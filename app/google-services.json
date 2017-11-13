@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "493014602105",
+    "project_id": "geoconnectable"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493014602105:android:e46fa57b3a54b263",
+        "android_client_info": {
+          "package_name": "com.botherconsulting.geoconnectable"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "493014602105-guhivfoj5lq5bs87d1um2dq3pd5hn3ut.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "493014602105-hgaaocg774tupq59kvpo8t90q6469emj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.botherconsulting.geoconnectable",
+            "certificate_hash": "2bed5e0bbf9aa71470f9361f835a00f97c05bed9"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4IUJ27pEBzHH6sF9KftOXnEtZjIyLWX8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
