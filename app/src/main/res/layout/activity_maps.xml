@@ -1,8 +1,26 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:map="http://schemas.android.com/apk/res-auto"
+<FrameLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/map"
-    android:name="com.google.android.gms.maps.SupportMapFragment"
-    android:layout_width="match_parent"
+    android:id="@+id/MaskedFrame"
     android:layout_height="match_parent"
-    tools:context="com.botherconsulting.geoconnectable.MapsActivity" />
+    android:layout_width="match_parent">
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="1200dp"
+        android:layout_height="1200dp"
+        android:layout_gravity="center"
+        tools:context="com.botherconsulting.geoconnectable.MapsActivity" />
+
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/MaskingFrame"
+        android:layout_height="1200dp"
+        android:layout_width="1200dp"
+        android:layout_gravity="center"
+        android:background="@drawable/mask1200" />
+</FrameLayout>
