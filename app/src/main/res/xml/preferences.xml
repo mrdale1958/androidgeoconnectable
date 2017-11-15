@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Sensors configuration">
+
+        <EditTextPreference
+            android:defaultValue="192.168.1.73"
+            android:key="sensor_ip_address"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Sensor IP Address" />
+        <EditTextPreference
+            android:defaultValue="5678"
+            android:key="sensor_tcp_port"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Sensor TCP Port" />
+        <EditTextPreference
+            android:defaultValue="256"
+            android:key="spin_sensor_clicks_per_rev"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Spin Sensor Clicks Per Revolution" />
+        <EditTextPreference
+            android:defaultValue="100"
+            android:key="tilt_sensor_scale_factor"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Spin Sensor Scale Factor" />
+
+        <!--
+        -->
+    </PreferenceCategory>
+    <PreferenceCategory android:title="UI configuration">
+        <EditTextPreference
+            android:defaultValue="0xff0000"
+            android:key="target_color"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Target Color" />
+        <EditTextPreference
+            android:defaultValue="0.03"
+            android:key="target_size"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Target Size" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
