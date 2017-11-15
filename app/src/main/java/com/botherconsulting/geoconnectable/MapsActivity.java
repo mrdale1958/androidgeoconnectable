@@ -1,5 +1,6 @@
 package com.botherconsulting.geoconnectable;
 
+import android.preference.PreferenceActivity;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
@@ -11,20 +12,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import android.app.Fragment;
 import android.os.Build;
-import android.os.Bundle;
+import android.os.AsyncTask;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.TextView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.java_websocket.client.WebSocketClient;
@@ -38,20 +29,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private WebSocketClient mWebSocketClient;
     private double currentSpinPosition = 0.0;
-    private  int targetColor = 0xff0000;
-    private  double targetWidth = 0.03; // portion of visible map
+    private int targetColor = 0xff0000;
+    private double targetWidth = 0.03; // portion of visible map
 
-    private  int maxZoom = 19;
-    private  int minZoom = 3;
-    private  double currentZoom = 0;
+    private double TiltScaleX = 500;
+    private double TiltScaleY = 500;
+    private int maxZoom = 19;
+    private int minZoom = 3;
+    private double currentZoom = 0;
     //var targetRectangle;
-    private  double currentScale = 1.0;
+    private double currentScale = 1.0;
     //var mapData = [];
-    private  int clicksPerRev =  256; // weirdly not 3.14159 * 4 *
-    private  double revsPerFullZoom = (maxZoom - minZoom)/8;
-    private  double clicksPerZoomLevel =  clicksPerRev / revsPerFullZoom;
-    private  double maxClicks = clicksPerRev * revsPerFullZoom * 1.0;
-    private void restartIdleTimer() {}
+    private int clicksPerRev = 256; // weirdly not 3.14159 * 4 *
+    private double revsPerFullZoom = (maxZoom - minZoom) / 8;
+    private double clicksPerZoomLevel = clicksPerRev / revsPerFullZoom;
+    private double maxClicks = clicksPerRev * revsPerFullZoom * 1.0;
+
+    private void restartIdleTimer() {
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,32 +57,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         BackgroundWebSocket bws = new BackgroundWebSocket();
-        bws.execute("ws://192.168.1.73:5678");
+       // bws.execute("ws://192.168.1.73:5678");
+        bws.execute("ws://10.21.5.22:5678");
         //connectWebSocket();
     }
 
-    private void onMessage(JSONObject message) {
+    private void onMessage(String messageString) {
 
         if (mMap == null) return;
         //var currentZoom = map.getZoom();
         //currentFeatureSet = zoomLayers[lastZoom];
+        JSONObject message = new JSONObject();
+        try {
+            message = new JSONObject(messageString);
+        } catch (org.json.JSONException e) {
+            e.printStackTrace();
+        }
         String messageType = "";
         String gestureType = "";
-        try {
-            messageType = message.getString("type");
-        } catch  (org.json.JSONException e)
-        {
+/*        try {
+ messageType = message.getString("type");
+        } catch (org.json.JSONException e) {
             e.printStackTrace();
-        }
+        }*/
         try {
             gestureType = message.getString("gesture");
-        } catch  (org.json.JSONException e)
-        {
+            //Log.i("incoming message",message.toString());
+        } catch (org.json.JSONException e) {
             e.printStackTrace();
         }
 
 
-        if (  messageType == "spin") {
+        if (messageType.equals("spin")) {
             try {
                 String encoderID = message.getJSONObject("packet").getString("sensorID");
                 Log.i("EncoderID", encoderID);
@@ -98,12 +100,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.i("EncoderElapsedTime", encoderET);
                 String encoderPosition = message.getJSONObject("packet").getString("encoderPosition");
                 Log.i("EncoderPosition", encoderPosition);
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
             }
 
-        } else if (messageType == "tilt") {
+        } else if (messageType.equals("tilt")) {
             try {
                 String accelerometerID = message.getJSONObject("packet").getString("sensorID");
                 Log.i("TiltsensorID", accelerometerID);
@@ -114,70 +115,62 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String tiltMagnitude = message.getJSONObject("packet").getString("tiltMagnitude");
                 Log.i("TiltMagnitude", tiltMagnitude);
 
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
-            }} else if (gestureType == "pan") {
+            }
+        } else if (gestureType.equals("pan")) {
             //var dampingZoom = map.getZoom()*minZoom/maxZoom;
             double x = 0.0;
             double y = 0.0;
             JSONObject vector = new JSONObject();
             try {
                 vector = message.getJSONObject("vector");
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
             }
             try {
 
                 x = vector.getDouble("x");
                 y = vector.getDouble("y");
-                if ( x == 0.0 && y == 0.0) return;
+                if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) return;
                 //console.log("sensor message: " + jsonData.type + "-" + jsonData.vector.x + "," +jsonData.vector.y);
 
                 //if (zoomLayers[currentZoom]["pannable"])
-                mMap.animateCamera(CameraUpdateFactory.scrollBy((float)(100*x), (float)(100*y)));
+                //Log.i("incoming pan",x + "," + y);
+                mMap.animateCamera(CameraUpdateFactory.scrollBy((float) (TiltScaleX * x), (float) (TiltScaleY * y)));
                 restartIdleTimer();
 
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
             }
             //paintTarget();
-        }
-        else if (gestureType == "zoom")
-        {
+        } else if (gestureType.equals("zoom")) {
             double delta = 0.0;
             JSONObject vector = new JSONObject();
             try {
                 vector = message.getJSONObject("vector");
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
             }
             try {
                 delta = vector.getDouble("delta");
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
             }
             currentSpinPosition += delta;
             //console.log(currentSpinPosition);
             //console.log("sensor message: " + jsonData.gesture + " " + jsonData.vector.delta + "; currentSpinPosition=" +currentSpinPosition);
             if (currentSpinPosition < 0) currentSpinPosition = 0;
-            double proposedZoom =  currentSpinPosition/clicksPerZoomLevel;
+            double proposedZoom = currentSpinPosition / clicksPerZoomLevel;
             //restartIdleTimer();
 
-            if (proposedZoom != currentZoom)
-            {
+            if (proposedZoom != currentZoom) {
                 //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
-                mMap.animateCamera(CameraUpdateFactory.zoomTo((float)(proposedZoom)));
+                mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
                 currentZoom = proposedZoom;
                 restartIdleTimer();
 
-            }
-            else
-            {
+            } else {
                         /*
                         currView = mMap.getBounds();
                         if (currView != undefined)
@@ -220,21 +213,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 }
                             }
                         }
-                    */}
+                    */
+            }
 
 
-        }
-        else if (gestureType == "combo")
-        {
-            double dampingZoom = mMap.getCameraPosition().zoom*minZoom/maxZoom;
+        } else if (gestureType == "combo") {
+            double dampingZoom = mMap.getCameraPosition().zoom * minZoom / maxZoom;
             double x = 0.0;
             double y = 0.0;
             double delta = 0.0;
             JSONObject vector = new JSONObject();
             try {
                 vector = message.getJSONObject("vector");
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
             }
             try {
@@ -242,24 +233,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 x = vector.getDouble("x");
                 y = vector.getDouble("y");
                 delta = vector.getDouble("delta");
-            } catch (org.json.JSONException e)
-            {
+            } catch (org.json.JSONException e) {
                 e.printStackTrace();
             }
-            if (x != 0.0 && y != 0.0)
-            {
-                mMap.animateCamera(CameraUpdateFactory.scrollBy((float)(100*x), (float)(100*y)));
+            if (x != 0.0 && y != 0.0) {
+                mMap.animateCamera(CameraUpdateFactory.scrollBy((float) (100 * x), (float) (100 * y)));
                 restartIdleTimer();
             }
             currentSpinPosition += delta;
             if (currentSpinPosition < 0) currentSpinPosition = 0;
-            double proposedZoom =  currentSpinPosition/clicksPerZoomLevel;
+            double proposedZoom = currentSpinPosition / clicksPerZoomLevel;
             //restartIdleTimer();
 
-            if (proposedZoom != currentZoom)
-            {
+            if (proposedZoom != currentZoom) {
                 //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
-                mMap.animateCamera(CameraUpdateFactory.zoomTo((float)(proposedZoom)));
+                mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
                 currentZoom = proposedZoom;
 
                 restartIdleTimer();
@@ -278,16 +266,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    class BackgroundWebSocket extends AsyncTask<String, void, JSONObject> {
+    class BackgroundWebSocket extends AsyncTask<String, String, String> {
 
         //inputarg can contain array of values
+        @Override
         protected String doInBackground(String... URIString) {
             URI uri;
             try {
                 uri = new URI(URIString[0]);
             } catch (URISyntaxException e) {
                 e.printStackTrace();
-                return "Invalid URI " ;
+                return "Invalid URI";
             }
             mWebSocketClient = new WebSocketClient(uri, new org.java_websocket.drafts.Draft_17()) {
                 @Override
@@ -299,14 +288,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 @Override
                 public void onMessage(String s) {
                     final String message = s;
-                    Log.i("incoming message", message);
-                    JSONObject jsonData = new JSONObject();
+                    //Log.i("incoming message", message);
+                    /*JSONObject jsonData = new JSONObject();
                     try {
                         jsonData = new JSONObject(message);
                     } catch (org.json.JSONException e) {
                         e.printStackTrace();
-                    }
-                    publishProgress(jsonData);
+                    }*/
+                    publishProgress(message);
 
                 }
 
@@ -321,8 +310,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             };
             mWebSocketClient.connect();
+            return null;
         }
-        protected JSONObject onProgressUpdate(JSONObject... progress) {
+
+        protected void onProgressUpdate(String... progress) {
 
             //update the progress
             onMessage(progress[0]);
@@ -339,7 +330,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    }
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -364,5 +356,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, radius));
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, 100));
 
+    }
+    public class SettingsActivity extends PreferenceActivity {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            //addPreferencesFromResource(R.xml.preferences);
+        }
     }
 }
