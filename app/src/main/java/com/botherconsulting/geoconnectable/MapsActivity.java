@@ -15,6 +15,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import android.os.Build;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.View;
 
 import org.json.JSONObject;
 
@@ -60,6 +61,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
        // bws.execute("ws://192.168.1.73:5678");
         bws.execute("ws://10.21.5.22:5678");
         //connectWebSocket();
+        hideSystemUI();
+    }
+
+    private void hideSystemUI() {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        // remove the following flag for version < API 19
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE
+        );
     }
 
     private void onMessage(String messageString) {
