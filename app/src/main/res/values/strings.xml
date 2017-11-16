@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">GeoConnectable</string>
     <string name="title_activity_maps">Map</string>
+    <string name="target_visible_summ">Toggles target display at center of table</string>
+    <string name="target_visible">Target visible</string>
+    <string name="tilt_sensor_scale_factor">Tilt Sensor Scale Factor</string>
+    <string name="spin_sensor_clicks_per_rev">Spin Sensor Clicks Per Revolution</string>
+    <string name="sensor_ip_address">Sensor server FQDN or IP address</string>
+    <string name="sensor_tcp_port">Sensor TCP Port</string>
 </resources>
