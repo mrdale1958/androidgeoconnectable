@@ -9,14 +9,14 @@
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="1600dp"
-        android:layout_height="1600dp"
+        android:layout_width="720dp"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
         tools:context="com.botherconsulting.geoconnectable.MapsActivity" />
     <FrameLayout
         android:id="@+id/MaskingFrame"
-        android:layout_width="1600dp"
-        android:layout_height="1600dp"
+        android:layout_width="720dp"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
         android:background="@drawable/mask1200" />
 </FrameLayout>

@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 
 import org.json.JSONObject;
 
@@ -59,12 +60,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         BackgroundWebSocket bws = new BackgroundWebSocket();
        // bws.execute("ws://192.168.1.73:5678");
-        bws.execute("ws://10.21.5.22:5678");
+        bws.execute("ws://10.21.7.178:5678");
         //connectWebSocket();
         hideSystemUI();
     }
 
     private void hideSystemUI() {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
@@ -356,7 +359,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+Log.i("map ready","ok");
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(-34, 151);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
@@ -369,11 +372,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, 100));
 
     }
-    public class SettingsActivity extends PreferenceActivity {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            //addPreferencesFromResource(R.xml.preferences);
-        }
-    }
+
 }
