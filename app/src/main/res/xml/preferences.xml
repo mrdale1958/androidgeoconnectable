@@ -1,75 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceScreen android:title="Sensors configuration">
+    <header
+        android:fragment="com.botherconsulting.geoconnectable.GenericPreferenceFragment"
+        android:title="@string/sensor_settings"
+        android:summary="@string/settings_sensorSummary" >
+        <extra android:name="settings" android:value="prefs_sensors" />
+    </header>
+    <header
+        android:fragment="com.botherconsulting.geoconnectable.GenericPreferenceFragment"
+        android:title="@string/UI_settings"
+        android:summary="@string/settings_UISummary">
+        <extra android:name="settings" android:value="prefs_ui" />
+    </header>
 
-        <EditTextPreference
-            android:defaultValue="192.168.1.73"
-            android:key="sensor_ip_address"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="@string/sensor_ip_address" />
-        <EditTextPreference
-            android:defaultValue="5678"
-            android:key="sensor_tcp_port"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="@string/sensor_tcp_port" />
-        <PreferenceScreen android:title="Hardware Gory details">
-            <EditTextPreference
-                android:defaultValue="256"
-                android:key="spin_sensor_clicks_per_rev"
-                android:selectAllOnFocus="true"
-                android:singleLine="true"
-                android:title="@string/spin_sensor_clicks_per_rev" />
-            <EditTextPreference
-                android:defaultValue="100"
-                android:key="tilt_sensor_scale_factor"
-                android:selectAllOnFocus="true"
-                android:singleLine="true"
-                android:title="@string/tilt_sensor_scale_factor" />
-        </PreferenceScreen>
-        <!--
-        -->
-    </PreferenceScreen>
-    <PreferenceScreen android:title="UI configuration">
-        <CheckBoxPreference
-            android:key="target_visible"
-            android:title="@string/target_visible"
-            android:summary="@string/target_visible_summ"
-            android:defaultValue="true" />
-        <EditTextPreference
-            android:defaultValue="0xff0000"
-            android:key="target_color"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Target Color" />
-        <EditTextPreference
-            android:defaultValue="0.03"
-            android:key="target_size"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Target Size" />
-        <EditTextPreference
-            android:defaultValue="Spin table top to zoom"
-            android:key="target_size"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Idle Text Bottom" />
-        <EditTextPreference
-            android:defaultValue="Tilt table top to pan"
-            android:key="target_size"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Idle Text Top" />
-        <PreferenceScreen android:title="UI Gory details">
-            <EditTextPreference
-                android:defaultValue="0"
-                android:key="horizontal_bump"
-                android:selectAllOnFocus="true"
-                android:singleLine="true"
-                android:title="Horizontal shift" />
-        </PreferenceScreen>
-    </PreferenceScreen>
 
-</PreferenceScreen>
+</preference-headers>

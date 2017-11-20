@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:key="target_visible"
+        android:title="@string/target_visible"
+        android:summary="@string/target_visible_summ"
+        android:defaultValue="true" />
+    <EditTextPreference
+        android:defaultValue="0xff0000"
+        android:key="target_color"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="Target Color" />
+    <EditTextPreference
+        android:defaultValue="0.03"
+        android:key="target_size"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="Target Size" />
+    <EditTextPreference
+        android:defaultValue="Spin table top to zoom"
+        android:key="target_size"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="Idle Text Bottom" />
+    <EditTextPreference
+        android:defaultValue="Tilt table top to pan"
+        android:key="target_size"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="Idle Text Top" />
+    <PreferenceScreen android:title="UI Gory details">
+        <EditTextPreference
+            android:defaultValue="0"
+            android:key="horizontal_bump"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Horizontal shift" />
+    </PreferenceScreen>
+</PreferenceScreen>
