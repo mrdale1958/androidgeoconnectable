@@ -1,8 +1,20 @@
 package com.botherconsulting.geoconnectable;
 
-import android.preference.PreferenceActivity;
-import android.support.v4.app.FragmentActivity;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -11,29 +23,34 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import android.os.Build;
-import android.os.AsyncTask;
-import android.util.Log;
-import android.view.View;
-import android.view.WindowManager;
-
-import org.json.JSONObject;
+import com.google.maps.android.data.kml.KmlLayer;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    static final int SHOW_PREFERENCES = 1;
+
     private GoogleMap mMap;
+    private boolean useHybridMap = true;
     private WebSocketClient mWebSocketClient;
     private double currentSpinPosition = 0.0;
-    private int targetColor = 0xff0000;
+    private String targetColor = "#ff0000";
     private double targetWidth = 0.03; // portion of visible map
-
+    private boolean targetVisible = false;
+    private int horizontalBump = 0;
     private double TiltScaleX = 500;
     private double TiltScaleY = 500;
     private int maxZoom = 19;
@@ -46,6 +63,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private double revsPerFullZoom = (maxZoom - minZoom) / 8;
     private double clicksPerZoomLevel = clicksPerRev / revsPerFullZoom;
     private double maxClicks = clicksPerRev * revsPerFullZoom * 1.0;
+    private String idleMessageTop = "Spin table top to zoom";
+    private String idleMessageBottom = "Tilt table top to pan";
+    int idleTime = 600;
+    String sensorServerAddress = "192.168.1.73";
+    String sensorServerPort = "5678";
+
+
 
     private void restartIdleTimer() {
     }
@@ -60,11 +84,66 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
         BackgroundWebSocket bws = new BackgroundWebSocket();
        // bws.execute("ws://192.168.1.73:5678");
-        bws.execute("ws://10.21.7.178:5678");
-        //connectWebSocket();
+        PreferenceManager.setDefaultValues(this, R.xml.gct_preferences, true);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        sensorServerAddress = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER, sensorServerAddress);
+        sensorServerPort = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER_PORT, sensorServerPort);
+        clicksPerRev = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(clicksPerRev)));
+        TiltScaleX = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleX)));
+        TiltScaleY = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleY)));
+        useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
+        targetVisible = sharedPref.getBoolean(SettingsActivity.KEY_PREF_TARGET_VISIBLE, targetVisible);
+        targetColor = sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_COLOR, targetColor);
+        idleMessageBottom = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_BOTTOM,idleMessageBottom);
+        idleMessageTop = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_TOP,idleMessageTop);
+        idleTime = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TIME, Integer.toString(idleTime)));
+        horizontalBump = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_HORIZONTAL_BUMP, Integer.toString(horizontalBump)));
+        //targetWidth = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_SIZE, Double.toString(targetWidth)));
+
+        bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
+
+
+        Handler idleHandler = new Handler();
+        Runnable runnable = new Runnable(){
+            public void run() {
+                Toast.makeText(MapsActivity.this, "C'Mom no hands!", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        idleHandler.postAtTime(runnable, System.currentTimeMillis()+idleTime*1000);
+        idleHandler.postDelayed(runnable, idleTime+1000);
+        final Intent intent = new Intent(this, SettingsActivity.class);
+
+        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(intent, SHOW_PREFERENCES);
+            }
+        });
         hideSystemUI();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            // launch settings activity
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
     private void hideSystemUI() {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -77,7 +156,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         );
     }
 
-    private void onMessage(String messageString) {
+   private void retrieveFileFromUrl() {
+        new DownloadKmlFile(getString(R.string.kml_url)).execute();
+    }
+    private class DownloadKmlFile extends AsyncTask<String, Void, byte[]> {
+        private final String mUrl;
+
+        public DownloadKmlFile(String url) {
+            mUrl = url;
+        }
+
+        protected byte[] doInBackground(String... params) {
+            try {
+                InputStream is =  new URL(mUrl).openStream();
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                int nRead;
+                byte[] data = new byte[16384];
+                while ((nRead = is.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
+                buffer.flush();
+                return buffer.toByteArray();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        protected void onPostExecute(byte[] byteArr) {
+            try {
+                KmlLayer kmlLayer = new KmlLayer(mMap, new ByteArrayInputStream(byteArr),
+                        getApplicationContext());
+                kmlLayer.addLayerToMap();
+
+            } catch (XmlPullParserException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+   private void onMessage(String messageString) {
 
         if (mMap == null) return;
         //var currentZoom = map.getZoom();
@@ -372,7 +492,10 @@ Log.i("map ready","ok");
         //Log.i("mask radius", radius.toString());
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, radius));
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, 100));
-
+        //Intent i = new Intent(this,TablePreferencesActivity.class);
+        //startActivityForResult(i, SHOW_PREFERENCES);
     }
+
+
 
 }
