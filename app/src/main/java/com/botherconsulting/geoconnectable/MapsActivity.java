@@ -2,6 +2,7 @@ package com.botherconsulting.geoconnectable;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Path;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,7 +16,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -39,11 +39,25 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import static android.os.SystemClock.uptimeMillis;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    static final int SHOW_PREFERENCES = 1;
-
+    static final int EAT_PREFERENCES = 12345;
+    final Handler idleHandler = new Handler();
+    final Runnable runnable = new Runnable(){
+        public void run() {
+            long timeSinceLastInteraction = (uptimeMillis() - lastInteractionTime);
+            Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
+            if (timeSinceLastInteraction > idleTime*idleTimeScaler) {
+                doIdle();
+            } else {
+                //Toast.makeText(MapsActivity.this, "C'Mom no hands!", Toast.LENGTH_SHORT).show();
+                idleHandler.postAtTime(this, uptimeMillis() + idleTime * idleTimeScaler);
+            }
+        }
+    };
+    private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true;
     private WebSocketClient mWebSocketClient;
@@ -54,6 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int horizontalBump = 0;
     private double TiltScaleX = 500;
     private double TiltScaleY = 500;
+    private double validTiltThreshold = 0.1;
     private double maxZoom = 19;
     private double minZoom = 0;
     private double currentZoom = 0;
@@ -69,6 +84,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int idleTime = 600;
     private LatLng idleHome = new LatLng(40.76667,-111.903373);
     private double idleZoom = 13.5;
+    private long lastInteractionTime = uptimeMillis();
+    private int idleTimeScaler = 100; // 1000 lets idleTime be in seconds
+    private boolean idling = false;
+    private int animateToHomeMS = 10000;
     private int idleSpin = 0;
     private int minSpin = -(int)((idleZoom - minZoom) * (double)clicksPerZoomLevel);
     private int maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
@@ -82,8 +101,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 
-    private void restartIdleTimer() {
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,48 +111,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         BackgroundWebSocket bws = new BackgroundWebSocket();
+        eatPreferences();
        // bws.execute("ws://192.168.1.73:5678");
-        PreferenceManager.setDefaultValues(this, R.xml.gct_preferences, true);
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-
-        sensorServerAddress = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER, sensorServerAddress);
-        sensorServerPort = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER_PORT, sensorServerPort);
-        clicksPerRev = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(clicksPerRev)));
-        revsPerFullZoom = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(revsPerFullZoom)));
-        TiltScaleX = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleX)));
-        TiltScaleY = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleY)));
-        useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
-        targetVisible = sharedPref.getBoolean(SettingsActivity.KEY_PREF_TARGET_VISIBLE, targetVisible);
-        targetColor = sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_COLOR, targetColor);
-        idleMessageBottom = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_BOTTOM,idleMessageBottom);
-        idleMessageTop = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_TOP,idleMessageTop);
-        idleTime = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TIME, Integer.toString(idleTime)));
-        idleZoom = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_ZOOM, Double.toString(idleZoom)));
-        horizontalBump = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_HORIZONTAL_BUMP, Integer.toString(horizontalBump)));
-        double idleHomeLat = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LAT, Double.toString(idleHome.latitude)));
-        double idleHomeLon = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LON, Double.toString(idleHome.longitude)));
-        idleHome = new LatLng(idleHomeLat, idleHomeLon);
-        //targetWidth = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_SIZE, Double.toString(targetWidth)));
         Log.w("idleTime set to", Integer.toString(idleTime));
         bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
 
 
-        Handler idleHandler = new Handler();
-        Runnable runnable = new Runnable(){
-            public void run() {
-                Toast.makeText(MapsActivity.this, "C'Mom no hands!", Toast.LENGTH_SHORT).show();
-            }
-        };
 
-        idleHandler.postAtTime(runnable, System.currentTimeMillis()+idleTime*1000);
-        idleHandler.postDelayed(runnable, idleTime+1000);
+        idleHandler.postAtTime(runnable, uptimeMillis()+idleTime*idleTimeScaler);
+        //idleHandler.postDelayed(runnable, idleTime+100);
         final Intent intent = new Intent(this, SettingsActivity.class);
 
         FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(intent, SHOW_PREFERENCES);
+                startActivityForResult(intent, EAT_PREFERENCES);
             }
         });
         hideSystemUI();
@@ -148,9 +139,86 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         overlays.add(scaleBarOverlay);*/
 
         idleMessageTopView = (OuterCircleTextView) findViewById(R.id.IdleTopText);
+        idleMessageTopView.setPath(600,
+        600,
+        600.0f,
+        Path.Direction.CCW,
+                0.7f * (float)Math.PI * 1200f,
+        -25f);
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView = (OuterCircleTextView) findViewById(R.id.IdleBottomText);
-        idleMessageBottomView.setText(idleMessageTop);
+        idleMessageBottomView.setPath(600,
+                600,
+                600.0f,
+                Path.Direction.CW,
+                0.80f * (float)Math.PI * 1200f,
+                20f);
+        idleMessageBottomView.setText(idleMessageBottom);
+    }
+
+    protected void doIdle() {
+        Log.i("Idle", "going into idle");
+        idling = true;
+        if (mMap != null) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLng(idleHome), animateToHomeMS, null);
+            mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (idleZoom)), animateToHomeMS, null);
+        }
+        idleMessageTopView.setText(idleMessageTop);
+        idleMessageBottomView.setText(idleMessageBottom);
+
+    }
+
+    protected void emergeFromIdle() {
+        Log.i("Idle", "emerging from idle");
+        idling = false;
+
+        idleMessageTopView.setText("");
+        idleMessageBottomView.setText("");
+        idleHandler.postAtTime(runnable, uptimeMillis()+idleTime*idleTimeScaler);
+
+    }
+
+    protected void eatPreferences() {
+        PreferenceManager.setDefaultValues(this, R.xml.gct_preferences, true);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        sensorServerAddress = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER, sensorServerAddress);
+        sensorServerPort = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER_PORT, sensorServerPort);
+        clicksPerRev = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(clicksPerRev)));
+        revsPerFullZoom = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(revsPerFullZoom)));
+        TiltScaleX = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleX)));
+        TiltScaleY = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleY)));
+        useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
+        if (mMap != null) {
+            if (useHybridMap) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+            } else {
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+            }
+        }
+        targetVisible = sharedPref.getBoolean(SettingsActivity.KEY_PREF_TARGET_VISIBLE, targetVisible);
+        targetColor = sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_COLOR, targetColor);
+        idleMessageBottom = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_BOTTOM,idleMessageBottom);
+        idleMessageTop = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_TOP,idleMessageTop);
+        idleTime = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TIME, Integer.toString(idleTime)));
+        idleZoom = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_ZOOM, Double.toString(idleZoom)));
+        horizontalBump = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_HORIZONTAL_BUMP, Integer.toString(horizontalBump)));
+        double idleHomeLat = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LAT, Double.toString(idleHome.latitude)));
+        double idleHomeLon = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LON, Double.toString(idleHome.longitude)));
+        idleHome = new LatLng(idleHomeLat, idleHomeLon);
+        //targetWidth = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_SIZE, Double.toString(targetWidth)));
+
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case EAT_PREFERENCES:
+                eatPreferences();
+                break;
+
+        }
 
     }
 
@@ -229,8 +297,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
    private void onMessage(String messageString) {
 
         if (mMap == null) return;
-        //var currentZoom = map.getZoom();
-        //currentFeatureSet = zoomLayers[lastZoom];
+
+
         JSONObject message = new JSONObject();
         try {
             message = new JSONObject(messageString);
@@ -251,38 +319,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i("no gesture message",message.toString());
         }
 
+        lastInteractionTime = uptimeMillis();
+        if (idling) emergeFromIdle();
 
-        if (messageType.equals("spin")) {
-            try {
-                String encoderID = message.getJSONObject("packet").getString("sensorID");
-                Log.i("EncoderID", encoderID);
-                String encoderIndex = message.getJSONObject("packet").getString("encoderIndex");
-                Log.i("EncoderIndex", encoderIndex);
-                String encoderDelta = message.getJSONObject("packet").getString("encoderDelta");
-                Log.i("EncoderDelta", encoderDelta);
-                String encoderET = message.getJSONObject("packet").getString("encoderElapsedTime");
-                Log.i("EncoderElapsedTime", encoderET);
-                String encoderPosition = message.getJSONObject("packet").getString("encoderPosition");
-                Log.i("EncoderPosition", encoderPosition);
-            } catch (org.json.JSONException e) {
-                e.printStackTrace();
-            }
 
-        } else if (messageType.equals("tilt")) {
-            try {
-                String accelerometerID = message.getJSONObject("packet").getString("sensorID");
-                Log.i("TiltsensorID", accelerometerID);
-                String tiltX = message.getJSONObject("packet").getString("tiltX");
-                Log.i("TiltX", tiltX);
-                String tiltY = message.getJSONObject("packet").getString("tiltY");
-                Log.i("TiltY", tiltY);
-                String tiltMagnitude = message.getJSONObject("packet").getString("tiltMagnitude");
-                Log.i("TiltMagnitude", tiltMagnitude);
-
-            } catch (org.json.JSONException e) {
-                e.printStackTrace();
-            }
-        } else if (gestureType.equals("pan")) {
+        if (gestureType.equals("pan")) {
             //var dampingZoom = map.getZoom()*minZoom/maxZoom;
             double x = 0.0;
             double y = 0.0;
@@ -290,30 +331,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 vector = message.getJSONObject("vector");
             } catch (org.json.JSONException e) {
-                e.printStackTrace();
+                Log.e("reading pan message", "no vector " + message.toString());
             }
             try {
 
                 x = TiltScaleX * vector.getDouble("x");
                 y = TiltScaleY * vector.getDouble("y");
-                if (Math.abs(x) < 0.1 && Math.abs(y) < 0.1) return;
-                //console.log("sensor message: " + jsonData.type + "-" + jsonData.vector.x + "," +jsonData.vector.y);
+                if (Math.abs(x) < validTiltThreshold && Math.abs(y) < validTiltThreshold) return;
 
                 //if (zoomLayers[currentZoom]["pannable"])
                 //Log.i("incoming pan",x + "," + y);
-                Log.i("pan update", "x: " + Double.toString(x) +
-                        " y: " + Double.toString(y) +
-                        " current Lat:" +
-                        Double.toString(mMap.getCameraPosition().target.latitude) +
-                        " current Lon:" +
-                        Double.toString(mMap.getCameraPosition().target.longitude)
+                if (logSensors) {
+                    Log.i("pan update", "x: " + Double.toString(x) +
+                            " y: " + Double.toString(y) +
+                            " current Lat:" +
+                            Double.toString(mMap.getCameraPosition().target.latitude) +
+                            " current Lon:" +
+                            Double.toString(mMap.getCameraPosition().target.longitude)
 
-                );
+                    );
+                }
                 mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
-                restartIdleTimer();
 
             } catch (org.json.JSONException e) {
-                e.printStackTrace();
+                Log.e("reading pan message", "invalid vector " + vector.toString());
             }
             //paintTarget();
         } else if (gestureType.equals("zoom")) {
@@ -322,77 +363,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 vector = message.getJSONObject("vector");
             } catch (org.json.JSONException e) {
-                e.printStackTrace();
+                Log.e("reading zoom message", "no vector " + message.toString());
             }
             try {
                 delta = vector.getInt("delta");
             } catch (org.json.JSONException e) {
-                e.printStackTrace();
+                Log.e("reading zoom message", "invalid vector " + vector.toString());
             }
             currentSpinPosition += delta;
             currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
-            //console.log(currentSpinPosition);
-            //console.log("sensor message: " + jsonData.gesture + " " + jsonData.vector.delta + "; currentSpinPosition=" +currentSpinPosition);
-            //if (currentSpinPosition < 0) currentSpinPosition = 0;
+
             double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
-            Log.i("zoom update", "maxSpin: " + Integer.toString(maxSpin) +
-                    "minSpin: " + Integer.toString(minSpin) +
-                    " new zoom: " +
-                    Double.toString(proposedZoom) +
-                    " currentSpinPosition: " +
-                    Integer.toString(currentSpinPosition));
+                if (logSensors) {
+                Log.i("zoom update", "maxSpin: " + Integer.toString(maxSpin) +
+                        "minSpin: " + Integer.toString(minSpin) +
+                        " new zoom: " +
+                        Double.toString(proposedZoom) +
+                        " currentSpinPosition: " +
+                        Integer.toString(currentSpinPosition));
+                 }
+
             //restartIdleTimer();
 
             if (proposedZoom != currentZoom) {
                 //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
                 mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
                 currentZoom = proposedZoom;
-                restartIdleTimer();
 
-            } else {
-                        /*
-                        currView = mMap.getBounds();
-                        if (currView != undefined)
-                        {
-                            currLeft = currView.getNorthEast().lng();
-                            currRight = currView.getSouthWest().lng();
-                            currTop = currView.getNorthEast().lat();
-                            currBottom = currView.getSouthWest().lat();
-                            currWidth = currLeft - currRight;
-                            currHeight = currTop - currBottom;
-                            currCenter = map.getCenter();
-                            hotBounds = new google.maps.LatLngBounds(
-                                    {lat: currCenter.lat()-targetWidth*currHeight, lng: currCenter.lng()-targetWidth*currWidth},
-                            {lat: currCenter.lat()+targetWidth*currHeight, lng: currCenter.lng()+targetWidth*currWidth});
-                            var hotspotFound = false;
-                            for (featureKey  in currentFeatureSet)
-                            {
-                                if ( typeof(currentFeatureSet[featureKey]) == "string" )
-                                {
-                                    if (hotspot[currentFeatureSet[featureKey]])
-                                    {
-                                        if (hotBounds.contains(hotspot[currentFeatureSet[featureKey]].position))
-                                        {
-                                            if ( ! hotspotFound )
-                                            {
-                                                console.log("zoomed in on " + currentFeatureSet[featureKey] + " in " + hotBounds );
-                                                openCedula(currentFeatureSet[featureKey]);
-                                                hotspotFound = true;
-                                            }
-                                            else
-                                                console.log("would like to have zoomed in on " + currentFeatureSet[featureKey] + " in " + hotBounds );
-
-                                        }
-                                        else
-                                        {
-                                            //console.log("zoomed in on something else. Closing " + currentFeatureSet[featureKey] + " in " + hotBounds );
-                                            closeCedula(currentFeatureSet[featureKey]);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    */
             }
 
 
@@ -405,7 +402,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 vector = message.getJSONObject("vector");
             } catch (org.json.JSONException e) {
-                e.printStackTrace();
+                Log.e("reading combo message", "no vector " + message.toString());
             }
             try {
 
@@ -413,11 +410,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 y = vector.getDouble("y");
                 delta = vector.getDouble("delta");
             } catch (org.json.JSONException e) {
-                e.printStackTrace();
+                Log.e("reading combo message", "invalid vector " + vector.toString());
             }
             if (x != 0.0 && y != 0.0) {
                 mMap.animateCamera(CameraUpdateFactory.scrollBy((float) (100 * x), (float) (100 * y)));
-                restartIdleTimer();
             }
             currentSpinPosition += delta;
             double proposedZoom = currentSpinPosition / clicksPerZoomLevel;
@@ -428,7 +424,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
                 currentZoom = proposedZoom;
 
-                restartIdleTimer();
             }
 
 
@@ -443,9 +438,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .getVisibleRegion().latLngBounds;
 
        TextView latDisplay  = (TextView)findViewById(R.id.currentLatitude);
-       latDisplay.setText("Latitude: "+ Double.toString(mMap.getCameraPosition().target.latitude));
+       latDisplay.setText("Latitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.latitude));
        TextView lonDisplay  = (TextView)findViewById(R.id.currentLongitude);
-       latDisplay.setText("Longitude: "+ Double.toString(mMap.getCameraPosition().target.longitude));
+       lonDisplay.setText("Longitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.longitude));
        //TextView altDisplay  = (TextView)findViewById(R.id.currentAltitude);
        //latDisplay.setText("Altitude: "+ Double.toString(mMap.getCameraPosition().target.));
 

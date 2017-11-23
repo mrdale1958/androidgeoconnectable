@@ -71,6 +71,7 @@ public class SettingsActivity
     @Override
     protected void onPause() {
         super.onPause();
+        Log.i("SettingsActivity", "pausing preference edit");
         //getPreferenceScreen().getSharedPreferences()
         //        .unregisterOnSharedPreferenceChangeListener(this);
     }
@@ -80,6 +81,7 @@ public class SettingsActivity
                                           String key) {
         Map<String, ?> preferencesMap = sharedPreferences.getAll();
 
+        Log.i("SettingsActivity", "onSharedPreferenceChanged");
         // get the preference that has been changed
         Object changedPreference = preferencesMap.get(key);
         // and if it's an instance of EditTextPreference class, update its summary
@@ -90,6 +92,7 @@ public class SettingsActivity
 
     private void updateSummary(EditTextPreference preference) {
         // set the EditTextPreference's summary value to its current text
+        Log.i("SettingsActivity", "updateSummary: " + preference.getText());
         preference.setSummary(preference.getText());
     }
 

@@ -32,77 +32,88 @@
         android:layout_width="800dp"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:background="@drawable/mask1200" />
+        android:background="@drawable/mask1200" >
+    <!--
     <com.botherconsulting.geoconnectable.ScaleBarOverlay
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-    <com.botherconsulting.geoconnectable.OuterCircleTextView
-        android:id="@+id/IdleTopText"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    <com.botherconsulting.geoconnectable.OuterCircleTextView
-        android:id="@+id/IdleBottomText"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|top"
-        android:layout_marginLeft="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_menu_preferences" />
+        -->
 
-    <android.support.design.widget.CoordinatorLayout
-        android:id="@+id/LocationParams"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_gravity="center_horizontal|top"
-        tools:background="#55555555">
+        <com.botherconsulting.geoconnectable.OuterCircleTextView
+               android:id="@+id/IdleTopText"
+               android:layout_width="match_parent"
+              android:background="@android:color/transparent"
+              android:layout_height="match_parent" />
+        <com.botherconsulting.geoconnectable.OuterCircleTextView
+               android:id="@+id/IdleBottomText"
+               android:layout_width="match_parent"
+            android:background="@android:color/transparent"
+               android:layout_height="match_parent" />
+    </FrameLayout>
+
+   <android.support.design.widget.FloatingActionButton
+       android:id="@+id/fab"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_gravity="center_horizontal|top"
+       android:layout_marginLeft="@dimen/fab_margin"
+       app:srcCompat="@android:drawable/ic_menu_preferences" />
+
+   <android.support.design.widget.CoordinatorLayout
+       android:id="@+id/LocationParams"
+       android:layout_width="200dp"
+       android:layout_height="200dp"
+       android:layout_marginLeft="@dimen/loc_margin"
+       android:layout_gravity="center_horizontal|top"
+       android:background="@android:color/transparent">
+
+       <android.support.v7.widget.AppCompatTextView
+           android:id="@+id/currentLongitude"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:layout_marginTop="8dp"
+           android:background="@android:color/transparent"
+           android:gravity="top"
+           android:shadowColor="#00ccff"
+           android:shadowDx="1"
+           android:shadowDy="1"
+           android:shadowRadius="1.5"
+           android:text="Longitude: 110.00"
+           android:textAlignment="center"
+           android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+           android:visibility="visible" />
 
         <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/currentLongitude"
-            android:layout_width="wrap_content"
+            android:id="@+id/currentLatitude"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:gravity="center_horizontal|top"
-            android:shadowColor="#00ccff"
-            android:shadowRadius="1.5"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:text="Longitude: 110.00"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:visibility="visible" />
-
-      <!-- can't seem to calculate camera height and there's no topological info in the Google Maps API
-       <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/currentAltitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal|bottom"
-            android:text="Altitude: 100km"
+            android:text="Latitude: 32.0"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="28dp"
             android:shadowColor="#00ccff"
             android:shadowRadius="1.5"
             android:shadowDx="1"
             android:shadowDy="1"
-            android:background="@android:color/transparent"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:visibility="visible" /> -->
-
-        <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/currentLatitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal|center_vertical"
-            android:text="Latitude: 32.0"
-            android:layout_marginTop="14dp"
-            android:shadowColor="#00ccff"
-            android:shadowRadius="1.5"
-            android:shadowDx="1"
-            android:shadowDy="1"
+            android:textAlignment="center"
             android:background="@android:color/transparent"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:visibility="visible" />
-    </android.support.design.widget.CoordinatorLayout>
+       <!-- can't seem to calculate camera height and there's no topological info in the Google Maps API
+        <android.support.v7.widget.AppCompatTextView
+             android:id="@+id/currentAltitude"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:gravity="center_horizontal|bottom"
+             android:text="Altitude: 100km"
+             android:layout_marginTop="28dp"
+             android:shadowColor="#00ccff"
+             android:shadowRadius="1.5"
+             android:shadowDx="1"
+             android:shadowDy="1"
+             android:background="@android:color/transparent"
+             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+             android:visibility="visible" /> -->
+
+   </android.support.design.widget.CoordinatorLayout>
 
 </android.support.design.widget.CoordinatorLayout>
