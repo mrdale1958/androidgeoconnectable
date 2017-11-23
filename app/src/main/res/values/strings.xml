@@ -10,6 +10,8 @@
     <string name="spin_sensor_revs_per_full_zoom">Revolutions to zoom all levels</string>
     <string name="sensor_ip_address">Sensor server FQDN or IP address</string>
     <string name="sensor_tcp_port">Sensor TCP Port</string>
+    <string name="include_kml_file">Include a KML file in the map display</string>
+    <string name="include_kml_file_summ">Include a KML file in the map display</string>
     <string name="kml_url">http://googlemaps.github.io/kml-samples/morekml/Polygons/Polygons.Google_Campus.kml</string>
     <string name="settings_sensorSummary">Adjust sensor settings for deployed sensors</string>
     <string name="sensor_settings">Sensor configuration</string>
