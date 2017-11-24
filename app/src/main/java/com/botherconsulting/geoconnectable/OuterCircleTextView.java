@@ -19,11 +19,13 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
     private float vOffset;
 
     private Paint mPaintText;
+
     public OuterCircleTextView(Context context, AttributeSet attrs) {
         super(context,attrs);
         setPath(20,20, 200, Path.Direction.CW, -180, 200);
-        setTextStyle(Paint.ANTI_ALIAS_FLAG, Paint.Style.FILL_AND_STROKE, Color.WHITE,20f);
+        setTextStyle(Paint.ANTI_ALIAS_FLAG, Paint.Style.FILL_AND_STROKE, Color.WHITE,32f);
     }
+
     public OuterCircleTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context,attrs,defStyleAttr);
         setPath(20,20, 200, Path.Direction.CW, -180, 200);
@@ -33,7 +35,7 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
     public OuterCircleTextView(Context context) {
         super(context);
         setPath(20,20, 200, Path.Direction.CW, -180, 200);
-        setTextStyle(Paint.ANTI_ALIAS_FLAG, Paint.Style.FILL_AND_STROKE, Color.WHITE,20f);
+        setTextStyle(Paint.ANTI_ALIAS_FLAG, Paint.Style.FILL_AND_STROKE, Color.WHITE,32f);
 
     }
 
@@ -48,6 +50,7 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
         mPaintText.setStyle(style);
         mPaintText.setColor(color);
         mPaintText.setTextSize(size);
+        mPaintText.setShadowLayer(2.0f,2.0f,2.0f,0xff0000);
         invalidate();
     }
 
@@ -61,6 +64,7 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
         mArc.addCircle(_x,_y, _radius, _direction);
         hOffset = _hOffset;
         vOffset = _vOffset;
+        invalidate();
     }
 
 

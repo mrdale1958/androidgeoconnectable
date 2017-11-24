@@ -43,12 +43,20 @@
                android:id="@+id/IdleTopText"
                android:layout_width="match_parent"
               android:background="@android:color/transparent"
-              android:layout_height="match_parent" />
+            android:shadowColor="#ff0000"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="0.5"
+            android:layout_height="match_parent" />
         <com.botherconsulting.geoconnectable.OuterCircleTextView
                android:id="@+id/IdleBottomText"
                android:layout_width="match_parent"
             android:background="@android:color/transparent"
-               android:layout_height="match_parent" />
+            android:shadowColor="#00ff00"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="0.5"
+            android:layout_height="match_parent" />
     </FrameLayout>
 
    <android.support.design.widget.FloatingActionButton

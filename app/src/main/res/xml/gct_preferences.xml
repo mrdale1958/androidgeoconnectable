@@ -27,7 +27,7 @@
         <android.support.v7.preference.EditTextPreference
             android:defaultValue="8"
             android:numeric="integer"
-            android:key="spin_sensor_clicks_per_rev"
+            android:key="spin_sensor_revs_per_full_zoom"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/spin_sensor_revs_per_full_zoom" />
@@ -37,6 +37,7 @@
             android:key="tilt_sensor_scale_factor"
             android:selectAllOnFocus="true"
             android:singleLine="true"
+            android:summary="convert from tilt values to percent of screen"
             android:title="@string/tilt_sensor_scale_factor" />
     </android.support.v7.preference.PreferenceCategory>
     <android.support.v7.preference.PreferenceCategory
@@ -57,7 +58,7 @@
             android:key="kml_url"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="@string/sensor_ip_address" />
+            android:title="@string/kml_url" />
         <android.support.v7.preference.CheckBoxPreference
             android:key="target_visible"
             android:title="@string/target_visible"

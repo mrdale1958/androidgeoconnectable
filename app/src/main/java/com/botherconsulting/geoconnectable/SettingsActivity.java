@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.EditTextPreference;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.util.Map;
 
@@ -55,6 +56,7 @@ public class SettingsActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getSupportFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new GCTPreferenceFragment())
             .commit();

@@ -3,283 +3,161 @@ package com.botherconsulting.geoconnectable;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Paint.Style;
-import android.graphics.Picture;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.location.Location;
 import android.view.View;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.model.LatLng;
 
 public class ScaleBarOverlay extends View {
 
-    // ===========================================================
-    // Fields
-    // ===========================================================
+    float mXOffset = 10;
+    float mYOffset = 10;
+    float mLineWidth = 3;
+    int mTextSize = 25;
 
-    // Defaults
+    boolean mIsImperial = false;
+    boolean mIsNautical = false;
 
-    boolean enabled = true;
+    boolean mIsLatitudeBar = true;
+    boolean mIsLongitudeBar = true;
 
-    float xOffset = 10;
-    float yOffset = 10;
-    float lineWidth = 2;
-    int textSize = 12;
+    private GoogleMap mMap;
 
-    boolean imperial = false;
-    boolean nautical = false;
+    float mXdpi = 1200/40;
+    float mYdpi = 1200/40;
 
-    boolean latitudeBar = true;
-    boolean longitudeBar = false;
+    public ScaleBarOverlay(Context context, GoogleMap map) {
+        super(context);
 
-    // Internal
+        mMap = map;
 
-    protected final GoogleMap mapView;
-    protected final MapsActivity master;
-
-    private Context context;
-
-    protected final Picture scaleBarPicture = new Picture();
-    private final Matrix scaleBarMatrix = new Matrix();
-
-    private float lastZoomLevel = -1;
-
-    float xdpi;
-    float ydpi;
-    int screenWidth;
-    int screenHeight;
-
-    // ===========================================================
-    // Constructors
-    // ===========================================================
-
-    public ScaleBarOverlay(Context _context, MapsActivity master, GoogleMap mapView) {
-        super(_context);
-
-        this.master = master;
-        this.context = _context;
-        this.mapView = mapView;
-
-        xdpi = (1200 /40); //this.context.getResources().getDisplayMetrics().xdpi;
-        ydpi = (1200 /40); //this.context.getResources().getDisplayMetrics().ydpi;
-
-        screenWidth = this.context.getResources().getDisplayMetrics().widthPixels;
-        screenHeight = this.context.getResources().getDisplayMetrics().heightPixels;
-
-    }
-
-    // ===========================================================
-    // Getter & Setter
-    // ===========================================================
-
-    /**
-     * @return the enabled
-     */
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    /**
-     * @param enabled the enabled to set
-     */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    /**
-     * @return the lineWidth
-     */
-    public float getLineWidth() {
-        return lineWidth;
-    }
-
-    /**
-     * @param lineWidth the lineWidth to set
-     */
-    public void setLineWidth(float lineWidth) {
-        this.lineWidth = lineWidth;
-    }
-
-    /**
-     * @return the imperial
-     */
-    public boolean isImperial() {
-        return imperial;
-    }
-
-    /**
-     * @param imperial the imperial to set
-     */
-    public void setImperial() {
-        this.imperial = true;
-        this.nautical = false;
-        createScaleBarPicture();
-    }
-
-    /**
-     * @return the nautical
-     */
-    public boolean isNautical() {
-        return nautical;
-    }
-
-    /**
-     * @param nautical the nautical to set
-     */
-    public void setNautical() {
-        this.nautical = true;
-        this.imperial = false;
-        createScaleBarPicture();
-    }
-
-    public void setMetric() {
-        this.nautical = false;
-        this.imperial = false;
-        createScaleBarPicture();
-    }
-
-    public void drawLatitudeScale(boolean latitude) {
-        this.latitudeBar = latitude;
-    }
-
-    public void drawLongitudeScale(boolean longitude) {
-        this.longitudeBar = longitude;
+        mXdpi = context.getResources().getDisplayMetrics().xdpi;
+        mYdpi = context.getResources().getDisplayMetrics().ydpi;
     }
 
     @Override
     public void onDraw(Canvas canvas) {
-        if (this.enabled) {
-            // Draw the overlay
-                final float zoomLevel = this.mapView.getCameraPosition().zoom;
+        canvas.save();
 
-                if (zoomLevel != lastZoomLevel) {
-                    lastZoomLevel = zoomLevel;
-                    createScaleBarPicture();
-                }
+        drawScaleBarPicture(canvas);
 
-                this.scaleBarMatrix.setTranslate(-1 * (scaleBarPicture.getWidth() / 2 - 0.5f), -1 * (scaleBarPicture.getHeight() / 2 - 0.5f));
-                this.scaleBarMatrix.postTranslate(xdpi/2, ydpi/2 + canvas.getHeight()-50);
-
-                canvas.save();
-                canvas.setMatrix(scaleBarMatrix);
-                canvas.drawPicture(scaleBarPicture);
-                canvas.restore();
-        }
+        canvas.restore();
     }
 
-    // ===========================================================
-    // Methods
-    // ===========================================================
-
-    public void disableScaleBar() {
-        this.enabled = false;
-    }
-
-    public boolean enableScaleBar() {
-        return this.enabled = true;
-    }
-
-    private void createScaleBarPicture() {
+    private void drawScaleBarPicture(Canvas canvas) {
         // We want the scale bar to be as long as the closest round-number miles/kilometers
         // to 1-inch at the latitude at the current center of the screen.
 
-        Projection projection = mapView.getProjection();
+        Projection projection = mMap.getProjection();
 
         if (projection == null) {
             return;
         }
 
-        Location locationP1 = new Location("ScaleBar location p1");
-        Location locationP2 = new Location("ScaleBar location p2");
-
-        // Two points, 1-inch apart in x/latitude, centered on screen
-        LatLng p1 = projection.fromScreenLocation(
-                new android.graphics.Point((int) ((screenWidth / 2) - (xdpi / 2)), screenHeight/2));
-        LatLng p2 = projection.fromScreenLocation(
-                new android.graphics.Point((int) ((screenWidth / 2) + (xdpi / 2)), screenHeight/2));
-
-        locationP1.setLatitude(p1.latitude);
-        locationP2.setLatitude(p2.latitude);
-        locationP1.setLongitude(p1.longitude);
-        locationP2.setLongitude(p2.longitude);
-
-        float xMetersPerInch = locationP1.distanceTo(locationP2);
-
-        p1 = projection.fromScreenLocation(
-                new android.graphics.Point(screenWidth/2, (int) ((screenHeight / 2) - (ydpi / 2))));
-        p2 = projection.fromScreenLocation(
-                new android.graphics.Point(screenWidth/2, (int) ((screenHeight / 2) + (ydpi / 2))));
-
-        locationP1.setLatitude(p1.latitude);
-        locationP2.setLatitude(p2.latitude);
-        locationP1.setLongitude(p1.longitude);
-        locationP2.setLongitude(p2.longitude);
-
-        float yMetersPerInch =  locationP1.distanceTo(locationP2);
-
         final Paint barPaint = new Paint();
         barPaint.setColor(Color.BLACK);
         barPaint.setAntiAlias(true);
-        barPaint.setStyle(Style.FILL);
-        barPaint.setAlpha(255);
+        barPaint.setStrokeWidth(mLineWidth);
 
         final Paint textPaint = new Paint();
         textPaint.setColor(Color.BLACK);
         textPaint.setAntiAlias(true);
-        textPaint.setStyle(Style.FILL);
-        textPaint.setAlpha(255);
-        textPaint.setTextSize(textSize);
+        textPaint.setTextSize(mTextSize);
 
-        final Canvas canvas = scaleBarPicture.beginRecording((int)xdpi, (int)ydpi);
+        drawXMetric(canvas, textPaint, barPaint);
 
-        if (latitudeBar) {
-            String xMsg = scaleBarLengthText(xMetersPerInch, imperial, nautical);
-            Rect xTextRect = new Rect();
-            textPaint.getTextBounds(xMsg, 0, xMsg.length(), xTextRect);
+        drawYMetric(canvas, textPaint, barPaint);
+    }
 
-            int textSpacing = (int)(xTextRect.height() / 5.0);
+    private void drawXMetric(Canvas canvas, Paint textPaint, Paint barPaint) {
+        Projection projection = mMap.getProjection();
 
-            canvas.drawRect(xOffset, yOffset, xOffset + xdpi, yOffset + lineWidth, barPaint);
-            canvas.drawRect(xOffset + xdpi, yOffset, xOffset + xdpi + lineWidth, yOffset + xTextRect.height() + lineWidth + textSpacing, barPaint);
+        if (projection != null) {
+            LatLng p1 = projection.fromScreenLocation(new android.graphics.Point((int) ((getWidth() / 2) - (mXdpi / 2)), getHeight() / 2));
+            LatLng p2 = projection.fromScreenLocation(new android.graphics.Point((int) ((getWidth() / 2) + (mXdpi / 2)), getHeight() / 2));
 
-            if (!longitudeBar) {
-                canvas.drawRect(xOffset, yOffset, xOffset + lineWidth, yOffset + xTextRect.height() + lineWidth + textSpacing, barPaint);
+            Location locationP1 = new Location("ScaleBar location p1");
+            Location locationP2 = new Location("ScaleBar location p2");
+
+            locationP1.setLatitude(p1.latitude);
+            locationP2.setLatitude(p2.latitude);
+            locationP1.setLongitude(p1.longitude);
+            locationP2.setLongitude(p2.longitude);
+
+            float xMetersPerInch = locationP1.distanceTo(locationP2);
+
+            if (mIsLatitudeBar) {
+                String xMsg = scaleBarLengthText(xMetersPerInch, mIsImperial, mIsNautical);
+                Rect xTextRect = new Rect();
+                textPaint.getTextBounds(xMsg, 0, xMsg.length(), xTextRect);
+
+                int textSpacing = (int) (xTextRect.height() / 5.0);
+
+                canvas.drawRect(mXOffset, mYOffset, mXOffset + mXdpi, mYOffset + mLineWidth, barPaint);
+                canvas.drawRect(mXOffset + mXdpi, mYOffset, mXOffset + mXdpi + mLineWidth, mYOffset +
+                        xTextRect.height() + mLineWidth + textSpacing, barPaint);
+
+                if (!mIsLongitudeBar) {
+                    canvas.drawRect(mXOffset, mYOffset, mXOffset + mLineWidth, mYOffset +
+                            xTextRect.height() + mLineWidth + textSpacing, barPaint);
+                }
+                canvas.drawText(xMsg, (mXOffset + mXdpi / 2 - xTextRect.width() / 2),
+                        (mYOffset + xTextRect.height() + mLineWidth + textSpacing), textPaint);
             }
-            canvas.drawText(xMsg, (xOffset + xdpi/2 - xTextRect.width()/2), (yOffset + xTextRect.height() + lineWidth + textSpacing), textPaint);
         }
+    }
 
-        if (longitudeBar) {
-            String yMsg = scaleBarLengthText(yMetersPerInch, imperial, nautical);
-            Rect yTextRect = new Rect();
-            textPaint.getTextBounds(yMsg, 0, yMsg.length(), yTextRect);
+    private void drawYMetric(Canvas canvas, Paint textPaint, Paint barPaint) {
+        Projection projection = mMap.getProjection();
 
-            int textSpacing = (int)(yTextRect.height() / 5.0);
+        if (projection != null) {
+            Location locationP1 = new Location("ScaleBar location p1");
+            Location locationP2 = new Location("ScaleBar location p2");
 
-            canvas.drawRect(xOffset, yOffset, xOffset + lineWidth, yOffset + ydpi, barPaint);
-            canvas.drawRect(xOffset, yOffset + ydpi, xOffset + yTextRect.height() + lineWidth + textSpacing, yOffset + ydpi + lineWidth, barPaint);
+            LatLng p1 = projection.fromScreenLocation(new Point(getWidth() / 2,
+                    (int) ((getHeight() / 2) - (mYdpi / 2))));
+            LatLng p2 = projection.fromScreenLocation(new Point(getWidth() / 2,
+                    (int) ((getHeight() / 2) + (mYdpi / 2))));
 
-            if (! latitudeBar) {
-                canvas.drawRect(xOffset, yOffset, xOffset + yTextRect.height() + lineWidth + textSpacing, yOffset + lineWidth, barPaint);
+            locationP1.setLatitude(p1.latitude);
+            locationP2.setLatitude(p2.latitude);
+            locationP1.setLongitude(p1.longitude);
+            locationP2.setLongitude(p2.longitude);
+
+            float yMetersPerInch = locationP1.distanceTo(locationP2);
+
+            if (mIsLongitudeBar) {
+                String yMsg = scaleBarLengthText(yMetersPerInch, mIsImperial, mIsNautical);
+                Rect yTextRect = new Rect();
+                textPaint.getTextBounds(yMsg, 0, yMsg.length(), yTextRect);
+
+                int textSpacing = (int) (yTextRect.height() / 5.0);
+
+                canvas.drawRect(mXOffset, mYOffset, mXOffset + mLineWidth, mYOffset + mYdpi, barPaint);
+                canvas.drawRect(mXOffset, mYOffset + mYdpi, mXOffset + yTextRect.height() +
+                        mLineWidth + textSpacing, mYOffset + mYdpi + mLineWidth, barPaint);
+
+                if (!mIsLatitudeBar) {
+                    canvas.drawRect(mXOffset, mYOffset, mXOffset + yTextRect.height() +
+                            mLineWidth + textSpacing, mYOffset + mLineWidth, barPaint);
+                }
+
+                float x = mXOffset + yTextRect.height() + mLineWidth + textSpacing;
+                float y = mYOffset + mYdpi / 2 + yTextRect.width() / 2;
+
+                canvas.rotate(-90, x, y);
+                canvas.drawText(yMsg, x, y + textSpacing, textPaint);
             }
-
-            float x = xOffset + yTextRect.height() + lineWidth + textSpacing;
-            float y = yOffset + ydpi/2 + yTextRect.width()/2;
-
-            canvas.rotate(-90, x, y);
-            canvas.drawText(yMsg, x, y + textSpacing, textPaint);
-
         }
-
-        scaleBarPicture.endRecording();
     }
 
     private String scaleBarLengthText(float meters, boolean imperial, boolean nautical) {
-        if (this.imperial) {
+        if (this.mIsImperial) {
             if (meters >= 1609.344) {
                 return (meters / 1609.344) + "mi";
             } else if (meters >= 1609.344/10) {
@@ -287,7 +165,7 @@ public class ScaleBarOverlay extends View {
             } else {
                 return (meters * 3.2808399) + "ft";
             }
-        } else if (this.nautical) {
+        } else if (this.mIsNautical) {
             if (meters >= 1852) {
                 return ((meters / 1852)) + "nm";
             } else if (meters >= 1852/10) {
@@ -304,10 +182,5 @@ public class ScaleBarOverlay extends View {
                 return meters + "m";
             }
         }
-    }
-
-    public boolean onTap(LatLng point, MapView mapView) {
-        // Do not react to screen taps.
-        return false;
     }
 }
