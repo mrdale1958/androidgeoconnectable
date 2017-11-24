@@ -16,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -57,49 +58,50 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     };
-    private boolean logSensors = false;
+    private boolean logSensors = true;
     private GoogleMap mMap;
-    private boolean useHybridMap = true;
+    private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
     private int currentSpinPosition = 0;
-    private String targetColor = "#ff0000";
-    private double targetWidth = 0.03; // portion of visible map
-    private boolean targetVisible = false;
-    private int horizontalBump = 0;
-    private double TiltScaleX = 500;
-    private double TiltScaleY = 500;
-    private double validTiltThreshold = 0.1;
-    private double maxZoom = 19;
-    private double minZoom = 0;
+    private String targetColor = "#ff0000"; // in settings
+    private double targetWidth = 0.03; // portion of visible map  // in settings
+    private boolean targetVisible = false; // in settings
+    private int horizontalBump = 0; // in settings
+    private double TiltScaleX = 500; // in settings
+    private double TiltScaleY = 500; // in settings
+    private double validTiltThreshold = 0.01; // needs to be in settings
+    private double maxZoom = 19; // needs to be in settings
+    private double minZoom = 0; // needs to be in settings
     private double currentZoom = 0;
     //var targetRectangle;
     private double currentScale = 1.0;
     //var mapData = [];
-    private int clicksPerRev = 256; // weirdly not 3.14159 * 4 *
-    private int revsPerFullZoom = 8;
+    private int clicksPerRev = 256; // in settings
+    private int revsPerFullZoom = 8;  // in settings
     private int clicksPerZoomLevel = clicksPerRev * revsPerFullZoom / (int)(maxZoom - minZoom) ;
     //private double maxClicks = clicksPerRev * revsPerFullZoom * 1.0;
-    private String idleMessageTop = "Spin table top to zoom";
-    private String idleMessageBottom = "Tilt table top to pan";
-    private int idleTime = 600;
-    private LatLng idleHome = new LatLng(40.76667,-111.903373);
-    private double idleZoom = 13.5;
+    private String idleMessageTop = "Spin table top to zoom";  // in settings
+    private String idleMessageBottom = "Tilt table top to pan";  // in settings
+    private int idleTime = 600; // in settings
+    private LatLng idleHome = new LatLng(40.76667,-111.903373);  // in settings
+    private double idleZoom = 13.5; // in settings
     private long lastInteractionTime = uptimeMillis();
-    private int idleTimeScaler = 100; // 1000 lets idleTime be in seconds
+    private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
     private boolean idling = false;
-    private int animateToHomeMS = 10000;
+    private int animateToHomeMS = 10000; // needs to be in settings
     private int idleSpin = 0;
     private int minSpin = -(int)((idleZoom - minZoom) * (double)clicksPerZoomLevel);
     private int maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
 
-    String idleTitle = "Clark Planetarium";
-    String sensorServerAddress = "192.168.1.73";
-    String sensorServerPort = "5678";
+    String idleTitle = "Clark Planetarium"; // needs to be in settings
+    String sensorServerAddress = "192.168.1.73";  // in settings
+    String sensorServerPort = "5678";  // in settings
 
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
 
-
+    /* need kml section as it appears in settings */
+    /* need location stats params as they appear in settings */
 
 
     @Override
@@ -137,21 +139,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 // Add scale bar overlay
         scaleBarOverlay.setMetric();
         overlays.add(scaleBarOverlay);*/
-
+        float instructionTextRadius = 540f;
         idleMessageTopView = (OuterCircleTextView) findViewById(R.id.IdleTopText);
         idleMessageTopView.setPath(600,
         600,
-        600.0f,
+                instructionTextRadius,
         Path.Direction.CCW,
-                0.7f * (float)Math.PI * 1200f,
-        -25f);
+                0.85f * (float)Math.PI * instructionTextRadius * 2,
+        -5f);
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView = (OuterCircleTextView) findViewById(R.id.IdleBottomText);
         idleMessageBottomView.setPath(600,
                 600,
-                600.0f,
+                instructionTextRadius,
                 Path.Direction.CW,
-                0.80f * (float)Math.PI * 1200f,
+                0.6f * (float)Math.PI * instructionTextRadius * 2,
                 20f);
         idleMessageBottomView.setText(idleMessageBottom);
     }
@@ -160,8 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.i("Idle", "going into idle");
         idling = true;
         if (mMap != null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLng(idleHome), animateToHomeMS, null);
-            mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (idleZoom)), animateToHomeMS, null);
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(idleHome, (float) (idleZoom)), animateToHomeMS, null);
         }
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView.setText(idleMessageBottom);
@@ -304,6 +305,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             message = new JSONObject(messageString);
         } catch (org.json.JSONException e) {
             Log.i("odd JSON",messageString);
+            return;
         }
         String messageType = "";
         String gestureType = "";
@@ -317,16 +319,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //Log.i("incoming message",message.toString());
         } catch (org.json.JSONException e) {
             Log.i("no gesture message",message.toString());
+            return;
         }
 
         lastInteractionTime = uptimeMillis();
         if (idling) emergeFromIdle();
-
+        LatLngBounds curScreen = mMap.getProjection()
+               .getVisibleRegion().latLngBounds;
 
         if (gestureType.equals("pan")) {
             //var dampingZoom = map.getZoom()*minZoom/maxZoom;
-            double x = 0.0;
-            double y = 0.0;
+            double deltaX = 0.0;
+            double deltaY = 0.0;
             JSONObject vector = new JSONObject();
             try {
                 vector = message.getJSONObject("vector");
@@ -334,16 +338,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.e("reading pan message", "no vector " + message.toString());
             }
             try {
+                double screenWidthDegrees = curScreen.southwest.longitude - curScreen.northeast.longitude;
+                double screenHeightDegrees = Math.abs(curScreen.southwest.latitude - curScreen.northeast.latitude);
+                double rawX = vector.getDouble("x");
+                double percentChangeInX = 0;
+                double percentChangeInY = 0;
+                double rawY = vector.getDouble("y");
 
-                x = TiltScaleX * vector.getDouble("x");
-                y = TiltScaleY * vector.getDouble("y");
-                if (Math.abs(x) < validTiltThreshold && Math.abs(y) < validTiltThreshold) return;
+                if (logSensors) {
+                    Log.i("pan update", " raw x: " + Double.toString(rawX) +
+                            " raw y: " + Double.toString(rawY));
+                }
+                if (Math.abs(rawX) < validTiltThreshold) {
+                    if (Math.abs(rawY) < validTiltThreshold) {
+                        if (logSensors) {
+                            Log.i("rejected pan update", " raw x: " + Double.toString(rawX) +
+                                    " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
+                        }
+                        return;
+                    } else {
+                        percentChangeInY = TiltScaleY * rawY;
+                        deltaY = screenHeightDegrees * percentChangeInY;
+                    }
+                } else {
+                    percentChangeInX = TiltScaleX * rawX;
+                    deltaX = screenHeightDegrees * percentChangeInX;
+                }
 
                 //if (zoomLayers[currentZoom]["pannable"])
                 //Log.i("incoming pan",x + "," + y);
                 if (logSensors) {
-                    Log.i("pan update", "x: " + Double.toString(x) +
-                            " y: " + Double.toString(y) +
+                    Log.i("pan update", "%x: " + Double.toString(percentChangeInX) +
+                            " %y: " + Double.toString(percentChangeInY) +
+                            " deltax: " + Double.toString(deltaX) +
+                            " deltay: " + Double.toString(deltaY) +
                             " current Lat:" +
                             Double.toString(mMap.getCameraPosition().target.latitude) +
                             " current Lon:" +
@@ -351,7 +379,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     );
                 }
-                mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
+                //mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
+                LatLng currentPosition = mMap.getCameraPosition().target;
+                LatLng newPosition = new LatLng(currentPosition.latitude+deltaY, currentPosition.longitude + deltaX);
+                mMap.animateCamera(CameraUpdateFactory.newLatLng(newPosition),1,null);
 
             } catch (org.json.JSONException e) {
                 Log.e("reading pan message", "invalid vector " + vector.toString());
@@ -387,7 +418,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if (proposedZoom != currentZoom) {
                 //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
-                mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
+                mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)),1,null);
                 currentZoom = proposedZoom;
 
             }
@@ -434,8 +465,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     message.appendChild(content);
                     messages.appendChild(message);*/
         }
-        LatLngBounds curScreen = mMap.getProjection()
-                .getVisibleRegion().latLngBounds;
+
 
        TextView latDisplay  = (TextView)findViewById(R.id.currentLatitude);
        latDisplay.setText("Latitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.latitude));
@@ -482,6 +512,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 @Override
                 public void onClose(int i, String s, boolean b) {
                     Log.i("Websocket", "Closed " + s);
+                    Toast.makeText(MapsActivity.this, "Sensor connection lost. Reconnecting...", Toast.LENGTH_LONG).show();
+                    //mWebSocketClient.connect();
                 }
 
                 @Override
@@ -536,6 +568,7 @@ Log.i("map ready","ok");
         mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (idleZoom)));
         LatLngBounds curScreen = mMap.getProjection()
                 .getVisibleRegion().latLngBounds;
+        ScaleBarOverlay mScaleBar = new ScaleBarOverlay(this, mMap);
         //LatLng radius = new LatLng(curScreen.northeast.latitude, curScreen.getCenter().longitude);
         //Log.i("mask radius", radius.toString());
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, radius));
