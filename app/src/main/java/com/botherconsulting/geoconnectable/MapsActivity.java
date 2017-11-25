@@ -3,6 +3,8 @@ package com.botherconsulting.geoconnectable;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Path;
+import android.graphics.Point;
+import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,6 +13,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,8 +48,8 @@ import static android.os.SystemClock.uptimeMillis;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     static final int EAT_PREFERENCES = 12345;
-    final Handler idleHandler = new Handler();
-    final Runnable runnable = new Runnable(){
+    final Handler asyncTaskHandler = new Handler();
+    final Runnable idleMonitor = new Runnable(){
         public void run() {
             long timeSinceLastInteraction = (uptimeMillis() - lastInteractionTime);
             Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
@@ -54,11 +57,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 doIdle();
             } else {
                 //Toast.makeText(MapsActivity.this, "C'Mom no hands!", Toast.LENGTH_SHORT).show();
-                idleHandler.postAtTime(this, uptimeMillis() + idleTime * idleTimeScaler);
+                asyncTaskHandler.postAtTime(this, uptimeMillis() + idleCheckTime);
             }
         }
     };
-    private boolean logSensors = true;
+
+    final Runnable sensorConnectionLauncher = new Runnable(){
+        public void run() {
+            launchServerConnection();
+        }
+    };
+
+    private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
@@ -83,6 +93,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String idleMessageTop = "Spin table top to zoom";  // in settings
     private String idleMessageBottom = "Tilt table top to pan";  // in settings
     private int idleTime = 600; // in settings
+    private int idleCheckTime = 10000; // once a minute look aat last interaction time
     private LatLng idleHome = new LatLng(40.76667,-111.903373);  // in settings
     private double idleZoom = 13.5; // in settings
     private long lastInteractionTime = uptimeMillis();
@@ -92,7 +103,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int idleSpin = 0;
     private int minSpin = -(int)((idleZoom - minZoom) * (double)clicksPerZoomLevel);
     private int maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
-
+    private int settings_button_offset_x =  0;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     String sensorServerAddress = "192.168.1.73";  // in settings
     String sensorServerPort = "5678";  // in settings
@@ -120,7 +131,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 
-        idleHandler.postAtTime(runnable, uptimeMillis()+idleTime*idleTimeScaler);
+        asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleTime*idleTimeScaler);
         //idleHandler.postDelayed(runnable, idleTime+100);
         final Intent intent = new Intent(this, SettingsActivity.class);
 
@@ -131,6 +142,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 startActivityForResult(intent, EAT_PREFERENCES);
             }
         });
+        floatingActionButton.setBackgroundColor(0x0);
+        floatingActionButton.setRippleColor(0x0);
+        floatingActionButton.setBackground(null);
+        floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
         hideSystemUI();
 
         // if showScaleBar the below is wrong needs to be adapted for ViewOverlay
@@ -156,6 +171,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 0.6f * (float)Math.PI * instructionTextRadius * 2,
                 20f);
         idleMessageBottomView.setText(idleMessageBottom);
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int height = size.y;
+        Toast.makeText(MapsActivity.this, "Screen res in pixels" + Integer.toString(width)+"x" + Integer.toString(height), Toast.LENGTH_LONG).show();
+
+        doIdle();
     }
 
     protected void doIdle() {
@@ -175,7 +198,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         idleMessageTopView.setText("");
         idleMessageBottomView.setText("");
-        idleHandler.postAtTime(runnable, uptimeMillis()+idleTime*idleTimeScaler);
+        asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleCheckTime);
 
     }
 
@@ -252,6 +275,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         // remove the following flag for version < API 19
                         | View.SYSTEM_UI_FLAG_IMMERSIVE
         );
+        /*FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        CoordinatorLayout bigwin = ((CoordinatorLayout) floatingActionButton.getParent());
+        bigwin.setLayoutParams(new CoordinatorLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        */
     }
 
    private void retrieveFileFromUrl() {
@@ -295,6 +322,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private void launchServerConnection() {
+        BackgroundWebSocket bws = new BackgroundWebSocket();
+        bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
+
+    }
+
+    private void complain(String... message) {
+        Toast.makeText(MapsActivity.this, message[0] + ":" + message[1], Toast.LENGTH_LONG).show();
+        if (message[0].equals("Connection closed")) asyncTaskHandler.postDelayed(sensorConnectionLauncher,15000);
+    }
+
    private void onMessage(String messageString) {
 
         if (mMap == null) return;
@@ -322,8 +360,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return;
         }
 
-        lastInteractionTime = uptimeMillis();
-        if (idling) emergeFromIdle();
         LatLngBounds curScreen = mMap.getProjection()
                .getVisibleRegion().latLngBounds;
 
@@ -466,6 +502,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     messages.appendChild(message);*/
         }
 
+       lastInteractionTime = uptimeMillis();
+       if (idling) emergeFromIdle();
 
        TextView latDisplay  = (TextView)findViewById(R.id.currentLatitude);
        latDisplay.setText("Latitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.latitude));
@@ -505,20 +543,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     } catch (org.json.JSONException e) {
                         e.printStackTrace();
                     }*/
-                    publishProgress(message);
+                    publishProgress("message", message);
 
                 }
 
                 @Override
                 public void onClose(int i, String s, boolean b) {
                     Log.i("Websocket", "Closed " + s);
-                    Toast.makeText(MapsActivity.this, "Sensor connection lost. Reconnecting...", Toast.LENGTH_LONG).show();
+                    publishProgress("Connection closed", s);
                     //mWebSocketClient.connect();
                 }
 
                 @Override
                 public void onError(Exception e) {
+
                     Log.i("Websocket", "Error " + e.getMessage());
+                    publishProgress("Connection Error", e.getMessage());
+
                 }
             };
             mWebSocketClient.connect();
@@ -528,7 +569,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         protected void onProgressUpdate(String... progress) {
 
             //update the progress
-            onMessage(progress[0]);
+            if (progress.length >=2 ) {
+                if (progress[0].equals("message")) {
+                    onMessage(progress[1]);
+                } else {
+                    //onMessage(progress[0]);
+                    complain(progress);
+                }
+            }
 
         }
 

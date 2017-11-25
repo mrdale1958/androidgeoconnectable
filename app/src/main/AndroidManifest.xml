@@ -31,6 +31,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
+            android:largeHeap="true"
             android:name=".MapsActivity"
             android:label="@string/title_activity_maps"
             android:theme="@style/geoconnectable">
