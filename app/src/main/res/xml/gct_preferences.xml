@@ -7,13 +7,13 @@
 
          <android.support.v7.preference.EditTextPreference
             android:defaultValue="192.168.1.73"
-            android:key="sensor_ip_address"
+            android:key="sensor_server"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/sensor_ip_address" />
         <android.support.v7.preference.EditTextPreference
             android:defaultValue="5678"
-            android:key="sensor_tcp_port"
+            android:key="sensor_server_port"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/sensor_tcp_port" />
