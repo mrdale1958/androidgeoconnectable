@@ -5,18 +5,6 @@
     <android.support.v7.preference.PreferenceCategory
         android:title="Sensor settings">
 
-         <android.support.v7.preference.EditTextPreference
-            android:defaultValue="192.168.1.73"
-            android:key="sensor_server"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="@string/sensor_ip_address" />
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="5678"
-            android:key="sensor_server_port"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="@string/sensor_tcp_port" />
         <android.support.v7.preference.EditTextPreference
             android:defaultValue="256"
             android:numeric="integer"
@@ -39,6 +27,18 @@
             android:singleLine="true"
             android:summary="convert from tilt values to percent of screen"
             android:title="@string/tilt_sensor_scale_factor" />
+        <android.support.v7.preference.EditTextPreference
+            android:defaultValue="192.168.1.73"
+            android:key="sensor_server"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/sensor_ip_address" />
+        <android.support.v7.preference.EditTextPreference
+            android:defaultValue="5678"
+            android:key="sensor_server_port"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/sensor_tcp_port" />
     </android.support.v7.preference.PreferenceCategory>
     <android.support.v7.preference.PreferenceCategory
         android:title="UI settings">
@@ -47,7 +47,7 @@
             android:title="@string/use_hybrid_map"
             android:summary="@string/use_hybrid_map_summ"
             android:defaultValue="true" />
-        <android.support.v7.preference.SwitchPreferenceCompat
+        <!--<android.support.v7.preference.SwitchPreferenceCompat
             android:key="include_kml_file"
             android:title="@string/include_kml_file"
             android:summary="@string/include_kml_file_summ"
@@ -58,8 +58,8 @@
             android:key="kml_url"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="@string/kml_url" />
-        <android.support.v7.preference.CheckBoxPreference
+            android:title="@string/kml_url" />-->
+        <!--<android.support.v7.preference.CheckBoxPreference
             android:key="target_visible"
             android:title="@string/target_visible"
             android:summary="@string/target_visible_summ"
@@ -76,7 +76,7 @@
             android:key="target_size"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="Target Size" />
+            android:title="Target Size" />-->
         <android.support.v7.preference.EditTextPreference
             android:defaultValue="Spin table top to zoom"
             android:key="idle_text_bottom"
@@ -89,62 +89,62 @@
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="Idle Text Top" />
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="0"
-            android:numeric="integer"
-            android:key="horizontal_bump"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Horizontal shift" />
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="600"
-            android:numeric="integer"
-            android:key="idle_time"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="IDLE timeout" />
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="40.76667"
-            android:numeric="decimal"
-            android:key="idle_latitude"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="IDLE latitude" />
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="-111.90337"
-            android:numeric="decimal"
-            android:key="idle_longitude"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="IDLE longitude" />
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="13.5"
-            android:numeric="decimal"
-            android:key="idle_zoom"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="IDLE zoom level (between 1 (out) and 19 (in)" />
+        <!-- <android.support.v7.preference.EditTextPreference
+             android:defaultValue="0"
+             android:numeric="integer"
+             android:key="horizontal_bump"
+             android:selectAllOnFocus="true"
+             android:singleLine="true"
+             android:title="Horizontal shift" />-->
+         <android.support.v7.preference.EditTextPreference
+             android:defaultValue="600"
+             android:numeric="integer"
+             android:key="idle_time"
+             android:selectAllOnFocus="true"
+             android:singleLine="true"
+             android:title="IDLE timeout" />
+         <android.support.v7.preference.EditTextPreference
+             android:defaultValue="40.76667"
+             android:numeric="decimal"
+             android:key="idle_latitude"
+             android:selectAllOnFocus="true"
+             android:singleLine="true"
+             android:title="IDLE latitude" />
+         <android.support.v7.preference.EditTextPreference
+             android:defaultValue="-111.90337"
+             android:numeric="decimal"
+             android:key="idle_longitude"
+             android:selectAllOnFocus="true"
+             android:singleLine="true"
+             android:title="IDLE longitude" />
+         <android.support.v7.preference.EditTextPreference
+             android:defaultValue="13.5"
+             android:numeric="decimal"
+             android:key="idle_zoom"
+             android:selectAllOnFocus="true"
+             android:singleLine="true"
+             android:title="IDLE zoom level (between 1 (out) and 19 (in)" />
 
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="600"
-            android:numeric="integer"
-            android:key="view_stats_location_horizontal"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Location stats horizontal placement" />
-        <android.support.v7.preference.EditTextPreference
-            android:defaultValue="600"
-            android:numeric="integer"
-            android:key="view_stats_location_vertical"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Location stats vertical placement" />
-        <android.support.v7.preference.SwitchPreferenceCompat
-            android:textOff="Imperial"
-            android:textOn="Metric"
-            android:defaultValue="Off"
-            android:showText="true"
-            android:key="view_stats_units"
-            android:title="Location stats units" />
+         <!--<android.support.v7.preference.EditTextPreference
+             android:defaultValue="600"
+             android:numeric="integer"
+             android:key="view_stats_location_horizontal"
+             android:selectAllOnFocus="true"
+             android:singleLine="true"
+             android:title="Location stats horizontal placement" />
+         <android.support.v7.preference.EditTextPreference
+             android:defaultValue="600"
+             android:numeric="integer"
+             android:key="view_stats_location_vertical"
+             android:selectAllOnFocus="true"
+             android:singleLine="true"
+             android:title="Location stats vertical placement" />
+         <android.support.v7.preference.SwitchPreferenceCompat
+             android:textOff="Imperial"
+             android:textOn="Metric"
+             android:defaultValue="Off"
+             android:showText="true"
+             android:key="view_stats_units"
+             android:title="Location stats units" /> -->
     </android.support.v7.preference.PreferenceCategory>
 </android.support.v7.preference.PreferenceScreen>

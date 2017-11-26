@@ -25,6 +25,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -52,7 +53,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     final Runnable idleMonitor = new Runnable(){
         public void run() {
             long timeSinceLastInteraction = (uptimeMillis() - lastInteractionTime);
-            Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
+            //Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
             if (timeSinceLastInteraction > idleTime*idleTimeScaler) {
                 doIdle();
             } else {
@@ -68,6 +69,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
+    private boolean logZoom = false;
+    private boolean logTilt = false;
     private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
@@ -136,8 +139,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        @Override
+        public void onClick(View v) {
                 startActivityForResult(intent, EAT_PREFERENCES);
             }
         });
@@ -155,27 +158,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         overlays.add(scaleBarOverlay);*/
         float instructionTextRadius = 540f;
         idleMessageTopView = (OuterCircleTextView) findViewById(R.id.IdleTopText);
-        idleMessageTopView.setPath(600,
-        600,
-                instructionTextRadius,
-        Path.Direction.CCW,
-                0.85f * (float)Math.PI * instructionTextRadius * 2,
+        idleMessageTopView.setPath(960,
+                                    600,
+                                    instructionTextRadius,
+                                    Path.Direction.CCW,
+                                   0.85f * (float)Math.PI * instructionTextRadius * 2,
         -5f);
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView = (OuterCircleTextView) findViewById(R.id.IdleBottomText);
-        idleMessageBottomView.setPath(600,
-                600,
-                instructionTextRadius,
-                Path.Direction.CW,
-                0.6f * (float)Math.PI * instructionTextRadius * 2,
-                20f);
+        idleMessageBottomView.setPath(960,
+                                        600,
+                                        instructionTextRadius,
+                                        Path.Direction.CW,
+                                        0.6f * (float)Math.PI * instructionTextRadius * 2,
+                                        20f);
         idleMessageBottomView.setText(idleMessageBottom);
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
         int width = size.x;
         int height = size.y;
-        Toast.makeText(MapsActivity.this, "Screen res in pixels" + Integer.toString(width)+"x" + Integer.toString(height), Toast.LENGTH_LONG).show();
+        if (logSensors) Toast.makeText(MapsActivity.this, "Screen res in pixels" + Integer.toString(width)+"x" + Integer.toString(height), Toast.LENGTH_LONG).show();
 
         doIdle();
     }
@@ -211,7 +214,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         sensorServerPort = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER_PORT, sensorServerPort);
         if (!sensorServerAddress.equals(oldServerAddress) || !sensorServerPort.equals(oldServerPort)) {
            Log.i("wtf", "new " + sensorServerAddress+":"+sensorServerPort + " old " + oldServerAddress +":"+oldServerPort );
-           //launchServerConnection();
+           //ltime'saunchServerConnection();
         }
         clicksPerRev = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(clicksPerRev)));
         revsPerFullZoom = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(revsPerFullZoom)));
@@ -380,36 +383,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.e("reading pan message", "no vector " + message.toString());
             }
             try {
-                double screenWidthDegrees = curScreen.southwest.longitude - curScreen.northeast.longitude;
+                double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
                 double screenHeightDegrees = Math.abs(curScreen.southwest.latitude - curScreen.northeast.latitude);
                 double rawX = vector.getDouble("x");
                 double percentChangeInX = 0;
                 double percentChangeInY = 0;
                 double rawY = vector.getDouble("y");
 
-                if (logSensors) {
+                if (logSensors || logTilt) {
                     Log.i("pan update", " raw x: " + Double.toString(rawX) +
-                            " raw y: " + Double.toString(rawY));
+                            " raw y: " + Double.toString(rawY) + " screenWidthDegrees: " + Double.toString(screenWidthDegrees) +
+                            " screenHeightDegrees: " + Double.toString(screenHeightDegrees) );
                 }
-                if (Math.abs(rawX) < validTiltThreshold) {
-                    if (Math.abs(rawY) < validTiltThreshold) {
-                        if (logSensors) {
-                            Log.i("rejected pan update", " raw x: " + Double.toString(rawX) +
+                if (Math.abs(rawX) < validTiltThreshold && Math.abs(rawY) < validTiltThreshold) {
+                        if (logSensors|| logTilt) {
+                            Log.d("rejected pan update", " raw x: " + Double.toString(rawX) +
                                     " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
                         }
                         return;
-                    } else {
-                        percentChangeInY = TiltScaleY * rawY;
-                        deltaY = screenHeightDegrees * percentChangeInY;
-                    }
                 } else {
+                    percentChangeInY = TiltScaleY * rawY;
+                    deltaY = screenHeightDegrees * percentChangeInY;
+
                     percentChangeInX = TiltScaleX * rawX;
-                    deltaX = screenHeightDegrees * percentChangeInX;
+                    deltaX = screenWidthDegrees * percentChangeInX;
                 }
 
                 //if (zoomLayers[currentZoom]["pannable"])
                 //Log.i("incoming pan",x + "," + y);
-                if (logSensors) {
+                if (logSensors|| logTilt) {
                     Log.i("pan update", "%x: " + Double.toString(percentChangeInX) +
                             " %y: " + Double.toString(percentChangeInY) +
                             " deltax: " + Double.toString(deltaX) +
@@ -448,7 +450,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
 
             double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
-                if (logSensors) {
+                if (logSensors || logZoom) {
                 Log.i("zoom update", "maxSpin: " + Integer.toString(maxSpin) +
                         "minSpin: " + Integer.toString(minSpin) +
                         " new zoom: " +
@@ -619,7 +621,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 Log.i("map ready","ok");
         // Add a marker in Sydney and move the camera
-        mMap.addMarker(new MarkerOptions().position(idleHome).title(idleTitle));
+        mMap.addMarker(new MarkerOptions().position(idleHome).title(idleTitle).icon(BitmapDescriptorFactory.fromResource(R.drawable.clark_planetarium_logo_50)));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(idleHome));
         mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (idleZoom)));
         LatLngBounds curScreen = mMap.getProjection()
