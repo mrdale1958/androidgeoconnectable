@@ -69,7 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    private boolean logZoom = true;
+    private boolean logZoom = false;
     private boolean logTilt = false;
     private boolean logSensors = false;
     private GoogleMap mMap;
@@ -89,7 +89,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //var targetRectangle;
     private double currentScale = 1.0;
     //var mapData = [];
-    private int clicksPerRev = 180; // in settings
+    private int clicksPerRev = 2400; // in settings
     private int revsPerFullZoom = 19;  // in settings
     private int clicksPerZoomLevel = clicksPerRev * revsPerFullZoom / (int)(maxZoom - minZoom) ;
     //private double maxClicks = clicksPerRev * revsPerFullZoom * 1.0;
@@ -221,6 +221,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.i("old zoom rate", Integer.toString(clicksPerZoomLevel));
         clicksPerZoomLevel = clicksPerRev * revsPerFullZoom / (int)(maxZoom - minZoom);
         Log.i("new zoom rate", Integer.toString(clicksPerZoomLevel));
+        minSpin = -(int)((idleZoom - minZoom) * (double)clicksPerZoomLevel);
+        maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
         TiltScaleX = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleX)));
         TiltScaleY = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleY)));
         useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
@@ -410,9 +412,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         return;
                 } else {
 
-                    double zoomFudge = (maxZoom - 3) +
-                                        (maxZoom-3 - minZoom + 1)/(minZoom-maxZoom) *
+                    double zoomFudge = (minZoom + 1) +
+                                        ((minZoom + 1) - (maxZoom-3 ))/(minZoom-maxZoom) *
                                                 (mMap.getCameraPosition().zoom-minZoom);
+                    //Log.i("fudge", Double.toString(zoomFudge) + ":" +  Double.toString(mMap.getCameraPosition().zoom));
                     percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
                     deltaY = screenHeightDegrees * percentChangeInY;
 
@@ -471,13 +474,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             //restartIdleTimer();
 
-            if (proposedZoom != currentZoom) {
+            //if (proposedZoom != currentZoom) {
                 //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
                 //mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)),1,null);
                 mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
                 currentZoom = proposedZoom;
 
-            }
+            //}
 
 
         } else if (gestureType == "combo") {
