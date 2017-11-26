@@ -51,9 +51,7 @@ public class SettingsActivity
             KEY_PREF_VIEW_STATS_LOCV = "view_stats_location_vertical";
     public static final String
             KEY_PREF_VIEW_STATS_UNITS = "view_stats_units";
-
-
-    @Override
+     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);

@@ -105,9 +105,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
     private int settings_button_offset_x =  0;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
-    String sensorServerAddress = "192.168.1.73";  // in settings
+    //String sensorServerAddress = "192.168.1.73";  // in settings
+    String sensorServerAddress = "10.20.69.4";  // in settings
     String sensorServerPort = "5678";  // in settings
-
+    BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
 
@@ -123,12 +124,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        BackgroundWebSocket bws = new BackgroundWebSocket();
         eatPreferences();
        // bws.execute("ws://192.168.1.73:5678");
         Log.w("idleTime set to", Integer.toString(idleTime));
-        bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
-
+        launchServerConnection();
 
 
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleTime*idleTimeScaler);
@@ -202,12 +201,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+
     protected void eatPreferences() {
         PreferenceManager.setDefaultValues(this, R.xml.gct_preferences, true);
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-
+        String oldServerAddress = sensorServerAddress;
+        String oldServerPort = sensorServerPort;
         sensorServerAddress = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER, sensorServerAddress);
         sensorServerPort = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER_PORT, sensorServerPort);
+        if (!sensorServerAddress.equals(oldServerAddress) || !sensorServerPort.equals(oldServerPort)) {
+           Log.i("wtf", "new " + sensorServerAddress+":"+sensorServerPort + " old " + oldServerAddress +":"+oldServerPort );
+           //launchServerConnection();
+        }
         clicksPerRev = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(clicksPerRev)));
         revsPerFullZoom = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(revsPerFullZoom)));
         TiltScaleX = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleX)));
@@ -323,7 +328,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void launchServerConnection() {
-        BackgroundWebSocket bws = new BackgroundWebSocket();
+        bws = new BackgroundWebSocket();
+        Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
         bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
 
     }
@@ -418,7 +424,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 //mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
                 LatLng currentPosition = mMap.getCameraPosition().target;
                 LatLng newPosition = new LatLng(currentPosition.latitude+deltaY, currentPosition.longitude + deltaX);
-                mMap.animateCamera(CameraUpdateFactory.newLatLng(newPosition),1,null);
+                //mMap.animateCamera(CameraUpdateFactory.newLatLng(newPosition),1,null);
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(newPosition));
 
             } catch (org.json.JSONException e) {
                 Log.e("reading pan message", "invalid vector " + vector.toString());
@@ -454,7 +461,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if (proposedZoom != currentZoom) {
                 //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
-                mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)),1,null);
+                //mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)),1,null);
+                mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
                 currentZoom = proposedZoom;
 
             }
