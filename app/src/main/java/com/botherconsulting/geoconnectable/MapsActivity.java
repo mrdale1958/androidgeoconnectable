@@ -412,8 +412,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         return;
                 } else {
 
-                    double zoomFudge = (minZoom + 1) +
-                                        ((minZoom + 1) - (maxZoom-3 ))/(minZoom-maxZoom) *
+                    double zoomFudge = (minZoom + 7) +
+                                        ((minZoom + 7) - (maxZoom-3 ))/(minZoom-maxZoom) *
                                                 (mMap.getCameraPosition().zoom-minZoom);
                     //Log.i("fudge", Double.toString(zoomFudge) + ":" +  Double.toString(mMap.getCameraPosition().zoom));
                     percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
