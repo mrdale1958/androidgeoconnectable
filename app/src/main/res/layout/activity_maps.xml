@@ -33,11 +33,17 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:background="@drawable/mask1200" >
+    </FrameLayout>
     <!--
     <com.botherconsulting.geoconnectable.ScaleBarOverlay
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
         -->
+    <FrameLayout
+        android:id="@+id/IdlingFrame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
 
         <com.botherconsulting.geoconnectable.OuterCircleTextView
                android:id="@+id/IdleTopText"
@@ -75,6 +81,7 @@
        android:layout_width="200dp"
        android:layout_height="200dp"
        android:layout_marginLeft="@dimen/loc_margin"
+       android:layout_marginTop="16dp"
        android:layout_gravity="center_horizontal|top"
        android:background="@android:color/transparent">
 
@@ -85,12 +92,14 @@
            android:layout_marginTop="8dp"
            android:background="@android:color/transparent"
            android:gravity="top"
-           android:shadowColor="#00ccff"
+           android:textColor="@color/black"
+           android:shadowColor="#ccccff"
            android:shadowDx="1"
            android:shadowDy="1"
            android:shadowRadius="1.5"
            android:text="Longitude: 110.00"
            android:textAlignment="center"
+           android:textSize="16dp"
            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
            android:visibility="visible" />
 
@@ -101,10 +110,12 @@
             android:text="Latitude: 32.0"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="28dp"
-            android:shadowColor="#00ccff"
+            android:textColor="@color/black"
+            android:shadowColor="#ccccff"
             android:shadowRadius="1.5"
             android:shadowDx="1"
             android:shadowDy="1"
+            android:textSize="16dp"
             android:textAlignment="center"
             android:background="@android:color/transparent"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
