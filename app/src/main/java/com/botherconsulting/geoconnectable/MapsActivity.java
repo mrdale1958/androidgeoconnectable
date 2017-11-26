@@ -29,7 +29,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.data.kml.KmlLayer;
+//import com.google.maps.android.data.kml.KmlLayer;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -69,7 +69,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    private boolean logZoom = false;
+    private boolean logZoom = true;
     private boolean logTilt = false;
     private boolean logSensors = false;
     private GoogleMap mMap;
@@ -80,8 +80,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private double targetWidth = 0.03; // portion of visible map  // in settings
     private boolean targetVisible = false; // in settings
     private int horizontalBump = 0; // in settings
-    private double TiltScaleX = 500; // in settings
-    private double TiltScaleY = 500; // in settings
+    private double TiltScaleX = 0.04; // in settings
+    private double TiltScaleY = 0.04; // in settings
     private double validTiltThreshold = 0.01; // needs to be in settings
     private double maxZoom = 19; // needs to be in settings
     private double minZoom = 0; // needs to be in settings
@@ -89,12 +89,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //var targetRectangle;
     private double currentScale = 1.0;
     //var mapData = [];
-    private int clicksPerRev = 256; // in settings
-    private int revsPerFullZoom = 8;  // in settings
+    private int clicksPerRev = 180; // in settings
+    private int revsPerFullZoom = 19;  // in settings
     private int clicksPerZoomLevel = clicksPerRev * revsPerFullZoom / (int)(maxZoom - minZoom) ;
     //private double maxClicks = clicksPerRev * revsPerFullZoom * 1.0;
-    private String idleMessageTop = "Spin table top to zoom";  // in settings
-    private String idleMessageBottom = "Tilt table top to pan";  // in settings
+    private String idleMessageTop = "Spin tabletop to zoom";  // in settings
+    private String idleMessageBottom = "Tilt tabletop to pan";  // in settings
     private int idleTime = 600; // in settings
     private int idleCheckTime = 10000; // once a minute look aat last interaction time
     private LatLng idleHome = new LatLng(40.76667,-111.903373);  // in settings
@@ -156,18 +156,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 // Add scale bar overlay
         scaleBarOverlay.setMetric();
         overlays.add(scaleBarOverlay);*/
-        float instructionTextRadius = 540f;
+        float instructionTextRadius = 640f;
         idleMessageTopView = (OuterCircleTextView) findViewById(R.id.IdleTopText);
-        idleMessageTopView.setPath(960,
-                                    600,
+        idleMessageTopView.setPath(760,
+                                    640,
                                     instructionTextRadius,
                                     Path.Direction.CCW,
                                    0.85f * (float)Math.PI * instructionTextRadius * 2,
         -5f);
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView = (OuterCircleTextView) findViewById(R.id.IdleBottomText);
-        idleMessageBottomView.setPath(960,
-                                        600,
+        idleMessageBottomView.setPath(1260,
+                                        980,
                                         instructionTextRadius,
                                         Path.Direction.CW,
                                         0.6f * (float)Math.PI * instructionTextRadius * 2,
@@ -218,6 +218,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         clicksPerRev = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(clicksPerRev)));
         revsPerFullZoom = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(revsPerFullZoom)));
+        Log.i("old zoom rate", Integer.toString(clicksPerZoomLevel));
+        clicksPerZoomLevel = clicksPerRev * revsPerFullZoom / (int)(maxZoom - minZoom);
+        Log.i("new zoom rate", Integer.toString(clicksPerZoomLevel));
         TiltScaleX = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleX)));
         TiltScaleY = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleY)));
         useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
@@ -237,7 +240,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         horizontalBump = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_HORIZONTAL_BUMP, Integer.toString(horizontalBump)));
         double idleHomeLat = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LAT, Double.toString(idleHome.latitude)));
         double idleHomeLon = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LON, Double.toString(idleHome.longitude)));
-        idleHome = new LatLng(idleHomeLat, idleHomeLon);
+        if (idleHomeLat != idleHome.latitude || idleHomeLon != idleHome.longitude) {
+            idleHome = new LatLng(idleHomeLat, idleHomeLon);
+            Log.i("new home? " , Double.toString(idleHomeLat) +","+ Double.toString(idleHome.latitude)  +" "+
+                    Double.toString(idleHomeLon)  +","+  Double.toString(idleHome.longitude));
+        }
         //targetWidth = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_SIZE, Double.toString(targetWidth)));
 
     }
@@ -317,8 +324,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         protected void onPostExecute(byte[] byteArr) {
-            try {
-                KmlLayer kmlLayer = new KmlLayer(mMap, new ByteArrayInputStream(byteArr),
+       /*      try {
+               KmlLayer kmlLayer = new KmlLayer(mMap, new ByteArrayInputStream(byteArr),
                         getApplicationContext());
                 kmlLayer.addLayerToMap();
 
@@ -326,7 +333,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            }
+            } */
         }
     }
 
@@ -402,10 +409,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                         return;
                 } else {
-                    percentChangeInY = TiltScaleY * rawY;
+
+                    double zoomFudge = (maxZoom - 3) +
+                                        (maxZoom-3 - minZoom + 1)/(minZoom-maxZoom) *
+                                                (mMap.getCameraPosition().zoom-minZoom);
+                    percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
                     deltaY = screenHeightDegrees * percentChangeInY;
 
-                    percentChangeInX = TiltScaleX * rawX;
+                    percentChangeInX = TiltScaleX * rawX *zoomFudge/maxZoom;
                     deltaX = screenWidthDegrees * percentChangeInX;
                 }
 
@@ -451,8 +462,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
                 if (logSensors || logZoom) {
-                Log.i("zoom update", "maxSpin: " + Integer.toString(maxSpin) +
-                        "minSpin: " + Integer.toString(minSpin) +
+                Log.i("zoom update", "delta:" + Integer.toString(delta) +
                         " new zoom: " +
                         Double.toString(proposedZoom) +
                         " currentSpinPosition: " +
@@ -619,11 +629,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         }
-Log.i("map ready","ok");
+Log.i("map ready",idleHome.toString());
         // Add a marker in Sydney and move the camera
         mMap.addMarker(new MarkerOptions().position(idleHome).title(idleTitle).icon(BitmapDescriptorFactory.fromResource(R.drawable.clark_planetarium_logo_50)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(idleHome));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (idleZoom)));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(idleHome,(float) idleZoom));
         LatLngBounds curScreen = mMap.getProjection()
                 .getVisibleRegion().latLngBounds;
         ScaleBarOverlay mScaleBar = new ScaleBarOverlay(this, mMap);
