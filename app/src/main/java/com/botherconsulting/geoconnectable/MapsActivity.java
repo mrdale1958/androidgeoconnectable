@@ -29,14 +29,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-//import com.google.maps.android.data.kml.KmlLayer;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONObject;
-import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +42,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import static android.os.SystemClock.uptimeMillis;
+
+//import com.google.maps.android.data.kml.KmlLayer;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -137,7 +136,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //idleHandler.postDelayed(runnable, idleTime+100);
         final Intent intent = new Intent(this, SettingsActivity.class);
 
-        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton floatingActionButton = findViewById(R.id.fab);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -157,7 +156,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         scaleBarOverlay.setMetric();
         overlays.add(scaleBarOverlay);*/
         float instructionTextRadius = 640f;
-        idleMessageTopView = (OuterCircleTextView) findViewById(R.id.IdleTopText);
+        idleMessageTopView =  findViewById(R.id.IdleTopText);
         idleMessageTopView.setPath(760,
                                     640,
                                     instructionTextRadius,
@@ -165,7 +164,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                    0.85f * (float)Math.PI * instructionTextRadius * 2,
         -5f);
         idleMessageTopView.setText(idleMessageTop);
-        idleMessageBottomView = (OuterCircleTextView) findViewById(R.id.IdleBottomText);
+        idleMessageBottomView = findViewById(R.id.IdleBottomText);
         idleMessageBottomView.setPath(1260,
                                         980,
                                         instructionTextRadius,
@@ -301,7 +300,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
    private void retrieveFileFromUrl() {
         new DownloadKmlFile(getString(R.string.kml_url)).execute();
     }
-    private class DownloadKmlFile extends AsyncTask<String, Void, byte[]> {
+    private static class DownloadKmlFile extends AsyncTask<String, Void, byte[]> {
         private final String mUrl;
 
         public DownloadKmlFile(String url) {
@@ -356,15 +355,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (mMap == null) return;
 
 
-        JSONObject message = new JSONObject();
+        JSONObject message;
         try {
             message = new JSONObject(messageString);
         } catch (org.json.JSONException e) {
             Log.i("odd JSON",messageString);
             return;
         }
-        String messageType = "";
-        String gestureType = "";
+        String messageType;
+        String gestureType;
 /*        try {
  messageType = message.getString("type");
         } catch (org.json.JSONException e) {
@@ -483,7 +482,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //}
 
 
-        } else if (gestureType == "combo") {
+        } else if (gestureType.equals("combo")) {
             double dampingZoom = mMap.getCameraPosition().zoom * minZoom / maxZoom;
             double x = 0.0;
             double y = 0.0;
@@ -528,16 +527,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
        lastInteractionTime = uptimeMillis();
        if (idling) emergeFromIdle();
 
-       TextView latDisplay  = (TextView)findViewById(R.id.currentLatitude);
+       TextView latDisplay  = findViewById(R.id.currentLatitude);
        latDisplay.setText("Latitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.latitude));
-       TextView lonDisplay  = (TextView)findViewById(R.id.currentLongitude);
+       TextView lonDisplay  = findViewById(R.id.currentLongitude);
        lonDisplay.setText("Longitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.longitude));
        //TextView altDisplay  = (TextView)findViewById(R.id.currentAltitude);
        //latDisplay.setText("Altitude: "+ Double.toString(mMap.getCameraPosition().target.));
 
    }
 
-    class BackgroundWebSocket extends AsyncTask<String, String, String> {
+     class BackgroundWebSocket extends AsyncTask<String, String, String> {
 
         //inputarg can contain array of values
         @Override
