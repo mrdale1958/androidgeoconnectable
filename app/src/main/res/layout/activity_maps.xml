@@ -70,7 +70,7 @@
        android:id="@+id/fab"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:layout_gravity="left|top"
+       android:layout_gravity="center"
        android:layout_marginLeft="@dimen/fab_margin"
        app:fabSize="normal"
        app:backgroundTint="@color/settingsbutton"
