@@ -68,47 +68,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    private boolean logZoom = false;
-    private boolean logTilt = false;
-    private boolean logSensors = false;
+    private ZoomLens zoomer = new ZoomLens(0,0,19,0,13.5);
+
+    private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
+
+    private boolean logZoom = true;
+    private boolean logTilt = true;
+    private boolean logSensors = true;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
-    private int currentSpinPosition = 0;
     private String targetColor = "#ff0000"; // in settings
     private double targetWidth = 0.03; // portion of visible map  // in settings
     private boolean targetVisible = false; // in settings
     private int horizontalBump = 0; // in settings
-    private double TiltScaleX = 0.04; // in settings
-    private double TiltScaleY = 0.04; // in settings
-    private double validTiltThreshold = 0.01; // needs to be in settings
-    private double maxZoom = 19; // needs to be in settings
-    private double minZoom = 0; // needs to be in settings
-    private double currentZoom = 0;
     //var targetRectangle;
     private double currentScale = 1.0;
     //var mapData = [];
-    private int clicksPerRev = 2400; // in settings
-    private int revsPerFullZoom = 19;  // in settings
-    private int clicksPerZoomLevel = clicksPerRev * revsPerFullZoom / (int)(maxZoom - minZoom) ;
     //private double maxClicks = clicksPerRev * revsPerFullZoom * 1.0;
     private String idleMessageTop = "Spin tabletop to zoom";  // in settings
     private String idleMessageBottom = "Tilt tabletop to pan";  // in settings
     private int idleTime = 600; // in settings
     private int idleCheckTime = 10000; // once a minute look aat last interaction time
     private LatLng idleHome = new LatLng(40.76667,-111.903373);  // in settings
-    private double idleZoom = 13.5; // in settings
     private long lastInteractionTime = uptimeMillis();
     private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
     private boolean idling = false;
     private int animateToHomeMS = 10000; // needs to be in settings
-    private int idleSpin = 0;
-    private int minSpin = -(int)((idleZoom - minZoom) * (double)clicksPerZoomLevel);
-    private int maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
     private int settings_button_offset_x =  0;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     //String sensorServerAddress = "192.168.1.73";  // in settings
-    String sensorServerAddress = "10.20.69.4";  // in settings
+    String sensorServerAddress = "10.21.25.110";  // in settings
     String sensorServerPort = "5678";  // in settings
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
@@ -121,7 +111,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -182,11 +172,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         doIdle();
     }
 
+    protected void animateByTable() {
+        zoomer.setZoomBounds(0, mMap.getMaxZoomLevel());
+        mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(panner.currentPosition),10,null);
+
+    }
+
     protected void doIdle() {
         Log.i("Idle", "going into idle");
         idling = true;
         if (mMap != null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(idleHome, (float) (idleZoom)), animateToHomeMS, null);
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(idleHome, (float) (zoomer.idleZoom)), animateToHomeMS, null);
         }
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView.setText(idleMessageBottom);
@@ -215,15 +212,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
            Log.i("wtf", "new " + sensorServerAddress+":"+sensorServerPort + " old " + oldServerAddress +":"+oldServerPort );
            //ltime'saunchServerConnection();
         }
-        clicksPerRev = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(clicksPerRev)));
-        revsPerFullZoom = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(revsPerFullZoom)));
-        Log.i("old zoom rate", Integer.toString(clicksPerZoomLevel));
-        clicksPerZoomLevel = clicksPerRev * revsPerFullZoom / (int)(maxZoom - minZoom);
-        Log.i("new zoom rate", Integer.toString(clicksPerZoomLevel));
-        minSpin = -(int)((idleZoom - minZoom) * (double)clicksPerZoomLevel);
-        maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
-        TiltScaleX = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleX)));
-        TiltScaleY = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(TiltScaleY)));
+        zoomer.configure(Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(zoomer.clicksPerRev))),
+                        Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(zoomer.revsPerFullZoom))),
+                 Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_ZOOM, Double.toString(zoomer.idleZoom))));
+
+        panner.configure(Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(panner.TiltScaleX))),
+                Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(panner.TiltScaleY))));
         useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
         if (mMap != null) {
             if (useHybridMap) {
@@ -237,7 +231,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         idleMessageBottom = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_BOTTOM,idleMessageBottom);
         idleMessageTop = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_TOP,idleMessageTop);
         idleTime = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TIME, Integer.toString(idleTime)));
-        idleZoom = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_ZOOM, Double.toString(idleZoom)));
         horizontalBump = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_HORIZONTAL_BUMP, Integer.toString(horizontalBump)));
         double idleHomeLat = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LAT, Double.toString(idleHome.latitude)));
         double idleHomeLon = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LON, Double.toString(idleHome.longitude)));
@@ -381,151 +374,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                .getVisibleRegion().latLngBounds;
 
         if (gestureType.equals("pan")) {
+            panner.handleJSON(message,mMap, logSensors || logTilt);
             //var dampingZoom = map.getZoom()*minZoom/maxZoom;
-            double deltaX = 0.0;
-            double deltaY = 0.0;
-            JSONObject vector = new JSONObject();
-            try {
-                vector = message.getJSONObject("vector");
-            } catch (org.json.JSONException e) {
-                Log.e("reading pan message", "no vector " + message.toString());
-            }
-            try {
-                double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
-                double screenHeightDegrees = Math.abs(curScreen.southwest.latitude - curScreen.northeast.latitude);
-                double rawX = vector.getDouble("x");
-                double percentChangeInX = 0;
-                double percentChangeInY = 0;
-                double rawY = vector.getDouble("y");
 
-                if (logSensors || logTilt) {
-                    Log.i("pan update", " raw x: " + Double.toString(rawX) +
-                            " raw y: " + Double.toString(rawY) + " screenWidthDegrees: " + Double.toString(screenWidthDegrees) +
-                            " screenHeightDegrees: " + Double.toString(screenHeightDegrees) );
-                }
-                if (Math.abs(rawX) < validTiltThreshold && Math.abs(rawY) < validTiltThreshold) {
-                        if (logSensors|| logTilt) {
-                            Log.d("rejected pan update", " raw x: " + Double.toString(rawX) +
-                                    " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
-                        }
-                        return;
-                } else {
-
-                    double zoomFudge = (minZoom + 7) +
-                                        ((minZoom + 7) - (maxZoom-3 ))/(minZoom-maxZoom) *
-                                                (mMap.getCameraPosition().zoom-minZoom);
-                    //Log.i("fudge", Double.toString(zoomFudge) + ":" +  Double.toString(mMap.getCameraPosition().zoom));
-                    percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
-                    deltaY = screenHeightDegrees * percentChangeInY;
-
-                    percentChangeInX = TiltScaleX * rawX *zoomFudge/maxZoom;
-                    deltaX = screenWidthDegrees * percentChangeInX;
-                }
-
-                //if (zoomLayers[currentZoom]["pannable"])
-                //Log.i("incoming pan",x + "," + y);
-                if (logSensors|| logTilt) {
-                    Log.i("pan update", "%x: " + Double.toString(percentChangeInX) +
-                            " %y: " + Double.toString(percentChangeInY) +
-                            " deltax: " + Double.toString(deltaX) +
-                            " deltay: " + Double.toString(deltaY) +
-                            " current Lat:" +
-                            Double.toString(mMap.getCameraPosition().target.latitude) +
-                            " current Lon:" +
-                            Double.toString(mMap.getCameraPosition().target.longitude)
-
-                    );
-                }
-                //mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
-                LatLng currentPosition = mMap.getCameraPosition().target;
-                LatLng newPosition = new LatLng(currentPosition.latitude+deltaY, currentPosition.longitude + deltaX);
-                //mMap.animateCamera(CameraUpdateFactory.newLatLng(newPosition),1,null);
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(newPosition));
-
-            } catch (org.json.JSONException e) {
-                Log.e("reading pan message", "invalid vector " + vector.toString());
-            }
             //paintTarget();
         } else if (gestureType.equals("zoom")) {
-            int delta = 0;
-            JSONObject vector = new JSONObject();
-            try {
-                vector = message.getJSONObject("vector");
-            } catch (org.json.JSONException e) {
-                Log.e("reading zoom message", "no vector " + message.toString());
-            }
-            try {
-                delta = vector.getInt("delta");
-            } catch (org.json.JSONException e) {
-                Log.e("reading zoom message", "invalid vector " + vector.toString());
-            }
-            currentSpinPosition += delta;
-            currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
-
-            double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
-                if (logSensors || logZoom) {
-                Log.i("zoom update", "delta:" + Integer.toString(delta) +
-                        " new zoom: " +
-                        Double.toString(proposedZoom) +
-                        " currentSpinPosition: " +
-                        Integer.toString(currentSpinPosition));
-                 }
-
-            //restartIdleTimer();
-
-            //if (proposedZoom != currentZoom) {
-                //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
-                //mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)),1,null);
-                mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
-                currentZoom = proposedZoom;
-
-            //}
+            zoomer.handleJSON(message,mMap, logSensors || logZoom);
 
 
-        } else if (gestureType.equals("combo")) {
-            double dampingZoom = mMap.getCameraPosition().zoom * minZoom / maxZoom;
-            double x = 0.0;
-            double y = 0.0;
-            double delta = 0.0;
-            JSONObject vector = new JSONObject();
-            try {
-                vector = message.getJSONObject("vector");
-            } catch (org.json.JSONException e) {
-                Log.e("reading combo message", "no vector " + message.toString());
-            }
-            try {
-
-                x = vector.getDouble("x");
-                y = vector.getDouble("y");
-                delta = vector.getDouble("delta");
-            } catch (org.json.JSONException e) {
-                Log.e("reading combo message", "invalid vector " + vector.toString());
-            }
-            if (x != 0.0 && y != 0.0) {
-                mMap.animateCamera(CameraUpdateFactory.scrollBy((float) (100 * x), (float) (100 * y)));
-            }
-            currentSpinPosition += delta;
-            double proposedZoom = currentSpinPosition / clicksPerZoomLevel;
-            //restartIdleTimer();
-
-            if (proposedZoom != currentZoom) {
-                //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
-                mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
-                currentZoom = proposedZoom;
-
-            }
-
-
-        } else {
-                   /* messages = document.getElementsByTagName("ul")[0];
-                    var message = document.createElement("li");
-                    var content = document.createTextNode(event.data);
-                    message.appendChild(content);
-                    messages.appendChild(message);*/
         }
 
        lastInteractionTime = uptimeMillis();
        if (idling) emergeFromIdle();
+
+       animateByTable();
 
        TextView latDisplay  = findViewById(R.id.currentLatitude);
        latDisplay.setText("Latitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.latitude));
@@ -634,7 +496,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 Log.i("map ready",idleHome.toString());
         // Add a marker in Sydney and move the camera
         mMap.addMarker(new MarkerOptions().position(idleHome).title(idleTitle).icon(BitmapDescriptorFactory.fromResource(R.drawable.clark_planetarium_logo_50)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(idleHome,(float) idleZoom));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(idleHome,(float) zoomer.idleZoom));
         LatLngBounds curScreen = mMap.getProjection()
                 .getVisibleRegion().latLngBounds;
         ScaleBarOverlay mScaleBar = new ScaleBarOverlay(this, mMap);
