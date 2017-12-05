@@ -22,6 +22,7 @@ public class ZoomLens {
     public double idleZoom = 13.5; // in settings
     private int minSpin;
     private int maxSpin;
+    public boolean newData = false;
 
     public ZoomLens(int _clicksPerRev, int _revsPerFullZoom, double _maxZoom, double _minZoom, double _idleZoom) {
         minZoom = _minZoom;
@@ -29,10 +30,11 @@ public class ZoomLens {
         configure(_clicksPerRev,_revsPerFullZoom, _idleZoom);
     }
 
-    private void setSpinBounds(){
-        minSpin = -(int)((idleZoom - minZoom) * (double)clicksPerZoomLevel);
-        maxSpin = (int)((maxZoom - idleZoom) * (double)clicksPerZoomLevel);
+    public float getCurrentZoom() {
+        newData = false;
+        return (float) currentZoom;
     }
+
 
     public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
         int delta = 0;
@@ -54,20 +56,21 @@ public class ZoomLens {
         if (doLog) {
             Log.i("zoom update", "delta:" + Integer.toString(delta) +
                     " new zoom: " +
-                    Double.toString(proposedZoom) +
-                    " currentSpinPosition: " +
-                    Integer.toString(currentSpinPosition));
+                    String.format ("%.2f", proposedZoom) +
+                    " cSP: " +
+                    Integer.toString(currentSpinPosition) +
+                    " min:" + Integer.toString(minSpin) +
+                    " max:" + Integer.toString(maxSpin)
+            );
         }
 
         //restartIdleTimer();
 
-        //if (proposedZoom != currentZoom) {
-        //doZoom(Math.min(Object.keys(zoomLayers).length - 1, Math.max(0,proposedZoom)));
-        //mMap.animateCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)),1,null);
-        //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (proposedZoom)));
-        currentZoom = proposedZoom;
+        if (proposedZoom != currentZoom) {
+            currentZoom = proposedZoom;
+            newData = true;
 
-        //}
+        }
 
 
     }
@@ -77,6 +80,7 @@ public class ZoomLens {
         maxZoom = _maxZoom;
         minSpin = -(int) ((idleZoom - minZoom) * (double) clicksPerZoomLevel);
         maxSpin = (int) ((maxZoom - idleZoom) * (double) clicksPerZoomLevel);
+        //logstate();
     }
 
     public void configure(int _clicksPerRev,
@@ -89,5 +93,20 @@ public class ZoomLens {
         setZoomBounds(minZoom, maxZoom);
         minSpin = -(int) ((idleZoom - minZoom) * (double) clicksPerZoomLevel);
         maxSpin = (int) ((maxZoom - idleZoom) * (double) clicksPerZoomLevel);
+        logstate();
+    }
+
+    private void logstate() {
+        Log.i("zoom state", "maxZoom:" + String.format ("%.2f", maxZoom) +
+                " minZoom:" + String.format ("%.2f", minZoom) +
+                " idleZoom:" + String.format ("%.2f", idleZoom) +
+                "\ncSP: " +
+                Integer.toString(currentSpinPosition) +
+                " min:" + Integer.toString(minSpin) +
+                " max:" + Integer.toString(maxSpin) +
+                "\nclicksPerZoomLevel:" + Integer.toString(clicksPerZoomLevel) +
+                " clicksPerRev:" + Integer.toString(clicksPerRev) +
+                        " revsPerFullZoom:" + Integer.toString(revsPerFullZoom)
+        );
     }
 }

@@ -1,0 +1,31 @@
+<html>
+<head>
+    <script  type='text/javascript'>
+var loc;
+function setupMZS() {
+    document.getElementById('foo').innerHTML ="<h1>mzsmzsmzsmzsmzsmzs</h1>";
+    params = window.location.href.substring(window.location.href.indexOf("?")+1 );
+    loc = params.split(',');
+    document.getElementById('foo').innerHTML = "<h1>" + loc[0] +","+ loc[1] +"</h1>";
+    }
+function callMZS() {
+    mzs = new google.maps.MaxZoomService();
+   mzs.getMaxZoomAtLatLng(new google.maps.LatLng(loc[0], loc[1]), function(response) {
+      if (response.status !== 'OK') {
+        document.getElementById('foo').innerHTML ='Error in MaxZoomService';
+      } else {
+        document.getElementById('foo').innerHTML ='The maximum zoom at this location is: ' + response.zoom;
+        Android.adjustMaxZoom("mzs adjustMaxZoom b" + response.zoom);
+      }
+    });
+}
+    </script>
+   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9mTlIuf4wMXE1q5aIyqFrnmi820eJedg&callback=initMap"
+            async defer>
+
+    </script>
+</head>
+<body  onLoad='setupMZS()'>
+<p id="foo">Hello</p>
+</body>
+</html>
