@@ -8,6 +8,8 @@ import com.google.android.gms.maps.model.LatLngBounds;
 
 import org.json.JSONObject;
 
+import static android.os.SystemClock.uptimeMillis;
+
 /**
  * Created by dalemacdonald on 11/28/17.
  */
@@ -17,10 +19,16 @@ public class TablePanner {
     public double TiltScaleY = 0.04; // in settings
     private double validTiltThreshold = 0.01; // needs to be in settings
     private double maxZoom = 19; // needs to be in settings
-    private double minZoom = 0; // needs to be in settings
+    private double minZoom = 3; // needs to be in settings
     public LatLng currentPosition = new LatLng(0,0);
     private LatLng idleHome;
     public boolean newData = false;
+    private int eventCount = 0;
+    long lastZoomMessageTime = uptimeMillis();
+    static final int eventWindowLength = 100;
+    long[] eventWindow = new long[eventWindowLength];
+    long sumElapsedTimes = 0;
+    long sumSquaredElapsedTimes = 0;
 
     public TablePanner(double _maxZoom, double _minZoom) {
         maxZoom = _maxZoom;
@@ -47,6 +55,37 @@ public class TablePanner {
                 " idleHome: " + idleHome.toString()
 
         );
+    }
+    private void reportStats() {
+        long windowSum = 0;
+        long windowSumSquared = 0;
+        long maxEt = 0;
+        long minEt = Long.MAX_VALUE;
+        for (long i:eventWindow) {
+            windowSum+=i;
+            windowSumSquared+= i*i;
+            maxEt = Math.max(maxEt, i);
+            minEt = Math.min(minEt, i);
+        }
+        Log.i("Tilt data flow stats",
+                "\nTotal events: " + eventCount +
+                        "\nTotal mean elapsed Time: " + (sumElapsedTimes/eventCount) +
+                        "\nwindow mean elapsedTime: " + (windowSum / eventWindowLength) +
+                        "\nWindow max ET: " + maxEt +
+                        "\nWindow min ET: " + minEt
+        );
+    }
+
+    private void updateStats() {
+        long elapsedTime = uptimeMillis() - lastZoomMessageTime;
+        lastZoomMessageTime = uptimeMillis();
+        eventCount++;
+        sumElapsedTimes += elapsedTime;
+        sumSquaredElapsedTimes += elapsedTime * elapsedTime;
+        eventWindow[eventCount % eventWindowLength] = elapsedTime;
+        if (eventCount % eventWindowLength == 0) {
+            reportStats();
+        }
     }
 
     public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog){
