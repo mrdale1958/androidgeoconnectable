@@ -6,13 +6,15 @@ import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONObject;
 
+import static android.os.SystemClock.uptimeMillis;
+
 /**
  * Created by dalemacdonald on 11/28/17.
  */
 
 public class ZoomLens {
     public double maxZoom = 19; // needs to be in settings
-    public double minZoom = 0; // needs to be in settings
+    public double minZoom = 3; // needs to be in settings
     public double currentZoom = 0;
     private int currentSpinPosition = 0;
     public int clicksPerRev = 2400; // in settings
@@ -23,6 +25,14 @@ public class ZoomLens {
     private int minSpin;
     private int maxSpin;
     public boolean newData = false;
+    private int eventCount = 0;
+    long lastZoomMessageTime = uptimeMillis();
+    static final int eventWindowLength = 100;
+    long[] eventWindow = new long[eventWindowLength];
+    long sumElapsedTimes = 0;
+    long sumSquaredElapsedTimes = 0;
+    private  int delta = 0;
+
 
     public ZoomLens(int _clicksPerRev, int _revsPerFullZoom, double _maxZoom, double _minZoom, double _idleZoom) {
         minZoom = _minZoom;
@@ -35,9 +45,43 @@ public class ZoomLens {
         return (float) currentZoom;
     }
 
+    private void reportStats() {
+        long windowSum = 0;
+        long windowSumSquared = 0;
+        long maxEt = 0;
+        long minEt = Long.MAX_VALUE;
+        for (long i:eventWindow) {
+            windowSum+=i;
+            windowSumSquared+= i*i;
+            maxEt = Math.max(maxEt, i);
+            minEt = Math.min(minEt, i);
+        }
+        Log.i("Zoom data flow stats",
+                "\nTotal events: " + eventCount +
+                        "\nTotal mean elapsed Time: " + (sumElapsedTimes/eventCount) +
+                        "\nwindow mean elapsedTime: " + (windowSum / eventWindowLength) +
+                        "\nWindow max ET: " + maxEt +
+                        "\nWindow min ET: " + minEt +
+                "\nlast delta: " + delta
+        );
+    }
+
+    private void updateStats() {
+        long elapsedTime = uptimeMillis() - lastZoomMessageTime;
+        lastZoomMessageTime = uptimeMillis();
+        eventCount++;
+        sumElapsedTimes += elapsedTime;
+        sumSquaredElapsedTimes += elapsedTime * elapsedTime;
+        eventWindow[eventCount % eventWindowLength] = elapsedTime;
+        if (eventCount % eventWindowLength == 0) {
+            //reportStats();
+        }
+    }
+
 
     public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
-        int delta = 0;
+
+        delta = 0;
         JSONObject vector = new JSONObject();
         try {
             vector = message.getJSONObject("vector");
@@ -49,6 +93,7 @@ public class ZoomLens {
         } catch (org.json.JSONException e) {
             Log.e("reading zoom message", "invalid vector " + vector.toString());
         }
+        updateStats();
         currentSpinPosition += delta;
         currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
 
@@ -56,7 +101,8 @@ public class ZoomLens {
         if (doLog) {
             Log.i("zoom update", "delta:" + Integer.toString(delta) +
                     " new zoom: " +
-                    String.format ("%.2f", proposedZoom) +
+                    //String.format ("%.2d", proposedZoom) +
+                     proposedZoom +
                     " cSP: " +
                     Integer.toString(currentSpinPosition) +
                     " min:" + Integer.toString(minSpin) +
