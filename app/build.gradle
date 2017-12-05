@@ -34,4 +34,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.android.support:support-annotations:27.0.2'
+    implementation 'com.github.pengrad:mapscaleview:1.2.1'
+
 }
