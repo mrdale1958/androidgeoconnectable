@@ -1,10 +1,12 @@
 package com.botherconsulting.geoconnectable;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,6 +20,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +33,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlay;
+import com.google.android.gms.maps.model.TileOverlayOptions;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -72,9 +78,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
 
-    private boolean logZoom = true;
-    private boolean logTilt = true;
-    private boolean logSensors = true;
+    private boolean logZoom = false;
+    private boolean logTilt = false;
+    private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
@@ -97,8 +103,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int animateToHomeMS = 10000; // needs to be in settings
     private int settings_button_offset_x =  0;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
-    //String sensorServerAddress = "192.168.1.73";  // in settings
-    String sensorServerAddress = "10.21.25.110";  // in settings
+    String sensorServerAddress = "192.168.1.73";  // in settings
+    //String sensorServerAddress = "10.21.25.110";  // in settings
     String sensorServerPort = "5678";  // in settings
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
@@ -116,10 +122,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        //mapFragment.mumble(GoogleMap.OnMapLoadedCallback)
         eatPreferences();
        // bws.execute("ws://192.168.1.73:5678");
         Log.w("idleTime set to", Integer.toString(idleTime));
         launchServerConnection();
+
+        WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.addJavascriptInterface(new WebAppInterface(), "Android");
 
 
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleTime*idleTimeScaler);
@@ -171,13 +183,83 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         doIdle();
     }
+    public class WebAppInterface {
+        Context mContext;
 
-    protected void animateByTable() {
-        zoomer.setZoomBounds(0, mMap.getMaxZoomLevel());
-        mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
-        mMap.animateCamera(CameraUpdateFactory.newLatLng(panner.currentPosition),10,null);
+        /** Instantiate the interface and set the context */
+        WebAppInterface() {
+            //mContext = c;
+        }
 
+        /** Show a toast from the web page */
+        @JavascriptInterface
+        public void adjustMaxZoom(String response) {
+            Log.w("adjustMaxZoom", response);
+        }
+
+        public void bindMZS(String mzs){
+            Log.w("bindMZS", mzs);
+        }
     }
+
+    final Runnable  animateByTable  = new Runnable() {
+        public void run() {
+
+            zoomer.setZoomBounds(0, Math.min(19.0,mMap.getMaxZoomLevel()));
+            float newZoom = mMap.getCameraPosition().zoom;
+            boolean doAnimate = false;
+            if (zoomer.newData) {
+                newZoom = zoomer.getCurrentZoom();
+                if (Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
+                    Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom));
+                    WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
+                    //String mzsURL = "http://192.168.1.64/mzs.html?"+
+                    String mzsURL = "file:///android_asset/www/index.html?"+
+                            mMap.getCameraPosition().target.latitude +
+                            "," +
+                            mMap.getCameraPosition().target.longitude;
+                    Log.w("mzs", mzsURL);
+                    webView.loadUrl(mzsURL);
+                }
+                //Log.i("new zoom", Float.toString(newZoom));
+                doAnimate = true;
+            }
+            LatLng newPos = mMap.getCameraPosition().target;
+            if (panner.newData) {
+                newPos = panner.getCurrentPosition();
+                //Log.i("new position", newPos.toString());
+                doAnimate = true;
+            }
+            //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
+            if (doAnimate) {
+                //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), 10, new GoogleMap.CancelableCallback() {
+                    @Override
+                    public void onFinish() {
+                        TextView latDisplay = findViewById(R.id.currentLatitude);
+                        latDisplay.setText("Latitude: " + String.format("%.2f", mMap.getCameraPosition().target.latitude));
+                        TextView lonDisplay = findViewById(R.id.currentLongitude);
+                        lonDisplay.setText("Longitude: " + String.format("%.2f", mMap.getCameraPosition().target.longitude));
+
+                        if (!idling){
+                            //Log.i("animateByTable", "now");
+                            asyncTaskHandler.post(animateByTable);
+                        }
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        Log.w("animateByTable", "hmm animation got canceled");
+                    }
+                });
+            } else {
+                //Log.i("animateByTable", "in the future");
+                asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + 50);
+
+            }
+
+        }
+    };
 
     protected void doIdle() {
         Log.i("Idle", "going into idle");
@@ -193,7 +275,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void emergeFromIdle() {
         Log.i("Idle", "emerging from idle");
         idling = false;
-
+        asyncTaskHandler.post(animateByTable);
         idleMessageTopView.setText("");
         idleMessageBottomView.setText("");
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleCheckTime);
@@ -216,8 +298,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_REVS_PER_FULL_ZOOM,Integer.toString(zoomer.revsPerFullZoom))),
                  Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_ZOOM, Double.toString(zoomer.idleZoom))));
 
+        try {
+            double idleHomeLat = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LAT, Double.toString(idleHome.latitude)));
+            double idleHomeLon = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LON, Double.toString(idleHome.longitude)));
+            if (idleHomeLat != idleHome.latitude || idleHomeLon != idleHome.longitude) {
+                idleHome = new LatLng(idleHomeLat, idleHomeLon);
+                Log.i("new home? ", Double.toString(idleHomeLat) + "," + Double.toString(idleHome.latitude) + " " +
+                        Double.toString(idleHomeLon) + "," + Double.toString(idleHome.longitude));
+            }
+        } catch (java.lang.NumberFormatException e) {
+            Toast.makeText(MapsActivity.this, "Invalid input" + ":" + e.getCause(), Toast.LENGTH_LONG).show();
+
+        }
+
         panner.configure(Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(panner.TiltScaleX))),
-                Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(panner.TiltScaleY))));
+                    Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(panner.TiltScaleY))),
+                    idleHome);
+
         useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
         if (mMap != null) {
             if (useHybridMap) {
@@ -232,13 +329,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         idleMessageTop = sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TEXT_TOP,idleMessageTop);
         idleTime = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_TIME, Integer.toString(idleTime)));
         horizontalBump = Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_HORIZONTAL_BUMP, Integer.toString(horizontalBump)));
-        double idleHomeLat = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LAT, Double.toString(idleHome.latitude)));
-        double idleHomeLon = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_IDLE_LON, Double.toString(idleHome.longitude)));
-        if (idleHomeLat != idleHome.latitude || idleHomeLon != idleHome.longitude) {
-            idleHome = new LatLng(idleHomeLat, idleHomeLon);
-            Log.i("new home? " , Double.toString(idleHomeLat) +","+ Double.toString(idleHome.latitude)  +" "+
-                    Double.toString(idleHomeLon)  +","+  Double.toString(idleHome.longitude));
-        }
         //targetWidth = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_SIZE, Double.toString(targetWidth)));
 
     }
@@ -387,12 +477,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
        lastInteractionTime = uptimeMillis();
        if (idling) emergeFromIdle();
 
-       animateByTable();
+       /*animateByTable();
 
        TextView latDisplay  = findViewById(R.id.currentLatitude);
        latDisplay.setText("Latitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.latitude));
        TextView lonDisplay  = findViewById(R.id.currentLongitude);
        lonDisplay.setText("Longitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.longitude));
+       */
        //TextView altDisplay  = (TextView)findViewById(R.id.currentAltitude);
        //latDisplay.setText("Altitude: "+ Double.toString(mMap.getCameraPosition().target.));
 
@@ -493,7 +584,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         }
-Log.i("map ready",idleHome.toString());
+       /* mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                Log.i("mapLoaded", "hmmm");
+            }
+        });*/
+        Drawable drawable = getResources().getDrawable(R.drawable.nodatatile,getTheme());
+        DeadTileProvider dtp = new DeadTileProvider(drawable);
+        TileOverlay tileOverlay = mMap.addTileOverlay(new TileOverlayOptions()
+                .tileProvider(dtp)
+                .zIndex((-1f)));
+
+        Log.i("map ready",idleHome.toString());
         // Add a marker in Sydney and move the camera
         mMap.addMarker(new MarkerOptions().position(idleHome).title(idleTitle).icon(BitmapDescriptorFactory.fromResource(R.drawable.clark_planetarium_logo_50)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(idleHome,(float) zoomer.idleZoom));

@@ -19,15 +19,34 @@ public class TablePanner {
     private double maxZoom = 19; // needs to be in settings
     private double minZoom = 0; // needs to be in settings
     public LatLng currentPosition = new LatLng(0,0);
+    private LatLng idleHome;
+    public boolean newData = false;
 
     public TablePanner(double _maxZoom, double _minZoom) {
         maxZoom = _maxZoom;
         minZoom = _minZoom;
     }
 
-    public void configure(double _TiltScaleX, double _TiltScaleY ) {
+    public void configure(double _TiltScaleX, double _TiltScaleY, LatLng _idleHome ) {
         TiltScaleX = _TiltScaleX;
         TiltScaleY = _TiltScaleY;
+        idleHome = _idleHome;
+        currentPosition = idleHome;
+        logstate();
+    }
+
+    public LatLng getCurrentPosition() {
+        newData = false;
+        return currentPosition;
+    }
+
+    private void logstate() {
+        Log.i("zoom state", "TiltScaleX:" + String.format ("%.2f", TiltScaleX) +
+                " TiltScaleY:" + String.format ("%.2f", TiltScaleY) +
+                "\ncurrentPosition:" + currentPosition.toString() +
+                " idleHome: " + idleHome.toString()
+
+        );
     }
 
     public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog){
@@ -89,8 +108,11 @@ public class TablePanner {
         }
         //mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
         LatLng currentCameraPosition = mMap.getCameraPosition().target;
-        currentPosition = new LatLng(currentCameraPosition.latitude+deltaY, currentCameraPosition.longitude + deltaX);
-        //mMap.animateCamera(CameraUpdateFactory.newLatLng(newPosition),1,null);
+        LatLng  nextPosition = new LatLng(currentCameraPosition.latitude+deltaY, currentCameraPosition.longitude + deltaX);
+        if (nextPosition != currentCameraPosition) {
+            currentPosition = nextPosition;
+            newData = true;
+        }
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
 
     } catch (org.json.JSONException e) {

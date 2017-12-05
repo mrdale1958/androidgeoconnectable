@@ -42,11 +42,11 @@ public class ScaleBarOverlay extends View {
 
     @Override
     public void onDraw(Canvas canvas) {
-        canvas.save();
+        //canvas.save();
 
-        drawScaleBarPicture(canvas);
+        //drawScaleBarPicture(canvas);
 
-        canvas.restore();
+        //canvas.restore();
     }
 
     private void drawScaleBarPicture(Canvas canvas) {
