@@ -6,26 +6,27 @@ function setupMZS() {
     document.getElementById('foo').innerHTML ="<h1>mzsmzsmzsmzsmzsmzs</h1>";
     params = window.location.href.substring(window.location.href.indexOf("?")+1 );
     loc = params.split(',');
-    document.getElementById('foo').innerHTML = "<h1>" + loc[0] +","+ loc[1] +"</h1>";
+    document.getElementById('foo').innerHTML = "<h1>" + loc[0] +"<br/>"+ loc[1] +"</h1>";
     }
 function callMZS() {
+   setupMZS();
     mzs = new google.maps.MaxZoomService();
    mzs.getMaxZoomAtLatLng(new google.maps.LatLng(loc[0], loc[1]), function(response) {
       if (response.status !== 'OK') {
         document.getElementById('foo').innerHTML ='Error in MaxZoomService';
       } else {
         document.getElementById('foo').innerHTML ='The maximum zoom at this location is: ' + response.zoom;
-        Android.adjustMaxZoom("mzs adjustMaxZoom b" + response.zoom);
+        Android.adjustMaxZoom("{ lat: " + loc[0] + ", lon: " + loc[1] + ", zoom: " + response.zoom + " }");
       }
     });
 }
     </script>
-   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9mTlIuf4wMXE1q5aIyqFrnmi820eJedg&callback=initMap"
+   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9mTlIuf4wMXE1q5aIyqFrnmi820eJedg&callback=callMZS"
             async defer>
 
     </script>
 </head>
-<body  onLoad='setupMZS()'>
-<p id="foo">Hello</p>
+<body style="background-color:0x0">
+<p id="foo" style="color:0x00ff00">Hello</p>
 </body>
 </html>
