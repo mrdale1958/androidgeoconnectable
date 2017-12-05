@@ -25,11 +25,13 @@ import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.pengrad.mapscaleview.MapScaleView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -51,14 +53,19 @@ import static android.os.SystemClock.uptimeMillis;
 
 //import com.google.maps.android.data.kml.KmlLayer;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity
+        extends FragmentActivity
+        implements OnMapReadyCallback,
+        GoogleMap.OnCameraMoveListener,
+        GoogleMap.OnCameraIdleListener,
+        GoogleMap.OnCameraChangeListener {
 
     static final int EAT_PREFERENCES = 12345;
     final Handler asyncTaskHandler = new Handler();
     final Runnable idleMonitor = new Runnable(){
         public void run() {
             long timeSinceLastInteraction = (uptimeMillis() - lastInteractionTime);
-            //Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
+            Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
             if (timeSinceLastInteraction > idleTime*idleTimeScaler) {
                 doIdle();
             } else {
@@ -74,12 +81,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    private ZoomLens zoomer = new ZoomLens(0,0,19,0,13.5);
+    private ZoomLens zoomer = new ZoomLens(0,0,19,3,13.5);
 
     private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
 
+    private int[][] maxZoomCache = new int[181][360];
     private boolean logZoom = false;
-    private boolean logTilt = false;
+    private boolean logTilt = true;
     private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
@@ -95,7 +103,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String idleMessageTop = "Spin tabletop to zoom";  // in settings
     private String idleMessageBottom = "Tilt tabletop to pan";  // in settings
     private int idleTime = 600; // in settings
-    private int idleCheckTime = 10000; // once a minute look aat last interaction time
+    private int idleCheckTime = 60000; // once a minute look aat last interaction time
     private LatLng idleHome = new LatLng(40.76667,-111.903373);  // in settings
     private long lastInteractionTime = uptimeMillis();
     private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
@@ -103,8 +111,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int animateToHomeMS = 10000; // needs to be in settings
     private int settings_button_offset_x =  0;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
-    String sensorServerAddress = "192.168.1.73";  // in settings
-    //String sensorServerAddress = "10.21.25.110";  // in settings
+    //String sensorServerAddress = "192.168.1.73";  // in settings
+    String sensorServerAddress = "10.21.3.42";  // in settings
     String sensorServerPort = "5678";  // in settings
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
@@ -182,6 +190,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (logSensors) Toast.makeText(MapsActivity.this, "Screen res in pixels" + Integer.toString(width)+"x" + Integer.toString(height), Toast.LENGTH_LONG).show();
 
         doIdle();
+        if (idling) emergeFromIdle();
+
     }
     public class WebAppInterface {
         Context mContext;
@@ -195,6 +205,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @JavascriptInterface
         public void adjustMaxZoom(String response) {
             Log.w("adjustMaxZoom", response);
+            JSONObject message;
+            try {
+                message = new JSONObject(response);
+            } catch (org.json.JSONException e) {
+                Log.i("odd JSON",response);
+                return;
+            }
+
+            try {
+                double lat = message.getDouble("lat");
+                double lon = message.getDouble("lon");
+                int zoom = message.getInt("zoom");
+                lat = Math.min(Math.max(lat, -90f), 90f);
+                int latIndex = (int) Math.round(lat) + 90;
+                lon = lon % 360;
+                int lonIndex = (int) Math.round(lon) + 180; // not quite right need to cope with
+                maxZoomCache[latIndex][lonIndex] = Math.min(19,zoom-1);
+
+            }catch (org.json.JSONException e) {
+                Log.i("odd JSON",response);
+                return;
+            }
         }
 
         public void bindMZS(String mzs){
@@ -210,8 +242,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             boolean doAnimate = false;
             if (zoomer.newData) {
                 newZoom = zoomer.getCurrentZoom();
-                if (Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
-                    Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom));
+
+                int latIndex = (int) Math.round(mMap.getCameraPosition().target.latitude) + 90;
+                int lonIndex = (int) Math.round(mMap.getCameraPosition().target.longitude) + 180;
+                if (maxZoomCache[latIndex][lonIndex] > 0) {
+                    zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
+                } else if(Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
+                    Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom) +
+                    "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
                     WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
                     //String mzsURL = "http://192.168.1.64/mzs.html?"+
                     String mzsURL = "file:///android_asset/www/index.html?"+
@@ -233,7 +271,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
             if (doAnimate) {
                 //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), 10, new GoogleMap.CancelableCallback() {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), 50, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onFinish() {
                         TextView latDisplay = findViewById(R.id.currentLatitude);
@@ -252,9 +290,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.w("animateByTable", "hmm animation got canceled");
                     }
                 });
+                if (idling) emergeFromIdle();
+                lastInteractionTime = uptimeMillis();
             } else {
                 //Log.i("animateByTable", "in the future");
-                asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + 50);
+                asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + 100);
 
             }
 
@@ -474,8 +514,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
 
-       lastInteractionTime = uptimeMillis();
-       if (idling) emergeFromIdle();
 
        /*animateByTable();
 
@@ -566,7 +604,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    @Override
+    public void onCameraMove() {
+        MapScaleView scaleView = (MapScaleView) findViewById(R.id.scaleView);
+        CameraPosition cameraPosition = mMap.getCameraPosition();
+        scaleView.update(cameraPosition.zoom, cameraPosition.target.latitude);
+    }
 
+    @Override
+    public void onCameraIdle() {
+        MapScaleView scaleView = (MapScaleView) findViewById(R.id.scaleView);
+        CameraPosition cameraPosition = mMap.getCameraPosition();
+        scaleView.update(cameraPosition.zoom, cameraPosition.target.latitude);
+    }
+
+    @Override
+    public void onCameraChange(CameraPosition cameraPosition) {
+        MapScaleView scaleView = (MapScaleView) findViewById(R.id.scaleView);
+        scaleView.update(cameraPosition.zoom, cameraPosition.target.latitude);
+    }
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -584,17 +640,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         }
+        mMap.setOnCameraMoveListener(this);
+        mMap.setOnCameraIdleListener(this);
+        mMap.setOnCameraChangeListener(this);
        /* mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
                 Log.i("mapLoaded", "hmmm");
             }
         });*/
+        /*
         Drawable drawable = getResources().getDrawable(R.drawable.nodatatile,getTheme());
+
         DeadTileProvider dtp = new DeadTileProvider(drawable);
         TileOverlay tileOverlay = mMap.addTileOverlay(new TileOverlayOptions()
                 .tileProvider(dtp)
-                .zIndex((-1f)));
+                .zIndex((-1f)));*/
 
         Log.i("map ready",idleHome.toString());
         // Add a marker in Sydney and move the camera
@@ -602,7 +663,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(idleHome,(float) zoomer.idleZoom));
         LatLngBounds curScreen = mMap.getProjection()
                 .getVisibleRegion().latLngBounds;
-        ScaleBarOverlay mScaleBar = new ScaleBarOverlay(this, mMap);
         //LatLng radius = new LatLng(curScreen.northeast.latitude, curScreen.getCenter().longitude);
         //Log.i("mask radius", radius.toString());
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, radius));
