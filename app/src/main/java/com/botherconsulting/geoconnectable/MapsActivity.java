@@ -40,11 +40,17 @@ import com.google.android.gms.maps.model.TileOverlayOptions;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -121,10 +127,69 @@ public class MapsActivity
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
 
+    @Override
+    protected void onStop() {
+        // call the superclass method first
+        super.onStop();
+        // need to save maxZoomCache
+        try {
+            JSONArray maxzoomarray = new JSONArray();
+            for (int lat = 0; lat < 181; lat++) {
+                JSONArray latarray = new JSONArray();
+                for (int lon = 0; lon < 360; lon++) {
+                    latarray.put(maxZoomCache[lat][lon]);
+                }
+                maxzoomarray.put(latarray);
+            }
+            String maxCacheAsString = maxzoomarray.toString();
+            FileOutputStream fos = openFileOutput("maxZoomData", Context.MODE_PRIVATE);
+            fos.write(maxCacheAsString.getBytes());
+            fos.close();
+        //} catch (JSONException e) {
+        //    Log.e("maxZoomCache", "oops broke it" + e.getMessage());
+        } catch (java.io.FileNotFoundException e) {
+        Log.e("writing maxZoomCache", "oops broke it" + e.getMessage());
+        } catch (java.io.IOException e) {
+            Log.e("writing maxZoomCache", "oops broke it" + e.getMessage());
+        }
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
+            FileInputStream fis = openFileInput("maxZoomData");
+            if ( fis != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(fis);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString);
+                }
+
+                fis.close();
+                String maxCacheAsString = stringBuilder.toString();
+                JSONArray maxzoomarray = new JSONArray(maxCacheAsString);
+                //Log.i("reading maxzoomarray:\n", maxzoomarray.toString(4));
+                for (int lat = 0; lat < 181; lat++) {
+                    JSONArray latarray = maxzoomarray.getJSONArray(lat);
+                    for (int lon = 0; lon < 360; lon++) {
+                        maxZoomCache[lat][lon] = latarray.getInt(lon);
+                    }
+                }
+
+            }
+        } catch (JSONException e) {
+                Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
+
+        } catch (java.io.FileNotFoundException e) {
+            Log.e("reading maxZoomCache", "no file no foul" + e.getMessage());
+        } catch (java.io.IOException e) {
+            Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
+        }
          setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -234,6 +299,19 @@ public class MapsActivity
         }
     }
 
+    public void checkMaxZoom(float newZoom) {
+        Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom) +
+                "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
+        WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
+        //String mzsURL = "http://192.168.1.64/mzs.html?"+
+        String mzsURL = "file:///android_asset/www/index.html?"+
+                mMap.getCameraPosition().target.latitude +
+                "," +
+                mMap.getCameraPosition().target.longitude;
+        Log.w("mzs", mzsURL);
+        webView.loadUrl(mzsURL);
+    }
+
     final Runnable  animateByTable  = new Runnable() {
         long lastRuntime;
         static final int ZOOM = 0;
@@ -255,16 +333,7 @@ public class MapsActivity
                 if (maxZoomCache[latIndex][lonIndex] > 0) {
                     zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
                 } else if(Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
-                    Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom) +
-                    "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
-                    WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
-                    //String mzsURL = "http://192.168.1.64/mzs.html?"+
-                    String mzsURL = "file:///android_asset/www/index.html?"+
-                            mMap.getCameraPosition().target.latitude +
-                            "," +
-                            mMap.getCameraPosition().target.longitude;
-                    Log.w("mzs", mzsURL);
-                    webView.loadUrl(mzsURL);
+                    checkMaxZoom( newZoom);
                 }
                 //Log.i("new zoom", Float.toString(newZoom));
                 doAnimate = true;
