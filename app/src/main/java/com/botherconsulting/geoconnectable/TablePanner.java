@@ -17,10 +17,11 @@ import static android.os.SystemClock.uptimeMillis;
 public class TablePanner {
     public double TiltScaleX = 0.04; // in settings
     public double TiltScaleY = 0.04; // in settings
-    private double validTiltThreshold = 0.01; // needs to be in settings
+    private double validTiltThreshold = 0.025; // needs to be in settings
     private double maxZoom = 19; // needs to be in settings
     private double minZoom = 3; // needs to be in settings
     public LatLng currentPosition = new LatLng(0,0);
+    public LatLng position = new LatLng(0,0);
     private LatLng idleHome;
     public boolean newData = false;
     private int eventCount = 0;
@@ -43,9 +44,9 @@ public class TablePanner {
         logstate();
     }
 
-    public LatLng getCurrentPosition() {
+    public Object[] getCurrentPosition() {
         newData = false;
-        return currentPosition;
+        return new Object[]{position, lastZoomMessageTime};
     }
 
     private void logstate() {
@@ -84,7 +85,7 @@ public class TablePanner {
         sumSquaredElapsedTimes += elapsedTime * elapsedTime;
         eventWindow[eventCount % eventWindowLength] = elapsedTime;
         if (eventCount % eventWindowLength == 0) {
-            reportStats();
+            //reportStats();
         }
     }
 
@@ -149,6 +150,8 @@ public class TablePanner {
         LatLng currentCameraPosition = mMap.getCameraPosition().target;
         LatLng  nextPosition = new LatLng(currentCameraPosition.latitude+deltaY, currentCameraPosition.longitude + deltaX);
         if (nextPosition != currentCameraPosition) {
+            updateStats();
+            position = currentPosition;
             currentPosition = nextPosition;
             newData = true;
         }
