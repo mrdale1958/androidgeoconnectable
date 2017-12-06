@@ -22,6 +22,7 @@ public class ZoomLens {
     private int clicksPerZoomLevel;
     private int idleSpin = 0;
     public double idleZoom = 13.5; // in settings
+    public double zoom;
     private int minSpin;
     private int maxSpin;
     public boolean newData = false;
@@ -40,9 +41,9 @@ public class ZoomLens {
         configure(_clicksPerRev,_revsPerFullZoom, _idleZoom);
     }
 
-    public float getCurrentZoom() {
+    public Object[] getCurrentZoom() {
         newData = false;
-        return (float) currentZoom;
+        return new Object[]{(float) zoom, lastZoomMessageTime} ;
     }
 
     private void reportStats() {
@@ -93,7 +94,6 @@ public class ZoomLens {
         } catch (org.json.JSONException e) {
             Log.e("reading zoom message", "invalid vector " + vector.toString());
         }
-        updateStats();
         currentSpinPosition += delta;
         currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
 
@@ -113,8 +113,10 @@ public class ZoomLens {
         //restartIdleTimer();
 
         if (proposedZoom != currentZoom) {
+            zoom = currentZoom;
             currentZoom = proposedZoom;
             newData = true;
+            updateStats();
 
         }
 
