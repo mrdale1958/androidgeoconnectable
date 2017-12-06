@@ -65,7 +65,7 @@ public class MapsActivity
     final Runnable idleMonitor = new Runnable(){
         public void run() {
             long timeSinceLastInteraction = (uptimeMillis() - lastInteractionTime);
-            Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
+            //Log.i("idle timer", "Time's up " + Long.toString(timeSinceLastInteraction));
             if (timeSinceLastInteraction > idleTime*idleTimeScaler) {
                 doIdle();
             } else {
@@ -87,7 +87,7 @@ public class MapsActivity
 
     private int[][] maxZoomCache = new int[181][360];
     private boolean logZoom = false;
-    private boolean logTilt = true;
+    private boolean logTilt = false;
     private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
@@ -235,14 +235,21 @@ public class MapsActivity
     }
 
     final Runnable  animateByTable  = new Runnable() {
+        long lastRuntime;
+        static final int ZOOM = 0;
+        static final int PAN = 0;
+        static final int GESTURE_TIME = 1;
+
         public void run() {
 
             zoomer.setZoomBounds(0, Math.min(19.0,mMap.getMaxZoomLevel()));
             float newZoom = mMap.getCameraPosition().zoom;
+            long lastZoomTime = 0;
             boolean doAnimate = false;
             if (zoomer.newData) {
-                newZoom = zoomer.getCurrentZoom();
-
+                Object[] zoomData = zoomer.getCurrentZoom();
+                newZoom = (float) zoomData[ZOOM];
+                lastZoomTime = (long) zoomData[GESTURE_TIME];
                 int latIndex = (int) Math.round(mMap.getCameraPosition().target.latitude) + 90;
                 int lonIndex = (int) Math.round(mMap.getCameraPosition().target.longitude) + 180;
                 if (maxZoomCache[latIndex][lonIndex] > 0) {
@@ -263,15 +270,19 @@ public class MapsActivity
                 doAnimate = true;
             }
             LatLng newPos = mMap.getCameraPosition().target;
+            long lastPanTime = 0;
             if (panner.newData) {
-                newPos = panner.getCurrentPosition();
+                Object[] pannerData = panner.getCurrentPosition();
+                newPos = (LatLng) pannerData[PAN];
+                lastPanTime = (long) pannerData[GESTURE_TIME];
                 //Log.i("new position", newPos.toString());
                 doAnimate = true;
             }
             //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
             if (doAnimate) {
-                //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), 50, new GoogleMap.CancelableCallback() {
+                int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
+                //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onFinish() {
                         TextView latDisplay = findViewById(R.id.currentLatitude);
