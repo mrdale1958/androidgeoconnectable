@@ -183,8 +183,7 @@ public class MapsActivity
 
             }
         } catch (JSONException e) {
-                Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
-
+            Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
         } catch (java.io.FileNotFoundException e) {
             Log.e("reading maxZoomCache", "no file no foul" + e.getMessage());
         } catch (java.io.IOException e) {
@@ -320,7 +319,7 @@ public class MapsActivity
 
         public void run() {
 
-            zoomer.setZoomBounds(0, Math.min(19.0,mMap.getMaxZoomLevel()));
+            zoomer.setZoomBounds(3, Math.min(19.0,mMap.getMaxZoomLevel()));
             float newZoom = mMap.getCameraPosition().zoom;
             long lastZoomTime = 0;
             boolean doAnimate = false;
@@ -335,7 +334,7 @@ public class MapsActivity
                 } else if(Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
                     checkMaxZoom( newZoom);
                 }
-                //Log.i("new zoom", Float.toString(newZoom));
+                //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
                 doAnimate = true;
             }
             LatLng newPos = mMap.getCameraPosition().target;
@@ -585,7 +584,6 @@ public class MapsActivity
 
         if (gestureType.equals("pan")) {
             panner.handleJSON(message,mMap, logSensors || logTilt);
-            //var dampingZoom = map.getZoom()*minZoom/maxZoom;
 
             //paintTarget();
         } else if (gestureType.equals("zoom")) {
