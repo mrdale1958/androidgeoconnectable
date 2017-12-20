@@ -27,8 +27,8 @@ public class ZoomLens {
     private int maxSpin;
     public boolean newData = false;
     private int eventCount = 0;
-    long lastZoomMessageTime = uptimeMillis();
-    static final int eventWindowLength = 100;
+    long lastZoomMessageTime = System.nanoTime();
+    static final int eventWindowLength = 10000;
     long[] eventWindow = new long[eventWindowLength];
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
@@ -61,6 +61,7 @@ public class ZoomLens {
                 "\nTotal events: " + eventCount +
                         "\nTotal mean elapsed Time: " + (sumElapsedTimes/eventCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventWindowLength) +
+                        "\nWindow total ET: " + windowSum +
                         "\nWindow max ET: " + maxEt +
                         "\nWindow min ET: " + minEt +
                 "\nlast delta: " + delta
@@ -68,14 +69,16 @@ public class ZoomLens {
     }
 
     private void updateStats() {
-        long elapsedTime = uptimeMillis() - lastZoomMessageTime;
-        lastZoomMessageTime = uptimeMillis();
+        long elapsedTime = System.nanoTime() - lastZoomMessageTime;
+
+        lastZoomMessageTime = System.nanoTime();
+        if (elapsedTime > 100000000) Log.i("Big data gap", Long.toString(elapsedTime));
         eventCount++;
         sumElapsedTimes += elapsedTime;
         sumSquaredElapsedTimes += elapsedTime * elapsedTime;
         eventWindow[eventCount % eventWindowLength] = elapsedTime;
         if (eventCount % eventWindowLength == 0) {
-            //reportStats();
+            reportStats();
         }
     }
 
@@ -111,12 +114,12 @@ public class ZoomLens {
         }
 
         //restartIdleTimer();
+        updateStats();
 
         if (proposedZoom != currentZoom) {
             zoom = currentZoom;
             currentZoom = proposedZoom;
             newData = true;
-            updateStats();
 
         }
 
