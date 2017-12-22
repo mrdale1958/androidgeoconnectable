@@ -3,10 +3,11 @@ package com.botherconsulting.geoconnectable;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
+import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,7 +22,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,8 +38,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.TileOverlay;
-import com.google.android.gms.maps.model.TileOverlayOptions;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -91,7 +92,7 @@ public class MapsActivity
 
     private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
 
-    private int[][] maxZoomCache = new int[181][360];
+    private int[][] maxZoomCache = new int[181][361];
     private boolean logZoom = false;
     private boolean logTilt = false;
     private boolean logSensors = false;
@@ -117,8 +118,8 @@ public class MapsActivity
     private int animateToHomeMS = 10000; // needs to be in settings
     private int settings_button_offset_x =  0;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
-    //String sensorServerAddress = "192.168.1.73";  // in settings
-    String sensorServerAddress = "10.21.3.42";  // in settings
+    String sensorServerAddress = "192.168.1.73";  // in settings
+    //String sensorServerAddress = "10.21.3.42";  // in settings
     String sensorServerPort = "5678";  // in settings
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
@@ -136,7 +137,7 @@ public class MapsActivity
             JSONArray maxzoomarray = new JSONArray();
             for (int lat = 0; lat < 181; lat++) {
                 JSONArray latarray = new JSONArray();
-                for (int lon = 0; lon < 360; lon++) {
+                for (int lon = 0; lon < 361; lon++) {
                     latarray.put(maxZoomCache[lat][lon]);
                 }
                 maxzoomarray.put(latarray);
@@ -176,7 +177,7 @@ public class MapsActivity
                 //Log.i("reading maxzoomarray:\n", maxzoomarray.toString(4));
                 for (int lat = 0; lat < 181; lat++) {
                     JSONArray latarray = maxzoomarray.getJSONArray(lat);
-                    for (int lon = 0; lon < 360; lon++) {
+                    for (int lon = 0; lon < 361; lon++) {
                         maxZoomCache[lat][lon] = latarray.getInt(lon);
                     }
                 }
@@ -204,6 +205,31 @@ public class MapsActivity
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(), "Android");
+        webView.setWebViewClient(new WebViewClient(){
+            // Override page so it's load on my view only
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap facIcon) {
+
+                //mLayoutProgress.setVisibility(View.VISIBLE);
+
+            }
+
+            @Override
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                handler.proceed();
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+
+                //mLayoutProgress.setVisibility(View.GONE);
+            }
+        });
 
 
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleTime*idleTimeScaler);
@@ -284,7 +310,7 @@ public class MapsActivity
                 lat = Math.min(Math.max(lat, -90f), 90f);
                 int latIndex = (int) Math.round(lat) + 90;
                 lon = lon % 360;
-                int lonIndex = (int) Math.round(lon) + 180; // not quite right need to cope with
+                int lonIndex = Math.min(360, Math.max(0,(int) Math.round(lon) + 180)); // not quite right need to cope with
                 maxZoomCache[latIndex][lonIndex] = Math.min(19,zoom-1);
 
             }catch (org.json.JSONException e) {
@@ -307,7 +333,7 @@ public class MapsActivity
                 mMap.getCameraPosition().target.latitude +
                 "," +
                 mMap.getCameraPosition().target.longitude;
-        Log.w("mzs", mzsURL);
+        //Log.w("mzs", mzsURL);
         webView.loadUrl(mzsURL);
     }
 
@@ -328,7 +354,7 @@ public class MapsActivity
                 newZoom = (float) zoomData[ZOOM];
                 lastZoomTime = (long) zoomData[GESTURE_TIME];
                 int latIndex = (int) Math.round(mMap.getCameraPosition().target.latitude) + 90;
-                int lonIndex = (int) Math.round(mMap.getCameraPosition().target.longitude) + 180;
+                int lonIndex = Math.min(360, Math.max(0,(int) Math.round(mMap.getCameraPosition().target.longitude) + 180)); // not quite right need to cope with
                 if (maxZoomCache[latIndex][lonIndex] > 0) {
                     zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
                 } else if(Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
@@ -617,7 +643,7 @@ public class MapsActivity
                 e.printStackTrace();
                 return "Invalid URI";
             }
-            mWebSocketClient = new WebSocketClient(uri, new org.java_websocket.drafts.Draft_17()) {
+            mWebSocketClient = new WebSocketClient(uri, new org.java_websocket.drafts.Draft_6455()) {
                 @Override
                 public void onOpen(ServerHandshake serverHandshake) {
                     Log.i("Websocket", "Opened");
