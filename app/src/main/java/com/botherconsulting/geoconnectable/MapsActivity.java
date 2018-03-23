@@ -212,8 +212,8 @@ public class MapsActivity
 
         FloatingActionButton floatingActionButton = findViewById(R.id.fab);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
+            @Override
+            public void onClick(View v) {
                 startActivityForResult(intent, EAT_PREFERENCES);
             }
         });
@@ -221,6 +221,20 @@ public class MapsActivity
         floatingActionButton.setRippleColor(0x0);
         floatingActionButton.setBackground(null);
         floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
+
+        final Intent intent = new Intent(this, ContentActivity.class);
+
+        FloatingActionButton contentEditorActionButton = findViewById(R.id.content);
+        contentEditorActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(intent, EAT_PREFERENCES);
+            }
+        });
+        contentEditorActionButton.setBackgroundColor(0x0);
+        contentEditorActionButton.setRippleColor(0x0);
+        floatingActionButton.setBackground(null);
+        contentEditorActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
         hideSystemUI();
 
         // if showScaleBar the below is wrong needs to be adapted for ViewOverlay
