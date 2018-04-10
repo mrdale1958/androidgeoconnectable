@@ -13,7 +13,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.preference.PreferenceManager;
+//import android.support.v7.preference.PreferenceManager;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -327,29 +328,18 @@ public class MapsActivity
 
     final Runnable  animateByTable  = new Runnable() {
         long lastRuntime;
-        static final int ZOOM = 0;
         static final int PAN = 0;
         static final int GESTURE_TIME = 1;
 
         public void run() {
 
             zoomer.setZoomBounds(3, Math.min(19.0,mMap.getMaxZoomLevel()));
-            float newZoom = mMap.getCameraPosition().zoom;
             long lastZoomTime = 0;
             boolean doAnimate = false;
             if (zoomer.newData) {
-                Object[] zoomData = zoomer.getCurrentZoom();
-                newZoom = (float) zoomData[ZOOM];
-                lastZoomTime = (long) zoomData[GESTURE_TIME];
-                int latIndex = (int) Math.round(mMap.getCameraPosition().target.latitude) + 90;
-                int lonIndex = (int) Math.round(mMap.getCameraPosition().target.longitude) + 180;
-                if (maxZoomCache[latIndex][lonIndex] > 0) {
-                    zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
-                } else if(Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
-                    checkMaxZoom( newZoom);
-                }
+
                 //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
-                doAnimate = true;
+                doAnimate = zoomer.needToAnimate();
             }
             LatLng newPos = mMap.getCameraPosition().target;
             long lastPanTime = 0;

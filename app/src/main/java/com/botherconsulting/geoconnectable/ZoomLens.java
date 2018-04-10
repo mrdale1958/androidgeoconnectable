@@ -6,8 +6,6 @@ import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONObject;
 
-import static android.os.SystemClock.uptimeMillis;
-
 /**
  * Created by dalemacdonald on 11/28/17.
  */
@@ -16,26 +14,36 @@ public class ZoomLens {
     public double maxZoom = 19; // needs to be in settings
     public double minZoom = 3; // needs to be in settings
     public double currentZoom = 0;
-    private int currentSpinPosition = 0;
+    protected int currentSpinPosition = 0;
     public int clicksPerRev = 2400; // in settings
     public int revsPerFullZoom = 19;  // in settings
-    private int clicksPerZoomLevel;
-    private int idleSpin = 0;
+    protected int clicksPerZoomLevel;
+    protected int idleSpin = 0;
     public double idleZoom = 13.5; // in settings
     public double zoom;
-    private int minSpin;
-    private int maxSpin;
+    protected int minSpin;
+    protected int maxSpin;
     public boolean newData = false;
-    private int eventCount = 0;
+    protected int eventCount = 0;
     long lastZoomMessageTime = System.nanoTime();
     static final int eventWindowLength = 10000;
     long[] eventWindow = new long[eventWindowLength];
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
-    private  int delta = 0;
+    protected  int delta = 0;
+    public Object zoomObject = mapZoom;
 
+    public ZoomLens() {
 
-    public ZoomLens(int _clicksPerRev, int _revsPerFullZoom, double _maxZoom, double _minZoom, double _idleZoom) {
+    }
+
+    public ZoomLens(Object _zoomObject,
+                    int _clicksPerRev,
+                    int _revsPerFullZoom,
+                    double _maxZoom,
+                    double _minZoom,
+                    double _idleZoom) {
+        zoomObject = zoomObject;
         minZoom = _minZoom;
         maxZoom = _maxZoom;
         configure(_clicksPerRev,_revsPerFullZoom, _idleZoom);
@@ -46,7 +54,7 @@ public class ZoomLens {
         return new Object[]{(float) zoom, lastZoomMessageTime} ;
     }
 
-    private void reportStats() {
+    protected void reportStats() {
         long windowSum = 0;
         long windowSumSquared = 0;
         long maxEt = 0;
@@ -68,7 +76,7 @@ public class ZoomLens {
         );
     }
 
-    private void updateStats() {
+    protected void updateStats() {
         long elapsedTime = System.nanoTime() - lastZoomMessageTime;
 
         lastZoomMessageTime = System.nanoTime();
@@ -97,29 +105,8 @@ public class ZoomLens {
         } catch (org.json.JSONException e) {
             Log.e("reading zoom message", "invalid vector " + vector.toString());
         }
-        currentSpinPosition += delta;
-        currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
-
-        double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
-        if (doLog) {
-            Log.i("zoom update", "delta:" + Integer.toString(delta) +
-                    " new zoom: " +
-                    //String.format ("%.2d", proposedZoom) +
-                     proposedZoom +
-                    " cSP: " +
-                    Integer.toString(currentSpinPosition) +
-                    " min:" + Integer.toString(minSpin) +
-                    " max:" + Integer.toString(maxSpin)
-            );
-        }
-
-        //restartIdleTimer();
-        updateStats();
-
-        if (proposedZoom != currentZoom) {
-            zoom = currentZoom;
-            currentZoom = proposedZoom;
-            newData = true;
+        if (zoomObject == mapZoom) {
+        } else if (zoomObject == hotspotZoom) {
 
         }
 
@@ -147,17 +134,17 @@ public class ZoomLens {
         logstate();
     }
 
-    private void logstate() {
-        Log.i("zoom state", "maxZoom:" + String.format ("%.2f", maxZoom) +
-                " minZoom:" + String.format ("%.2f", minZoom) +
-                " idleZoom:" + String.format ("%.2f", idleZoom) +
+    protected void logstate() {
+        Log.i("zoom state", "maxZoom:" + String.format("%.2f", maxZoom) +
+                " minZoom:" + String.format("%.2f", minZoom) +
+                " idleZoom:" + String.format("%.2f", idleZoom) +
                 "\ncSP: " +
                 Integer.toString(currentSpinPosition) +
                 " min:" + Integer.toString(minSpin) +
                 " max:" + Integer.toString(maxSpin) +
                 "\nclicksPerZoomLevel:" + Integer.toString(clicksPerZoomLevel) +
                 " clicksPerRev:" + Integer.toString(clicksPerRev) +
-                        " revsPerFullZoom:" + Integer.toString(revsPerFullZoom)
+                " revsPerFullZoom:" + Integer.toString(revsPerFullZoom)
         );
     }
 }
