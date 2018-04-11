@@ -88,7 +88,7 @@ public class MapsActivity
         }
     };
 
-    private ZoomLens zoomer = new ZoomLens(0,0,19,3,13.5);
+    private ZoomLens zoomer;
 
     private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
 
@@ -223,13 +223,13 @@ public class MapsActivity
         floatingActionButton.setBackground(null);
         floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
 
-        final Intent intent = new Intent(this, ContentActivity.class);
+        final Intent fabintent = new Intent(this, ContentActivity.class);
 
         FloatingActionButton contentEditorActionButton = findViewById(R.id.content);
         contentEditorActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(intent, EAT_PREFERENCES);
+                startActivityForResult(fabintent, EAT_PREFERENCES);
             }
         });
         contentEditorActionButton.setBackgroundColor(0x0);
@@ -313,18 +313,6 @@ public class MapsActivity
         }
     }
 
-    public void checkMaxZoom(float newZoom) {
-        Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom) +
-                "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
-        WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
-        //String mzsURL = "http://192.168.1.64/mzs.html?"+
-        String mzsURL = "file:///android_asset/www/index.html?"+
-                mMap.getCameraPosition().target.latitude +
-                "," +
-                mMap.getCameraPosition().target.longitude;
-        Log.w("mzs", mzsURL);
-        webView.loadUrl(mzsURL);
-    }
 
     final Runnable  animateByTable  = new Runnable() {
         long lastRuntime;
@@ -354,7 +342,7 @@ public class MapsActivity
             if (doAnimate) {
                 int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
                 //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, zoomer.newZoom), animateTime, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onFinish() {
                         TextView latDisplay = findViewById(R.id.currentLatitude);
@@ -722,6 +710,7 @@ public class MapsActivity
         } else {
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         }
+        zoomer = new MapZoomer(mMap, maxZoomCache, (WebView) findViewById(R.id.maxZoomPortal), 0,0,19,3,13.5);
         mMap.setOnCameraMoveListener(this);
         mMap.setOnCameraIdleListener(this);
         mMap.setOnCameraChangeListener(this);

@@ -31,7 +31,7 @@ public class ZoomLens {
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
     protected  int delta = 0;
-    public Object zoomObject = mapZoom;
+    public Object zoomObject;
 
     public ZoomLens() {
 
@@ -76,7 +76,7 @@ public class ZoomLens {
         );
     }
 
-    protected void updateStats() {
+    protected void updateStats(int delta) {
         long elapsedTime = System.nanoTime() - lastZoomMessageTime;
 
         lastZoomMessageTime = System.nanoTime();
@@ -105,10 +105,10 @@ public class ZoomLens {
         } catch (org.json.JSONException e) {
             Log.e("reading zoom message", "invalid vector " + vector.toString());
         }
-        if (zoomObject == mapZoom) {
-        } else if (zoomObject == hotspotZoom) {
+        if (zoomObject == mMap) {
+        } //else if (zoomObject == hotspotZoom) {
 
-        }
+        //}
 
 
     }
