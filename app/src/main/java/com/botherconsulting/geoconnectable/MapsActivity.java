@@ -88,9 +88,9 @@ public class MapsActivity
         }
     };
 
-    private ZoomLens zoomer;
+    private MapZoomer zoomer;
 
-    private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
+    private TablePanner panner;
 
     private int[][] maxZoomCache = new int[181][360];
     private boolean logZoom = false;
@@ -225,6 +225,9 @@ public class MapsActivity
 
         final Intent fabintent = new Intent(this, ContentActivity.class);
 
+        /**
+         *
+
         FloatingActionButton contentEditorActionButton = findViewById(R.id.content);
         contentEditorActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -234,8 +237,9 @@ public class MapsActivity
         });
         contentEditorActionButton.setBackgroundColor(0x0);
         contentEditorActionButton.setRippleColor(0x0);
-        floatingActionButton.setBackground(null);
+         contentEditorActionButton.setBackground(null);
         contentEditorActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
+         */
         hideSystemUI();
 
         // if showScaleBar the below is wrong needs to be adapted for ViewOverlay
@@ -342,7 +346,7 @@ public class MapsActivity
             if (doAnimate) {
                 int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
                 //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, zoomer.newZoom), animateTime, new GoogleMap.CancelableCallback() {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, zoomer.getLatestZoom()), animateTime, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onFinish() {
                         TextView latDisplay = findViewById(R.id.currentLatitude);
@@ -711,6 +715,7 @@ public class MapsActivity
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         }
         zoomer = new MapZoomer(mMap, maxZoomCache, (WebView) findViewById(R.id.maxZoomPortal), 0,0,19,3,13.5);
+        panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
         mMap.setOnCameraMoveListener(this);
         mMap.setOnCameraIdleListener(this);
         mMap.setOnCameraChangeListener(this);

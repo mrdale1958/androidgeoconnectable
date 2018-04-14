@@ -23,6 +23,7 @@ public class MapZoomer extends ZoomLens {
                       double _maxZoom,
                       double _minZoom,
                       double _idleZoom) {
+        super();
         maxZoomCache = _maxZoomCache;
         zoomObject = _zoomObject;
         webView = _webView;
@@ -68,6 +69,7 @@ public class MapZoomer extends ZoomLens {
         } else if(Math.floor(newZoom) > zoomObject.getCameraPosition().zoom)  {
             checkMaxZoom( newZoom);
         }
+        return newData;
     }
 
     public void checkMaxZoom(float newZoom) {

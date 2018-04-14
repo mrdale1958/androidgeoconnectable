@@ -147,4 +147,8 @@ public class ZoomLens {
                 " revsPerFullZoom:" + Integer.toString(revsPerFullZoom)
         );
     }
+
+    public float getLatestZoom() {
+        return (float) getCurrentZoom()[0];
+    }
 }
