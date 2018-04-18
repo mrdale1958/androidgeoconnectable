@@ -54,10 +54,11 @@ public class ContentActivity
      @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        getSupportFragmentManager().beginTransaction()
-                .replace(android.R.id.content, new GCTPreferenceFragment())
-            .commit();
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //getSupportFragmentManager().beginTransaction()
+        //        .replace(android.R.id.content, new GCTPreferenceFragment())
+        //    .commit();
+         setContentView(R.layout.contenteditor);
     }
 
     @Override

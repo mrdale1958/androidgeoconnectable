@@ -1,5 +1,6 @@
 package com.botherconsulting.geoconnectable;
 
+import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,8 +14,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
-//import android.support.v7.preference.PreferenceManager;
-import android.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceManager;
+//import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
@@ -68,6 +69,7 @@ public class MapsActivity
         GoogleMap.OnCameraChangeListener {
 
     static final int EAT_PREFERENCES = 12345;
+    static final int EAT_CONTENT = 54321;
     final Handler asyncTaskHandler = new Handler();
     final Runnable idleMonitor = new Runnable(){
         public void run() {
@@ -124,6 +126,7 @@ public class MapsActivity
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
+    private Hotspot[] hotspots;
 
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
@@ -196,7 +199,7 @@ public class MapsActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         //mapFragment.mumble(GoogleMap.OnMapLoadedCallback)
-        eatPreferences();
+        //eatPreferences();
        // bws.execute("ws://192.168.1.73:5678");
         Log.w("idleTime set to", Integer.toString(idleTime));
         launchServerConnection();
@@ -209,13 +212,13 @@ public class MapsActivity
 
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleTime*idleTimeScaler);
         //idleHandler.postDelayed(runnable, idleTime+100);
-        final Intent intent = new Intent(this, SettingsActivity.class);
+        final Intent prefsintent = new Intent(this, SettingsActivity.class);
 
         FloatingActionButton floatingActionButton = findViewById(R.id.fab);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(intent, EAT_PREFERENCES);
+                startActivityForResult(prefsintent, EAT_PREFERENCES);
             }
         });
         floatingActionButton.setBackgroundColor(0x0);
@@ -223,23 +226,22 @@ public class MapsActivity
         floatingActionButton.setBackground(null);
         floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
 
-        final Intent fabintent = new Intent(this, ContentActivity.class);
+        final Intent contentintent = new Intent(this, ContentActivity.class);
 
-        /**
-         *
+
 
         FloatingActionButton contentEditorActionButton = findViewById(R.id.content);
         contentEditorActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(fabintent, EAT_PREFERENCES);
+                startActivityForResult(contentintent, EAT_CONTENT);
             }
         });
         contentEditorActionButton.setBackgroundColor(0x0);
         contentEditorActionButton.setRippleColor(0x0);
          contentEditorActionButton.setBackground(null);
         contentEditorActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
-         */
+
         hideSystemUI();
 
         // if showScaleBar the below is wrong needs to be adapted for ViewOverlay
@@ -447,6 +449,11 @@ public class MapsActivity
         //targetWidth = Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TARGET_SIZE, Double.toString(targetWidth)));
 
     }
+
+    private void eatContent() {
+    }
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -456,11 +463,15 @@ public class MapsActivity
                 eatPreferences();
                 break;
 
+            case EAT_CONTENT:
+                eatContent();
+                break;
+
         }
 
     }
 
-    @Override
+   @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
@@ -708,6 +719,8 @@ public class MapsActivity
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        HotspotDatabase db = Room.databaseBuilder(getApplicationContext(),
+                HotspotDatabase.class, "hotspot-db").build();
         mMap = googleMap;
         if (useHybridMap) {
             mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
@@ -716,6 +729,7 @@ public class MapsActivity
         }
         zoomer = new MapZoomer(mMap, maxZoomCache, (WebView) findViewById(R.id.maxZoomPortal), 0,0,19,3,13.5);
         panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
+        eatPreferences();
         mMap.setOnCameraMoveListener(this);
         mMap.setOnCameraIdleListener(this);
         mMap.setOnCameraChangeListener(this);
