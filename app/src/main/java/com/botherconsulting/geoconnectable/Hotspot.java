@@ -10,7 +10,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 @Entity
 public class Hotspot {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     private int uid;
 
     @ColumnInfo(name = "latitude")
