@@ -41,4 +41,16 @@ public class Hotspot {
         return new LatLng(latitude, longitude);
     }
 
+    public boolean inTarget(LatLng position, double diameter) {
+        boolean retVal = false;
+        if ((Math.abs(this.latitude  - position.latitude)  < diameter) &&
+                (Math.abs(this.latitude  - position.latitude)  < diameter)) {
+            retVal = true;
+            this.icon.setTargeted();
+        } else {
+            this.icon.unsetTageted();
+        }
+        return retVal;
+    }
+
 }
