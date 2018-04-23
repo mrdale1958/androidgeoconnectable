@@ -209,6 +209,11 @@ public class MapsActivity
         webView.getSettings().setDomStorageEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(), "Android");
 
+        WebView contentView =  = (WebView) findViewById(R.id.contentViewer);
+        contentView.getSettings().setJavaScriptEnabled(true);
+        contentView.getSettings().setDomStorageEnabled(true);
+        contentView.addJavascriptInterface(new WebAppInterface(), "Android");
+
 
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleTime*idleTimeScaler);
         //idleHandler.postDelayed(runnable, idleTime+100);
@@ -239,7 +244,7 @@ public class MapsActivity
         });
         contentEditorActionButton.setBackgroundColor(0x0);
         contentEditorActionButton.setRippleColor(0x0);
-         contentEditorActionButton.setBackground(null);
+        contentEditorActionButton.setBackground(null);
         contentEditorActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
 
         hideSystemUI();
@@ -316,6 +321,19 @@ public class MapsActivity
 
         public void bindMZS(String mzs){
             Log.w("bindMZS", mzs);
+        }
+
+        @JavascriptInterface
+        public void endContent(String response) {
+            Log.w("endContent", response);
+            JSONObject message;
+            try {
+                message = new JSONObject(response);
+            } catch (org.json.JSONException e) {
+                Log.i("odd JSON",response);
+                return;
+            }
+
         }
     }
 
