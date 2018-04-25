@@ -2,6 +2,7 @@ package com.botherconsulting.geoconnectable;
 
 import android.arch.persistence.room.*;
 
+import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 
 /**
@@ -26,13 +27,15 @@ public class Hotspot {
     private  String set;
     @ColumnInfo(name = "URL")
     private  java.net.URL URL;
+    private HotSpotMarker icon;
 
-    public Hotspot() {
+    public Hotspot(GoogleMap _mmap) {
         this.latitude = 0.0;
         this.longitude = 0.0;
 
         this.enabled = false;
         this.set = "default";
+        this.icon = new HotSpotMarker(_mmap, this);
 
 
     }
@@ -48,7 +51,7 @@ public class Hotspot {
             retVal = true;
             this.icon.setTargeted();
         } else {
-            this.icon.unsetTageted();
+            this.icon.unsetTargeted();
         }
         return retVal;
     }

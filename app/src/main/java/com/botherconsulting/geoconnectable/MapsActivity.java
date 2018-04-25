@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -98,6 +99,7 @@ public class MapsActivity
     private boolean logZoom = false;
     private boolean logTilt = false;
     private boolean logSensors = false;
+    private boolean mapping = true; // toggle between map interface and content interface
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
@@ -209,7 +211,7 @@ public class MapsActivity
         webView.getSettings().setDomStorageEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(), "Android");
 
-        WebView contentView =  = (WebView) findViewById(R.id.contentViewer);
+        WebView contentView =  (WebView) findViewById(R.id.contentViewer);
         contentView.getSettings().setJavaScriptEnabled(true);
         contentView.getSettings().setDomStorageEnabled(true);
         contentView.addJavascriptInterface(new WebAppInterface(), "Android");
@@ -338,6 +340,7 @@ public class MapsActivity
     }
 
 
+
     final Runnable  animateByTable  = new Runnable() {
         long lastRuntime;
         static final int PAN = 0;
@@ -366,25 +369,35 @@ public class MapsActivity
             if (doAnimate) {
                 int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
                 //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, zoomer.getLatestZoom()), animateTime, new GoogleMap.CancelableCallback() {
-                    @Override
-                    public void onFinish() {
-                        TextView latDisplay = findViewById(R.id.currentLatitude);
-                        latDisplay.setText("Latitude: " + String.format("%.2f", mMap.getCameraPosition().target.latitude));
-                        TextView lonDisplay = findViewById(R.id.currentLongitude);
-                        lonDisplay.setText("Longitude: " + String.format("%.2f", mMap.getCameraPosition().target.longitude));
+                if (mapping) {
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, zoomer.getLatestZoom()), animateTime, new GoogleMap.CancelableCallback() {
+                        @Override
+                        public void onFinish() {
+                            TextView latDisplay = findViewById(R.id.currentLatitude);
+                            latDisplay.setText("Latitude: " + String.format("%.2f", mMap.getCameraPosition().target.latitude));
+                            TextView lonDisplay = findViewById(R.id.currentLongitude);
+                            lonDisplay.setText("Longitude: " + String.format("%.2f", mMap.getCameraPosition().target.longitude));
 
-                        if (!idling){
-                            //Log.i("animateByTable", "now");
-                            asyncTaskHandler.post(animateByTable);
+                            if (!idling){
+                                //Log.i("animateByTable", "now");
+                                asyncTaskHandler.post(animateByTable);
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onCancel() {
-                        Log.w("animateByTable", "hmm animation got canceled");
-                    }
-                });
+                        @Override
+                        public void onCancel() {
+                            Log.w("animateByTable", "hmm animation got canceled");
+                        }
+                    });
+                } else {
+                    Log.i("moving content", "hmmmm");
+                    WebView contentView = (WebView) findViewById(R.id.contentViewer);
+                    contentView.evaluateJavascript("receiveMotionData(" + newPos+"," + zoomer.getLatestZoom() + ");",  new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String s) {
+                        }
+                    });
+                }
                 if (idling) emergeFromIdle();
                 lastInteractionTime = uptimeMillis();
             } else {
