@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,8 +37,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.TileOverlay;
-import com.google.android.gms.maps.model.TileOverlayOptions;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -128,7 +125,7 @@ public class MapsActivity
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
-    private Hotspot[] hotspots;
+    private HotspotSchema[] hotspots;
 
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */

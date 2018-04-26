@@ -5,6 +5,7 @@ buildscript {
     repositories {
         google()
         jcenter()
+
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.1'
@@ -16,10 +17,15 @@ buildscript {
     }
 }
 
+ext {
+    archRoomVersion = "1.0.01"
+
+}
 allprojects {
     repositories {
         google()
         jcenter()
+        maven { url 'https://maven.google.com' }
     }
 }
 

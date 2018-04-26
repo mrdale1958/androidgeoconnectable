@@ -12,16 +12,40 @@ public class HotSpotMarker  {
     private boolean targeted = false;
     private GoogleMap mmap;
     private Hotspot hotspot;
+    private String fileName;
+    private String resourceName;
+    private String pathName;
 
     public HotSpotMarker(GoogleMap googleMap, Hotspot _hotspot) {
         mmap = googleMap;
         hotspot = _hotspot;
         targetedMarkerDescription = new MarkerOptions()
-                .position(hotspot.get_LatLng());
+                .position(hotspot.getLatLng());
         untargetedMarkerDescription = new MarkerOptions()
-                .position(hotspot.get_LatLng());
+                .position(hotspot.getLatLng());
         untargetedMarker = googleMap.addMarker(untargetedMarkerDescription
         );
+    }
+
+
+
+    public String toString() {
+        if (!this.resourceName.isEmpty()) return this.resourceName;
+        if (!this.fileName.isEmpty()) return this.fileName;
+        if (!this.pathName.isEmpty()) return this.pathName;
+        return "";
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    public void setPathName(String pathName) {
+        this.pathName = pathName;
     }
 
     public void setTargeted() {
@@ -29,7 +53,7 @@ public class HotSpotMarker  {
         // change to targeted marker
         untargetedMarker.remove();
         targetedMarker = mmap.addMarker(new MarkerOptions()
-                .position(hotspot.get_LatLng())
+                .position(hotspot.getLatLng())
         );
 
 
@@ -39,7 +63,7 @@ public class HotSpotMarker  {
         // change to untargeted marker
         targetedMarker.remove();
         untargetedMarker = mmap.addMarker(new MarkerOptions()
-                .position(hotspot.get_LatLng())
+                .position(hotspot.getLatLng())
         );
 
     }
