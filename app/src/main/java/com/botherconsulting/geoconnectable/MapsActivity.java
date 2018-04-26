@@ -125,7 +125,7 @@ public class MapsActivity
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
-    private HotspotSchema[] hotspots;
+    private Hotspot[] hotspots;
 
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
@@ -397,6 +397,10 @@ public class MapsActivity
                 }
                 if (idling) emergeFromIdle();
                 lastInteractionTime = uptimeMillis();
+                Hotspot newContent = findActiveHotSpot();
+                if (newContent != null) {
+                    mapping = false;
+                }
             } else {
                 //Log.i("animateByTable", "in the future");
                 asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + 100);
@@ -410,6 +414,7 @@ public class MapsActivity
         Log.i("Idle", "going into idle");
         idling = true;
         if (mMap != null) {
+            mapping = true;
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(idleHome, (float) (zoomer.idleZoom)), animateToHomeMS, null);
         }
         idleMessageTopView.setText(idleMessageTop);
@@ -481,6 +486,16 @@ public class MapsActivity
     private void eatContent() {
     }
 
+    private Hotspot findActiveHotSpot() {
+        Hotspot retVal = null;
+        for (int hs=0; hs < hotspots.length; hs++) {
+            Hotspot hsut = hotspots[hs];
+            if (hsut.inTarget(mMap.getCameraPosition().target, mMap.getCameraPosition().zoom)) {
+                retVal = hsut;
+            }
+        }
+        return retVal;
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
