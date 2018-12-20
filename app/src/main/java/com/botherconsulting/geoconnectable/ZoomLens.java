@@ -6,8 +6,6 @@ import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONObject;
 
-import static android.os.SystemClock.uptimeMillis;
-
 /**
  * Created by dalemacdonald on 11/28/17.
  */
@@ -32,6 +30,7 @@ public class ZoomLens {
     long[] eventWindow = new long[eventWindowLength];
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
+    int lastMessageID = 0;
     private  int delta = 0;
 
 
@@ -57,13 +56,17 @@ public class ZoomLens {
             maxEt = Math.max(maxEt, i);
             minEt = Math.min(minEt, i);
         }
+        double diff = (windowSumSquared - eventWindow.length * (windowSum / eventWindowLength)*(windowSum / eventWindowLength));
+
         Log.i("Zoom data flow stats",
                 "\nTotal events: " + eventCount +
                         "\nTotal mean elapsed Time: " + (sumElapsedTimes/eventCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventWindowLength) +
                         "\nWindow total ET: " + windowSum +
+                        "\nWindow sigma ET: " + Math.sqrt(diff/eventWindowLength) +
                         "\nWindow max ET: " + maxEt +
                         "\nWindow min ET: " + minEt +
+                        "\nlast message ID: " + lastMessageID +
                 "\nlast delta: " + delta
         );
     }
@@ -72,7 +75,7 @@ public class ZoomLens {
         long elapsedTime = System.nanoTime() - lastZoomMessageTime;
 
         lastZoomMessageTime = System.nanoTime();
-        if (elapsedTime > 100000000) Log.i("Big data gap", Long.toString(elapsedTime));
+        if (elapsedTime > 150000000) Log.i("Big data gap", Long.toString(elapsedTime));
         eventCount++;
         sumElapsedTimes += elapsedTime;
         sumSquaredElapsedTimes += elapsedTime * elapsedTime;
@@ -94,6 +97,10 @@ public class ZoomLens {
         }
         try {
             delta = vector.getInt("delta");
+            int messageID = message.getInt("id");
+            //if (messageID > lastMessageID + 1)
+            //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
+            lastMessageID = messageID;
         } catch (org.json.JSONException e) {
             Log.e("reading zoom message", "invalid vector " + vector.toString());
         }
