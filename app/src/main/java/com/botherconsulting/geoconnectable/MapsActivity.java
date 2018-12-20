@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
+import android.widget.GridLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -222,19 +223,18 @@ public class MapsActivity
         floatingActionButton.setBackground(null);
         floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
 
-        final Intent intent = new Intent(this, ContentActivity.class);
+        final Intent htmlOverlayIntent = new Intent(this, ContentActivity.class);
 
-        FloatingActionButton contentEditorActionButton = findViewById(R.id.content);
-        contentEditorActionButton.setOnClickListener(new View.OnClickListener() {
+        GridLayout contentContainer = findViewById(R.id.content);
+        contentContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivityForResult(intent, EAT_PREFERENCES);
             }
         });
-        contentEditorActionButton.setBackgroundColor(0x0);
-        contentEditorActionButton.setRippleColor(0x0);
-        floatingActionButton.setBackground(null);
-        contentEditorActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
+        contentContainer.setBackgroundColor(0x0);
+        contentContainer.setBackground(null);
+        contentContainer.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
         hideSystemUI();
 
         // if showScaleBar the below is wrong needs to be adapted for ViewOverlay
@@ -631,7 +631,7 @@ public class MapsActivity
                 e.printStackTrace();
                 return "Invalid URI";
             }
-            mWebSocketClient = new WebSocketClient(uri, new org.java_websocket.drafts.Draft_17()) {
+            mWebSocketClient = new WebSocketClient(uri, new org.java_websocket.drafts.Draft_6455()) {
                 @Override
                 public void onOpen(ServerHandshake serverHandshake) {
                     Log.i("Websocket", "Opened");
