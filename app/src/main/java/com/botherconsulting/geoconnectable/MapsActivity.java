@@ -126,6 +126,7 @@ public class MapsActivity
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
     private Hotspot[] hotspots;
+    private static double TARGET_PERCENT_DIAMETER = 0.1;
 
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
@@ -209,6 +210,8 @@ public class MapsActivity
         webView.addJavascriptInterface(new WebAppInterface(), "Android");
 
         WebView contentView =  (WebView) findViewById(R.id.contentViewer);
+        contentView.setBackgroundColor(0x00000000);
+
         contentView.getSettings().setJavaScriptEnabled(true);
         contentView.getSettings().setDomStorageEnabled(true);
         contentView.addJavascriptInterface(new WebAppInterface(), "Android");
@@ -490,9 +493,11 @@ public class MapsActivity
         Hotspot retVal = null;
         for (int hs=0; hs < hotspots.length; hs++) {
             Hotspot hsut = hotspots[hs];
-            if (hsut.inTarget(mMap.getCameraPosition().target, mMap.getCameraPosition().zoom)) {
-                retVal = hsut;
-            }
+            LatLngBounds viewport = mMap.getProjection().getVisibleRegion().latLngBounds;
+            double viewWidth = viewport.northeast.longitude - viewport.southwest.longitude;
+            double viewHeight = viewport.northeast.latitude - viewport.southwest.latitude;
+
+            retVal = hsut.inTarget(mMap.getCameraPosition().target, TARGET_PERCENT_DIAMETER * viewWidth, TARGET_PERCENT_DIAMETER * viewHeight,mMap.getCameraPosition().zoom);
         }
         return retVal;
     }

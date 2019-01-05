@@ -1,6 +1,7 @@
 package com.botherconsulting.geoconnectable;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -15,6 +16,7 @@ public class HotSpotMarker  {
     private String fileName;
     private String resourceName;
     private String pathName;
+    private String title;
 
     public HotSpotMarker(GoogleMap googleMap, Hotspot _hotspot) {
         mmap = googleMap;
@@ -40,12 +42,32 @@ public class HotSpotMarker  {
         this.fileName = fileName;
     }
 
+    public String getFileName() {
+        return fileName;
+    }
+
     public void setResourceName(String resourceName) {
         this.resourceName = resourceName;
     }
 
+    public String getResourceName() {
+        return resourceName;
+    }
+
     public void setPathName(String pathName) {
         this.pathName = pathName;
+    }
+
+    public String getPathName() {
+        return pathName;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public void setTargeted() {
@@ -54,6 +76,8 @@ public class HotSpotMarker  {
         untargetedMarker.remove();
         targetedMarker = mmap.addMarker(new MarkerOptions()
                 .position(hotspot.getLatLng())
+                .title(this.title)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
         );
 
 
@@ -64,6 +88,8 @@ public class HotSpotMarker  {
         targetedMarker.remove();
         untargetedMarker = mmap.addMarker(new MarkerOptions()
                 .position(hotspot.getLatLng())
+                .title(this.title)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
         );
 
     }

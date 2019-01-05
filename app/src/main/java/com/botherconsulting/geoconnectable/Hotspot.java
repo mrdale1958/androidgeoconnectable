@@ -18,6 +18,9 @@ public class Hotspot {
     private URL URL;
     private HotspotSchema data;
     private GoogleMap mmap;
+    private static double MAXZOOM = 20d;
+    private static double MINZOOM = 15d;
+
 
     public Hotspot() {
         this(new HotspotSchema());
@@ -86,11 +89,12 @@ public class Hotspot {
         this.data.setURL(this.URL.toString());
     }
 
-    public boolean inTarget(LatLng position, double diameter) {
-        boolean retVal = false;
-        if ((Math.abs(this.latLng.latitude  - position.latitude)  < diameter) &&
-                (Math.abs(this.latLng.latitude  - position.latitude)  < diameter)) {
-            retVal = true;
+    public Hotspot inTarget(LatLng position, double width, double height, double zoom) {
+        Hotspot retVal = null;
+        if ((Math.abs(this.latLng.latitude  - position.latitude)  < height) &&
+                (Math.abs(this.latLng.latitude  - position.latitude)  < width)) {
+            if (zoom < MAXZOOM && zoom > MINZOOM)
+                retVal = this;
             this.icon.setTargeted();
         } else {
             this.icon.unsetTargeted();
