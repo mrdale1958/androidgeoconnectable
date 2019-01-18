@@ -116,6 +116,7 @@ public class MapsActivity
     private long lastInteractionTime = uptimeMillis();
     private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
     private boolean idling = false;
+    private int nullAnimationClockTick = 100;
     private int animateToHomeMS = 10000; // needs to be in settings
     private int settings_button_offset_x =  0;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
@@ -199,7 +200,7 @@ public class MapsActivity
         //mapFragment.mumble(GoogleMap.OnMapLoadedCallback)
         eatPreferences();
        // bws.execute("ws://192.168.1.73:5678");
-        Log.w("idleTime set to", Integer.toString(idleTime));
+        Log.i("idleTime set to", Integer.toString(idleTime));
         launchServerConnection();
 
         WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
@@ -389,7 +390,7 @@ public class MapsActivity
             //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
             if (doAnimate) {
                 int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
-                //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
+                Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onFinish() {
@@ -413,7 +414,7 @@ public class MapsActivity
                 lastInteractionTime = uptimeMillis();
             } else {
                 //Log.i("animateByTable", "in the future");
-                asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + 100);
+                asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
 
             }
 
@@ -581,6 +582,7 @@ public class MapsActivity
     }
 
     private void launchServerConnection() {
+        if (mWebSocketClient != null && mWebSocketClient.isOpen()) mWebSocketClient.close();
         bws = new BackgroundWebSocket();
         Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
         bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
