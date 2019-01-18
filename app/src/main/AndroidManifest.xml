@@ -17,9 +17,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        android:name=".com.botherconsulting.geoconnectable.GeoConnectableApplication"
-
+        android:theme="@style/AppTheme"
+        >
+<!-- android:name=".com.botherconsulting.geoconnectable.GeoConnectableApplication" -->
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -51,5 +51,6 @@
                 android:value=".MapsActivity"/>
         </activity>
     </application>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
 </manifest>
