@@ -24,6 +24,7 @@ import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
+import android.webkit.WebResourceRequest;
 import android.widget.GridLayout;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
@@ -161,8 +162,13 @@ public class MapsActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FileInputStream fis = null;
         try {
-            FileInputStream fis = openFileInput("maxZoomData");
+            fis = openFileInput("maxZoomData");
+        } catch (java.io.FileNotFoundException e) {
+            Log.i("reading maxZoomCache", "no file no foul just use empty array" + e.getMessage());
+        }
+        try {
             if ( fis != null ) {
                 InputStreamReader inputStreamReader = new InputStreamReader(fis);
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -187,8 +193,6 @@ public class MapsActivity
             }
         } catch (JSONException e) {
             Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
-        } catch (java.io.FileNotFoundException e) {
-            Log.e("reading maxZoomCache", "no file no foul" + e.getMessage());
         } catch (java.io.IOException e) {
             Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
         }
@@ -210,7 +214,7 @@ public class MapsActivity
         webView.setWebViewClient(new WebViewClient(){
             // Override page so it's load on my view only
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return false;
             }
 
@@ -344,7 +348,7 @@ public class MapsActivity
                 "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
         WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
         //String mzsURL = "http://192.168.1.64/mzs.html?"+
-        String mzsURL = "file:///android_asset/www/index.html?"+
+        String mzsURL = "file:///android_asset/www/mzs.html?"+
                 mMap.getCameraPosition().target.latitude +
                 "," +
                 mMap.getCameraPosition().target.longitude;
