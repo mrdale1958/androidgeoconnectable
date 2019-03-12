@@ -40,6 +40,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.VisibleRegion;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -118,8 +119,10 @@ public class MapsActivity
     private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
     private boolean idling = false;
     private int nullAnimationClockTick = 100;
+    private int minZoomLevel = 0; // needs to be in settings
     private int animateToHomeMS = 10000; // needs to be in settings
     private int settings_button_offset_x =  0;
+    private Hotspot[] hotspots;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     String sensorServerAddress = "192.168.1.73";  // in settings
     //String sensorServerAddress = "10.21.3.42";  // in settings
@@ -127,6 +130,7 @@ public class MapsActivity
     BackgroundWebSocket bws;
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
+
 
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
@@ -364,7 +368,7 @@ public class MapsActivity
 
         public void run() {
 
-            zoomer.setZoomBounds(3, Math.min(19.0,mMap.getMaxZoomLevel()));
+            zoomer.setZoomBounds(minZoomLevel, Math.min(19.0,mMap.getMaxZoomLevel()));
             float newZoom = mMap.getCameraPosition().zoom;
             long lastZoomTime = 0;
             boolean doAnimate = false;
@@ -390,6 +394,26 @@ public class MapsActivity
                 lastPanTime = (long) pannerData[GESTURE_TIME];
                 //Log.i("new position", newPos.toString());
                 doAnimate = true;
+                VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                double currLeft = visibleRegion.farLeft.longitude;
+                double currRight = visibleRegion.farRight.longitude;
+                double currTop = visibleRegion.farLeft.latitude;
+                double currBottom = visibleRegion.nearRight.latitude;
+                double currWidth = currLeft - currRight;
+                double currHeight = currTop - currBottom;
+                LatLngBounds hotBounds = new LatLngBounds(
+                       new LatLng(newPos.latitude-targetWidth*currHeight,
+                               newPos.longitude-targetWidth*currWidth),
+                        new LatLng(newPos.latitude-+targetWidth*currHeight,
+                                newPos.longitude+targetWidth*currWidth));
+                Boolean hotspotFound = false;
+
+                for (int hs =0; hs < hotspots.length; hs++) {
+                    if (hotBounds.contains(hotspots[hs].marker.getPosition())) {
+                        hotspotFound = true;
+                    }
+                }
+
             }
             //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
             if (doAnimate) {
