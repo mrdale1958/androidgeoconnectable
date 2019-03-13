@@ -91,7 +91,7 @@ public class MapsActivity
         }
     };
 
-    private ZoomLens zoomer = new ZoomLens(0,0,19,3,13.5);
+    private ZoomLens zoomer = new ZoomLens(0,0,19,0,0);
 
     private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
 
@@ -123,6 +123,7 @@ public class MapsActivity
     private int animateToHomeMS = 10000; // needs to be in settings
     private int settings_button_offset_x =  0;
     private Hotspot[] hotspots;
+    private Boolean hotSpotActive = false;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     String sensorServerAddress = "192.168.1.73";  // in settings
     //String sensorServerAddress = "10.21.3.42";  // in settings
@@ -135,11 +136,7 @@ public class MapsActivity
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
 
-    @Override
-    protected void onStop() {
-        // call the superclass method first
-        super.onStop();
-        // need to save maxZoomCache
+    private void saveMaxZoomData() {
         try {
             JSONArray maxzoomarray = new JSONArray();
             for (int lat = 0; lat < 181; lat++) {
@@ -153,13 +150,20 @@ public class MapsActivity
             FileOutputStream fos = openFileOutput("maxZoomData", Context.MODE_PRIVATE);
             fos.write(maxCacheAsString.getBytes());
             fos.close();
-        //} catch (JSONException e) {
-        //    Log.e("maxZoomCache", "oops broke it" + e.getMessage());
+            //} catch (JSONException e) {
+            //    Log.e("maxZoomCache", "oops broke it" + e.getMessage());
         } catch (java.io.FileNotFoundException e) {
-        Log.e("writing maxZoomCache", "oops broke it" + e.getMessage());
+            Log.e("writing maxZoomCache", "oops broke it" + e.getMessage());
         } catch (java.io.IOException e) {
             Log.e("writing maxZoomCache", "oops broke it" + e.getMessage());
         }
+    }
+    @Override
+    protected void onStop() {
+        // call the superclass method first
+        super.onStop();
+        // need to save maxZoomCache
+        saveMaxZoomData();
 
     }
 
@@ -211,31 +215,62 @@ public class MapsActivity
         Log.i("idleTime set to", Integer.toString(idleTime));
         launchServerConnection();
 
-        WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setDomStorageEnabled(true);
-        webView.addJavascriptInterface(new WebAppInterface(), "Android");
-        webView.setWebViewClient(new WebViewClient(){
+
+        WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
+        hotSpotWebView.getSettings().setJavaScriptEnabled(true);
+        hotSpotWebView.getSettings().setDomStorageEnabled(true);
+        hotSpotWebView.addJavascriptInterface(new WebAppInterface(), "Android");
+        hotSpotWebView.setWebViewClient(new WebViewClient(){
             // Override page so it's load on my view only
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+            public boolean shouldOverrideUrlLoading(WebView maxZoomWebView, WebResourceRequest request) {
                 return false;
             }
 
             @Override
-            public void onPageStarted(WebView view, String url, Bitmap facIcon) {
+            public void onPageStarted(WebView maxZoomWebView, String url, Bitmap facIcon) {
 
                 //mLayoutProgress.setVisibility(View.VISIBLE);
 
             }
 
             @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            public void onReceivedSslError(WebView maxZoomWebView, SslErrorHandler handler, SslError error) {
                 handler.proceed();
             }
 
             @Override
-            public void onPageFinished(WebView view, String url) {
+            public void onPageFinished(WebView maxZoomWebView, String url) {
+
+                //mLayoutProgress.setVisibility(View.GONE);
+            }
+        });
+
+        WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
+        maxZoomWebView.getSettings().setJavaScriptEnabled(true);
+        maxZoomWebView.getSettings().setDomStorageEnabled(true);
+        maxZoomWebView.addJavascriptInterface(new WebAppInterface(), "Android");
+        maxZoomWebView.setWebViewClient(new WebViewClient(){
+            // Override page so it's load on my view only
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView maxZoomWebView, WebResourceRequest request) {
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView maxZoomWebView, String url, Bitmap facIcon) {
+
+                //mLayoutProgress.setVisibility(View.VISIBLE);
+
+            }
+
+            @Override
+            public void onReceivedSslError(WebView maxZoomWebView, SslErrorHandler handler, SslError error) {
+                handler.proceed();
+            }
+
+            @Override
+            public void onPageFinished(WebView maxZoomWebView, String url) {
 
                 //mLayoutProgress.setVisibility(View.GONE);
             }
@@ -260,16 +295,16 @@ public class MapsActivity
 
         final Intent htmlOverlayIntent = new Intent(this, ContentActivity.class);
 
-        GridLayout contentContainer = findViewById(R.id.content);
-        contentContainer.setOnClickListener(new View.OnClickListener() {
+        GridLayout hotSpotDataContainer = findViewById(R.id.hotSpotView);
+        hotSpotDataContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivityForResult(intent, EAT_PREFERENCES);
             }
         });
-        contentContainer.setBackgroundColor(0x0);
-        contentContainer.setBackground(null);
-        contentContainer.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
+        hotSpotDataContainer.setBackgroundColor(0x0);
+        hotSpotDataContainer.setBackground(null);
+        hotSpotDataContainer.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
         hideSystemUI();
 
         // if showScaleBar the below is wrong needs to be adapted for ViewOverlay
@@ -350,14 +385,14 @@ public class MapsActivity
     public void checkMaxZoom(float newZoom) {
         Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom) +
                 "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
-        WebView webView = (WebView) findViewById(R.id.maxZoomPortal);
+        WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
         //String mzsURL = "http://192.168.1.64/mzs.html?"+
         String mzsURL = "file:///android_asset/www/mzs.html?"+
                 mMap.getCameraPosition().target.latitude +
                 "," +
                 mMap.getCameraPosition().target.longitude;
         //Log.w("mzs", mzsURL);
-        webView.loadUrl(mzsURL);
+        maxZoomWebView.loadUrl(mzsURL);
     }
 
     final Runnable  animateByTable  = new Runnable() {
@@ -367,6 +402,7 @@ public class MapsActivity
         static final int GESTURE_TIME = 1;
 
         public void run() {
+            // TODO: label this 19. Does it set a maximum zoom level for the app
 
             zoomer.setZoomBounds(minZoomLevel, Math.min(19.0,mMap.getMaxZoomLevel()));
             float newZoom = mMap.getCameraPosition().zoom;
@@ -394,6 +430,11 @@ public class MapsActivity
                 lastPanTime = (long) pannerData[GESTURE_TIME];
                 //Log.i("new position", newPos.toString());
                 doAnimate = true;
+
+
+            }
+            //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
+            if (doAnimate) {
                 VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 double currLeft = visibleRegion.farLeft.longitude;
                 double currRight = visibleRegion.farRight.longitude;
@@ -402,21 +443,21 @@ public class MapsActivity
                 double currWidth = currLeft - currRight;
                 double currHeight = currTop - currBottom;
                 LatLngBounds hotBounds = new LatLngBounds(
-                       new LatLng(newPos.latitude-targetWidth*currHeight,
-                               newPos.longitude-targetWidth*currWidth),
+                        new LatLng(newPos.latitude-targetWidth*currHeight,
+                                newPos.longitude-targetWidth*currWidth),
                         new LatLng(newPos.latitude-+targetWidth*currHeight,
                                 newPos.longitude+targetWidth*currWidth));
                 Boolean hotspotFound = false;
-
-                for (int hs =0; hs < hotspots.length; hs++) {
-                    if (hotBounds.contains(hotspots[hs].marker.getPosition())) {
-                        hotspotFound = true;
+                if (hotSpotActive) {
+                    // deal with animating hotSpot
+                } else {
+                    for (int hs = 0; hs < hotspots.length; hs++) {
+                        if (hotBounds.contains(hotspots[hs].marker.getPosition())) {
+                            hotspotFound = true;
+                        }
                     }
                 }
 
-            }
-            //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
-            if (doAnimate) {
                 int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
                 Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
@@ -457,7 +498,12 @@ public class MapsActivity
         }
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView.setText(idleMessageBottom);
-
+        if (hotSpotActive) {
+            // close it
+            hotSpotActive = false;
+        }
+// TODO: add animation rotating text
+        // TODO: after long idle save maxZoom data
     }
 
     protected void emergeFromIdle() {
