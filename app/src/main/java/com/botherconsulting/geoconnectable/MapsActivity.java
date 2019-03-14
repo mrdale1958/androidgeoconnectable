@@ -124,6 +124,7 @@ public class MapsActivity
     private int settings_button_offset_x =  0;
     private Hotspot[] hotspots;
     private Boolean hotSpotActive = false;
+    private Hotspot liveHotSpot;
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     String sensorServerAddress = "192.168.1.73";  // in settings
     //String sensorServerAddress = "10.21.3.42";  // in settings
@@ -450,10 +451,35 @@ public class MapsActivity
                 Boolean hotspotFound = false;
                 if (hotSpotActive) {
                     // deal with animating hotSpot
+                    // need a mechanism to get clear of target voxel  before redisplaying
+/* Classes
+Zoom
+Pan
+Pan_x
+Pan_y
+Click
+Click_x
+Click_y
+Fade
+Fade_x
+Fade_y
+Fade_z
+Sequence
+*/
+
+
+
+
+
                 } else {
                     for (int hs = 0; hs < hotspots.length; hs++) {
                         if (hotBounds.contains(hotspots[hs].marker.getPosition())) {
-                            hotspotFound = true;
+                            if (newZoom >  hotspots[hs].hotSpotZoomTriggerRange[0] &&
+                                    newZoom <  hotspots[hs].hotSpotZoomTriggerRange[1]) {
+                                hotSpotActive = true;
+                                liveHotSpot = hotspots[hs];
+                                break;
+                            }
                         }
                     }
                 }
@@ -698,13 +724,25 @@ public class MapsActivity
         LatLngBounds curScreen = mMap.getProjection()
                .getVisibleRegion().latLngBounds;
 
-        if (gestureType.equals("pan")) {
-            panner.handleJSON(message,mMap, logSensors || logTilt);
+        if (!hotSpotActive) {
+            if (gestureType.equals("pan"))
+             {
+                panner.handleJSON(message,mMap, logSensors || logTilt);
 
-            //paintTarget();
-        } else if (gestureType.equals("zoom")) {
-            zoomer.handleJSON(message,mMap, logSensors || logZoom);
+                //paintTarget();
+            } else if (gestureType.equals("zoom")) {
+                    zoomer.handleJSON(message, mMap, logSensors || logZoom);
+            }
 
+        } else {
+            if (gestureType.equals("pan"))
+            {
+                liveHotSpot.panner.handleJSON(message,mMap, logSensors || logTilt);
+
+                //paintTarget();
+            } else if (gestureType.equals("zoom")) {
+                liveHotSpot.zoomer.handleJSON(message, mMap, logSensors || logZoom);
+            }
 
         }
 
