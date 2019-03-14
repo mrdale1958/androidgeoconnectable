@@ -16,6 +16,9 @@ public class Hotspot {
     public String set;
     public java.net.URL URL;
     public Marker marker;
+    public Double[] hotSpotZoomTriggerRange = {12.0, 15.0};
+
+
 
     public Hotspot(GoogleMap map) {
         this.enabled = false;
@@ -39,5 +42,9 @@ public class Hotspot {
     }
     public void setPosition(LatLng position) {
         this.marker.setPosition(position);
+    }
+    public void setZoomTriggerRange(Double minZoom, Double maxZoom) {
+        this.hotSpotZoomTriggerRange[0] = minZoom;
+        this.hotSpotZoomTriggerRange[1] = maxZoom;
     }
 }
