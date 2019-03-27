@@ -121,10 +121,14 @@ public class MapsActivity
     private int nullAnimationClockTick = 100;
     private int minZoomLevel = 0; // needs to be in settings
     private int animateToHomeMS = 10000; // needs to be in settings
+    private double maxPanPercent = 0.01; // needs to be in settings
     private int settings_button_offset_x =  0;
     private Hotspot[] hotspots;
     private Boolean hotSpotActive = false;
     private Hotspot liveHotSpot;
+    private double currScreenWidth;
+    private double currScreenHeight;
+
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     String sensorServerAddress = "192.168.1.73";  // in settings
     //String sensorServerAddress = "10.21.3.42";  // in settings
@@ -441,13 +445,13 @@ public class MapsActivity
                 double currRight = visibleRegion.farRight.longitude;
                 double currTop = visibleRegion.farLeft.latitude;
                 double currBottom = visibleRegion.nearRight.latitude;
-                double currWidth = currLeft - currRight;
-                double currHeight = currTop - currBottom;
+                currScreenWidth = currLeft - currRight;
+                currScreenHeight = currTop - currBottom;
                 LatLngBounds hotBounds = new LatLngBounds(
-                        new LatLng(newPos.latitude-targetWidth*currHeight,
-                                newPos.longitude-targetWidth*currWidth),
-                        new LatLng(newPos.latitude-+targetWidth*currHeight,
-                                newPos.longitude+targetWidth*currWidth));
+                        new LatLng(newPos.latitude-targetWidth*currScreenHeight,
+                                newPos.longitude-targetWidth*currScreenWidth),
+                        new LatLng(newPos.latitude-+targetWidth*currScreenHeight,
+                                newPos.longitude+targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
                 if (hotSpotActive) {
                     // deal with animating hotSpot
@@ -571,9 +575,12 @@ Sequence
 
         }
 
-        panner.configure(Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(panner.TiltScaleX))),
-                    Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR, Double.toString(panner.TiltScaleY))),
-                    idleHome);
+        panner.configure(Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR,
+                            Double.toString(panner.TiltScaleX))),
+                    Double.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_TILT_SENSOR_SCALE_FACTOR,
+                            Double.toString(panner.TiltScaleY))),
+                    idleHome,
+                maxPanPercent);
 
         useHybridMap = sharedPref.getBoolean(SettingsActivity.KEY_PREF_USE_HYBRID_MAP, useHybridMap);
         if (mMap != null) {
@@ -727,7 +734,7 @@ Sequence
         if (!hotSpotActive) {
             if (gestureType.equals("pan"))
              {
-                panner.handleJSON(message,mMap, logSensors || logTilt);
+                panner.handleJSON(message,mMap, logSensors || logTilt, currScreenWidth, currScreenHeight);
 
                 //paintTarget();
             } else if (gestureType.equals("zoom")) {
@@ -737,11 +744,11 @@ Sequence
         } else {
             if (gestureType.equals("pan"))
             {
-                liveHotSpot.panner.handleJSON(message,mMap, logSensors || logTilt);
+                liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
 
                 //paintTarget();
             } else if (gestureType.equals("zoom")) {
-                liveHotSpot.zoomer.handleJSON(message, mMap, logSensors || logZoom);
+                liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
             }
 
         }
