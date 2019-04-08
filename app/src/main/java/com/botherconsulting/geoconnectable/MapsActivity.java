@@ -454,6 +454,7 @@ public class MapsActivity
                                 newPos.longitude+targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
                 if (hotSpotActive) {
+                    WebView hotspot = (WebView) findViewById(R.id.hotSpotView);
                     // deal with animating hotSpot
                     // need a mechanism to get clear of target voxel  before redisplaying
 /* Classes
@@ -734,7 +735,7 @@ Sequence
         if (!hotSpotActive) {
             if (gestureType.equals("pan"))
              {
-                panner.handleJSON(message,mMap, logSensors || logTilt, currScreenWidth, currScreenHeight);
+                panner.handleJSON(message, mMap, logSensors || logTilt, currScreenWidth, currScreenHeight);
 
                 //paintTarget();
             } else if (gestureType.equals("zoom")) {

@@ -1,1 +1,2 @@
-mumble
+function TableInterface() {
+}
