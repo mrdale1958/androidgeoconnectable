@@ -25,7 +25,7 @@ const machine = {
     'zoomingIn': {
         fully_zoomed_in: function(){
             this.changeStateTo('open');
-\        },
+        },
         zoom_in: function(){
             atMax = increaseZoomOnMainDiv();
             if (atMax) {
@@ -74,14 +74,14 @@ function increaseZoomOnMainDiv() {
     var currentTransform = mainDiv.style.transform;
     if (currentTransform.indexOf('scale(' == 0))
     {
-        scaler = currentTransform.substring(currentTransform.indexOf('(') +1, currentTransform.indexOf(')')
+        scaler = currentTransform.substring(currentTransform.indexOf('(') +1, currentTransform.indexOf(')'));
         if (scaler.indexOf(',') > 0) scaler = scaler.substring(0,scaler.indexOf(','));
         scaler = Math.min(1.0, Number(scaler) + zoomIncrement);
         currentTransform = 'scale(' + scaler +');'
     }
 }
 
-var TableInterface() {
+var TableInterface = {
     constructor: function(mainDiv) {
 		this.tiltVector = [0.0, 0.0];
 		this.zoom = 0.0;
@@ -90,7 +90,7 @@ var TableInterface() {
 	},
 	update: function update(tiltVector, zoom) {
 	    this.tiltVector = [this.tiltVector[0] + tiltVector[0], this.tiltVector[1] + tiltVector[1]];
-	}
+	},
 	start: function()
 	{
 	    this.machine.dispatch('click');
