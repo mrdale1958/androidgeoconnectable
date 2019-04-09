@@ -123,7 +123,7 @@ public class MapsActivity
     private int animateToHomeMS = 10000; // needs to be in settings
     private double maxPanPercent = 0.01; // needs to be in settings
     private int settings_button_offset_x =  0;
-    private Hotspot[] hotspots;
+    private Hotspot[] hotspots= new Hotspot[1];
     private Boolean hotSpotActive = false;
     private Hotspot liveHotSpot;
     private double currScreenWidth;
@@ -251,8 +251,7 @@ public class MapsActivity
             }
         });
 
-        hotspots[0] = new Hotspot(mMap, hotSpotWebView);
-        WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
+         WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
         maxZoomWebView.getSettings().setJavaScriptEnabled(true);
         maxZoomWebView.getSettings().setDomStorageEnabled(true);
         maxZoomWebView.addJavascriptInterface(new WebAppInterface(), "Android");
@@ -301,7 +300,7 @@ public class MapsActivity
 
         final Intent htmlOverlayIntent = new Intent(this, ContentActivity.class);
 
-        GridLayout hotSpotDataContainer = findViewById(R.id.hotSpotView);
+       /* GridLayout hotSpotDataContainer = findViewById(R.id.hotSpotView);
         hotSpotDataContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -311,6 +310,7 @@ public class MapsActivity
         hotSpotDataContainer.setBackgroundColor(0x0);
         hotSpotDataContainer.setBackground(null);
         hotSpotDataContainer.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
+*/
         hideSystemUI();
 
         // if showScaleBar the below is wrong needs to be adapted for ViewOverlay
@@ -450,9 +450,9 @@ public class MapsActivity
                 currScreenHeight = currTop - currBottom;
                 LatLngBounds hotBounds = new LatLngBounds(
                         new LatLng(newPos.latitude-targetWidth*currScreenHeight,
-                                newPos.longitude-targetWidth*currScreenWidth),
-                        new LatLng(newPos.latitude-+targetWidth*currScreenHeight,
-                                newPos.longitude+targetWidth*currScreenWidth));
+                                newPos.longitude+targetWidth*currScreenWidth),
+                        new LatLng(newPos.latitude+targetWidth*currScreenHeight,
+                                newPos.longitude-targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
                 if (hotSpotActive) {
                     WebView hotspot = (WebView) findViewById(R.id.hotSpotView);
@@ -746,11 +746,11 @@ Sequence
         } else {
             if (gestureType.equals("pan"))
             {
-                liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
+              //  liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
 
                 //paintTarget();
             } else if (gestureType.equals("zoom")) {
-                liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
+              //  liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
             }
 
         }
@@ -910,6 +910,11 @@ Sequence
         //mMap.addPolygon(MapMask.createPolygonWithCircle(this, sydney, 100));
         //Intent i = new Intent(this,TablePreferencesActivity.class);
         //startActivityForResult(i, SHOW_PREFERENCES);
+        WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
+        hotspots[0] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[0].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+        hotspots[0].setPosition(new LatLng(40.76667,-111.903373));
+
     }
 
 
