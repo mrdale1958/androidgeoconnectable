@@ -105,60 +105,7 @@
        android:layout_marginLeft="@dimen/fab_margin"
        app:fabSize="normal"
        app:backgroundTint="@color/settingsbutton"
-       app:rippleColor="@android:color/black">
-   tools:context="com.android_examples.com.gridlayout.MainActivity"
-        android:columnCount="4"
-        android:rowCount="3">
-        <TextView
-            android:id="@+id/textView1"
-            android:text="Label"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:padding="30dp"
-            android:layout_row="0"
-            android:layout_column="0" />
-        <TextView
-            android:id="@+id/textView2"
-            android:text="Set"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:padding="30dp"
-            android:layout_row="1"
-            android:layout_column="0" />
-        <TextView
-            android:id="@+id/textView3"
-            android:text="Latitude"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:padding="30dp"
-            android:layout_row="2"
-            android:layout_column="0" />
-        <TextView
-            android:id="@+id/textView4"
-            android:text="Longitude"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:padding="30dp"
-            android:layout_row="0"
-            android:layout_column="1" />
-        <TextView
-            android:id="@+id/textView5"
-            android:text="URL"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:padding="30dp"
-            android:layout_row="1"
-            android:layout_column="1" />
-        <TextView
-            android:id="@+id/textView6"
-            android:text="Enable"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:padding="30dp"
-            android:layout_row="2"
-            android:layout_column="1" />
-        <TextView
-            android:id="@+id/textView7"
-            android:text="Edit"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:padding="30dp"
-            android:layout_row="0"
-            android:layout_column="2" />
-    </GridLayout>
+       app:rippleColor="@android:color/black"/>
     <!--app:srcCompat="@android:drawable/ic_menu_preferences" /> -->
 
     <android.support.design.widget.CoordinatorLayout

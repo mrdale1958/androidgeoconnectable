@@ -63,6 +63,7 @@ public class Hotspot {
     public Double[] hotSpotZoomTriggerRange = {12.0, 15.0};
     public Double[] currentTilt = {0.0, 0.0};
     private WebView displaySurface;
+    private GoogleMap mMap;
     public enum States {
         CLOSED,
         OPENING,
@@ -81,15 +82,23 @@ public class Hotspot {
         this.displaySurface = webView;
         this.enabled = false;
         this.set = "default";
-        this.marker = map.addMarker(new MarkerOptions()
+        this.marker=null;
+        this.mMap = map;
+/*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
                 .title("some pithy name")
                 .snippet("Even pithier label")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-
+*/
     }
 
     public void setIcon(BitmapDescriptor icon) {
+        if (this.marker == null) {
+            this.marker = this.mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(0.0,0.0))
+                    .title("some pithy name")
+                    .snippet("Even pithier label"));
+        }
         this.marker.setIcon(icon);
     }
     public void setTitle(String title) {
