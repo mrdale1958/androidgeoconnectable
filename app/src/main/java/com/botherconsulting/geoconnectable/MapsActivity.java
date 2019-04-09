@@ -251,6 +251,7 @@ public class MapsActivity
             }
         });
 
+        hotspots[0] = new Hotspot(mMap, hotSpotWebView);
         WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
         maxZoomWebView.getSettings().setJavaScriptEnabled(true);
         maxZoomWebView.getSettings().setDomStorageEnabled(true);
