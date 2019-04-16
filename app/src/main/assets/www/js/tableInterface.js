@@ -59,6 +59,18 @@ const machine = {
         this.changeStateTo('zooming_out');
         this.dispatch('zoom_out');
         }
+        click_left: function(){
+        }
+        click_right: function(){
+        }
+     },
+    'slide_show': {
+        zoom_in: function(){
+        },
+        zoom_out: function(){
+        this.changeStateTo('zooming_out');
+        this.dispatch('zoom_out');
+        }
      },
 
      'error': {
@@ -82,7 +94,7 @@ function increaseZoomOnMainDiv() {
 }
 
 var TableInterface = {
-    constructor: function(mainDiv) {
+    constructor: function(mainDiv,transitionType,...internals) {
 		this.tiltVector = [0.0, 0.0];
 		this.zoom = 0.0;
 		this.mainDiv = mainDiv;
