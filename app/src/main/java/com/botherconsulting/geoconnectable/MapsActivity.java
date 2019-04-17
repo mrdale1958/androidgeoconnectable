@@ -119,7 +119,7 @@ public class MapsActivity
     private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
     private boolean idling = false;
     private int nullAnimationClockTick = 100;
-    private int minZoomLevel = 0; // needs to be in settings
+    private int minZoomLevel = 1; // needs to be in settings
     private int animateToHomeMS = 10000; // needs to be in settings
     private double maxPanPercent = 0.01; // needs to be in settings
     private int settings_button_offset_x =  0;
