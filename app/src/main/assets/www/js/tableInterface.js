@@ -63,12 +63,20 @@ const machine = {
             this.dispatch('zoom_out');
         },
         click_left: function(){
+            this.changeStateTo('paging');
+            this.dispatch('slide_left');
         },
         click_right: function(){
+            this.changeStateTo('paging');
+            this.dispatch('slide_right');
         },
         click_up: function(){
+            this.changeStateTo('paging');
+            this.dispatch('slide_up');
         },
         click_down: function(){
+            this.changeStateTo('paging');
+            this.dispatch('slide_down');
         }
      },
     'slide_show': {
@@ -80,21 +88,47 @@ const machine = {
         },
      },
      'paging': {
-      click_left: function(){
-         },
-         click_right: function(){
-         },
-         click_up: function(){
-         },
-         click_down: function(){
-         },
+        page_complete: function() {
+        },
+        click_left: function(){
+        },
+        click_right: function(){
+        },
+        click_up: function(){
+        },
+        click_down: function(){
+        },
         slide_left: function(){
+            moveCurrentDivLeft();
+            atMax = moveNextDivLeft();
+            if (atMax)
+            {
+                this.dispatch('page_complete');
+            }
         },
         slide_right: function(){
+            moveCurrentDivLeft();
+            atMax = moveNextDivLeft();
+            if (atMax)
+            {
+                this.dispatch('page_complete');
+            }
         },
         slide_up: function(){
+            moveCurrentDivLeft();
+            atMax = moveNextDivLeft();
+            if (atMax)
+            {
+                this.dispatch('page_complete');
+            }
         },
         slide_down: function(){
+            moveCurrentDivLeft();
+            atMax = moveNextDivLeft();
+            if (atMax)
+            {
+                this.dispatch('page_complete');
+            }
         },
      },
 
