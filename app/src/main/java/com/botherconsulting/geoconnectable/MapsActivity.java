@@ -746,11 +746,11 @@ Sequence
         } else {
             if (gestureType.equals("pan"))
             {
-              //  liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
+              liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
 
                 //paintTarget();
             } else if (gestureType.equals("zoom")) {
-              //  liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
+               liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
             }
 
         }
@@ -913,7 +913,7 @@ Sequence
         WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
         hotspots[0] = new Hotspot(mMap, hotSpotWebView);
         hotspots[0].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-        hotspots[0].setPosition(new LatLng(40.76667,-111.903373));
+        hotspots[0].setPosition(new LatLng(40.06667,-111.903373));
 
     }
 
