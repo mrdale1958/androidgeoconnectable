@@ -24,7 +24,7 @@ public class Hotspot {
     public double TiltScaleY = 0.04; // in settings
     private double panMax = 0.01;
     private int minSpin;
-    private int maxSpin;
+    private int maxSpin = 100000000;
     private double validTiltThreshold = 0.025; // needs to be in settings
     long lastTiltMessageTime = System.nanoTime();
     private int eventTiltCount = 0;
