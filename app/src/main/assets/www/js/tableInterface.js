@@ -16,6 +16,13 @@ const machine = {
     render(`state changed: ${ newState }`);
     this.state = newState;
   },
+  setMainDiv(newMainDiv) {
+    this.mainDiv = newMainDiv;
+    // if (this.mainDiv.classList.contains("hotspot_box") { do good things otherwise need to complain }
+    this.slideShow = this.mainDiv.getElementsByClassName("hotspot_slide");
+
+  },
+  mainDiv: null,
   state: 'idle',
   transitions: {
     'idle': {
@@ -27,7 +34,20 @@ const machine = {
     },
     'zoomingIn': {
         fully_zoomed_in: function(){
-            this.changeStateTo('open');
+            if (this.slideShow.length > 0) {
+                this.currentSlide = this.mainDiv.getElementById("0");
+                if (this.currentSlide == null || ! this.currentSlide.classList.contains("hotspot_slide"))  {
+                    this.currentSlide = this.slideShow[0];
+                }
+                this.nextSlide = this.mainDiv.getElementById("1");
+                if (this.nextSlide == null || ! this.nextSlide.classList.contains("hotspot_slide"))  {
+                    this.nextSlide = this.slideShow[1];
+                }
+                this.changeStateTo('paging');
+            } else
+                {
+                    this.changeStateTo('open');
+                }
         },
         zoom_in: function(){
             atMax = increaseZoomOnMainDiv();
@@ -107,24 +127,24 @@ const machine = {
             }
         },
         slide_right: function(){
-            moveCurrentDivLeft();
-            atMax = moveNextDivLeft();
+            moveCurrentDivRight();
+            atMax = moveNextDivRight ();
             if (atMax)
             {
                 this.dispatch('page_complete');
             }
         },
         slide_up: function(){
-            moveCurrentDivLeft();
-            atMax = moveNextDivLeft();
+            moveCurrentDivUp();
+            atMax = moveNextDivUp();
             if (atMax)
             {
                 this.dispatch('page_complete');
             }
         },
         slide_down: function(){
-            moveCurrentDivLeft();
-            atMax = moveNextDivLeft();
+            moveCurrentDivDown();
+            atMax = moveNextDivDown();
             if (atMax)
             {
                 this.dispatch('page_complete');
@@ -140,6 +160,7 @@ const machine = {
      }
   }
 }
+
 
 function increaseZoomOnMainDiv() {
     var currentTransform = mainDiv.style.transform;
@@ -174,6 +195,38 @@ function decreaseZoomOnMainDiv() {
     mainDiv.style.transform = currentTransform;
     return scaler;
 
+}
+
+function moveCurrentDivLeft()
+{
+    return pageDivs('left');
+}
+
+function  moveCurrentDivRight()
+{
+    return pageDivs('right');
+}
+
+function  moveCurrentDivUp()
+{
+    return pageDivs('up');
+}
+
+function  moveCurrentDivDown()
+{
+    return pageDivs('down');
+}
+
+function pageDivs(direction) {
+
+
+    var increment;
+    var
+
+    /*
+    move a three slide view accroding to tilt
+*/
+    return mainDiv.style.left == 0;
 }
 
 var TableInterface = {

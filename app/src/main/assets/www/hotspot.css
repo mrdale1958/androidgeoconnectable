@@ -1,5 +1,25 @@
 .hotspot_box
 {
-width: 1080px ;
- height: 1080px ;
+  width: 1080px ;
+  height: 1080px ;
+  overflow: hidden;
+}
+
+.hotspot_slide
+{
+    width: 50%;
+    overflow: hidden;
+    height: 1080px;
+    vertical-align: middle;
+
+}
+
+.left-slide
+{
+    float: left;
+}
+
+.right-slide
+{
+    margin-left: 50%;
 }
