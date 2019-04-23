@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+-->
+<html lang="en">
+  <head>
+    <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
+    <link rel="stylesheet" href="material.deep_purple-pink.min.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="mdl-demo">
+
+    <script>
+      var y = 0;
+      function leftArrowPressed(y) {
+         // Your stuff here
+        var x = document.getElementById("myDIV");
+        if (y==0)
+           x.innerHTML = "What if the Vice President of Research was not focused in science, but rather in another field, such as critical media studies? <br><br><br><br><br><br><br><br>";
+      }
+      function rightArrowPressed(y) {
+         // Your stuff here
+        var x = document.getElementById("myDIV");
+        if(y==1)
+            x.innerHTML = "I accepted my appointment as the Vice President for Research for UT-Dallas on 1 June 2018, and have been serving as a Professor in Bioengineering and Associate Provost since August 2015. I received my PhD in Biomedical Engineering from the University of Virginia, with PhD training focused on the ion channel electrophysiology using the patch clamp technique. I received a National Research Service Award, and did my postdoctoral training in pharmacology. My current researches carry a theme on the development and demonstration of novel neural interface technology. My lab aims to create new devices capable of neural stimulation and recording. We conduct studies to model the tissue-electrode interface and real time imaging of neuronal activity. My position in the Office of Research allows me to be a part of overseeing the following: Research funding & facilities, technology commercialization & licensing, compliance & safety, and the Institutional Review Board.";
+      }
+
+      document.onkeydown = function(evt) {
+        switch (evt.keyCode) {
+            case 39:
+                rightArrowPressed(y+1);
+                break;
+            case 37:
+                leftArrowPressed(y);
+                break;
+        }
+      };
+    </script>
+
+
+    <div>
+      <main>
+        <div class="mdl-layout__tab-panel is-active" id="overview">
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--4dp">
+            <header class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--4-col-phone mdl-color--photo3-100">
+            </header>
+            <div class="mdl-card mdl-cell mdl-cell--9-col-desktop mdl-cell--6-col-tablet mdl-cell--4-col-phone">
+              <div class="mdl-card__supporting-text">
+                <h4>Joseph Pancrazio</h4>
+                <div id="myDIV">Hello, there! My name is Joseph Pancrazio.<br><br><br><br><br><br><br><br><br> </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

@@ -45,9 +45,10 @@ const machine = {
                 }
                 this.changeStateTo('paging');
             } else
-                {
-                    this.changeStateTo('open');
-                }
+            {
+                this.changeStateTo('open');
+                if (video)  playvideo;
+            }
         },
         zoom_in: function(){
             atMax = increaseZoomOnMainDiv();

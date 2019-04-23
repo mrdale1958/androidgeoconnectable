@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+-->
+<html lang="en">
+  <head>
+    <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
+    <link rel="stylesheet" href="material.deep_purple-pink.min.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="mdl-demo">
+
+    <script>
+      var y = 0;
+      function leftArrowPressed(y) {
+         // Your stuff here
+        var x = document.getElementById("myDIV");
+        if (y==0)
+           x.innerHTML = "Had Kennedy been able to deliver the speech or visit the campus, it might have pushed the GRCSW further toward defense development rather than space science.<br><br><br><br><br><br> ";
+      }
+      function rightArrowPressed(y) {
+         // Your stuff here
+        var x = document.getElementById("myDIV");
+        if(y==1)
+            x.innerHTML = "At the Dallas Trade Mart, Dr. Jonsson broke the news to thousands of guests. The President was slated to start his speech about national security by praising the GRCSW.<br><br><br><br><br><br> ";
+      }
+
+      document.onkeydown = function(evt) {
+        switch (evt.keyCode) {
+            case 39:
+                rightArrowPressed(y+1);
+                break;
+            case 37:
+                leftArrowPressed(y);
+                break;
+        }
+      };
+    </script>
+
+
+    <div>
+      <main>
+        <div class="mdl-layout__tab-panel is-active" id="overview">
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--4dp">
+            <header class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--4-col-phone mdl-color--photo5-100">
+            </header>
+            <div class="mdl-card mdl-cell mdl-cell--9-col-desktop mdl-cell--6-col-tablet mdl-cell--4-col-phone">
+              <div class="mdl-card__supporting-text">
+                <h4>TI Headquarters</h4>
+                <div id="myDIV">In 1963, the GRCSW became a primary sponsor of President Kennedy's trip to Dallas. A proposed itinerary had him eschewing a motorcade for a visit to Richardson. It was nixed.<br><br><br><br><br><br> </div><br>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
