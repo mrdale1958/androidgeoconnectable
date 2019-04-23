@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+-->
+<html lang="en">
+  <head>
+    <!-- SEO: If your mobile URL is different from the desktop URL, add a canonical link to the desktop page https://developers.google.com/webmasters/smartphone-sites/feature-phones -->
+    <link rel="stylesheet" href="material.deep_purple-pink.min.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="mdl-demo">
+    <script>
+      var y = 0;
+      function leftArrowPressed(y) {
+         // Your stuff here
+        var x = document.getElementById("myDIV");
+        if (y==0)
+           x.innerHTML = "What if I had survived and lived longer? What would my impact on UT Dallas be like? Would we surpass UT Austin’s research capabilities?<br><br><br><br><br><br><br> ";
+      }
+      function rightArrowPressed(y) {
+         // Your stuff here
+        var x = document.getElementById("myDIV");
+        if(y==1)
+            x.innerHTML = "I was a nationally known scientist, focusing on geophysics. I am proud to have been a contributor in the invention of the standard ionospheric measuring device. I was a nationally known scientist, focusing on geophysics. I am proud to have been a contributor in the invention of the standard ionospheric measuring device. I also contributed to many other groundbreaking scientific discoveries and theories, such as how the Earth's atmosphere develops, the proposition of International Geophysical Year, and how the solar system's inner planets evolved. I was also instrumental in founding the Graduate Research Center of the Southwest, which was the predecessor to UT Dallas. I was proudly the first president of UT Dallas. Unfortunately, I died suddenly of a heart attack in 1967. Therefore, I ended my legacy at UT Dallas quite early. Unfortunately, I died suddenly of a heart attack in 1967. Therefore, I ended my legacy at UT Dallas quite early. ";
+      }
+
+      document.onkeydown = function(evt) {
+        switch (evt.keyCode) {
+            case 39:
+                rightArrowPressed(y+1);
+                break;
+            case 37:
+                leftArrowPressed(y);
+                break;
+        }
+      };
+    </script>
+
+
+    <div>
+      <main>
+        <div class="mdl-layout__tab-panel is-active" id="overview">
+          <section class="section--center mdl-grid mdl-grid--no-spacing mdl-shadow--4dp">
+            <header class="mdl-cell--3-col-desktop mdl-cell--2-col-tablet mdl-cell--4-col-phone mdl-color--photo2-100">
+            </header>
+            <div class="mdl-card mdl-cell mdl-cell--9-col-desktop mdl-cell--6-col-tablet mdl-cell--4-col-phone">
+              <div class="mdl-card__supporting-text">
+                <h4>Lloyd Berkner</h4>
+                <div id="myDIV">Hello! I’m Dr. Lloyd Berkner. You may have seen a building on campus named after me - Berkner Hall. Let's talk about how that came to be.<br><br><br><br><br><br><br> </div><br>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
