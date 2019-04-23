@@ -3,6 +3,7 @@
   width: 1080px ;
   height: 1080px ;
   overflow: hidden;
+  background:rgba(1,1,1,0.5);
 }
 
 .hotspot_slide
