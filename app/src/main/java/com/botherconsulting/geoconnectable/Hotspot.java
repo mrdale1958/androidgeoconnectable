@@ -101,6 +101,14 @@ public class Hotspot {
         }
         this.marker.setIcon(icon);
     }
+    public void setURL(String url) {
+        try {
+            this.URL = new java.net.URL(url);
+        }
+        catch (java.net.MalformedURLException e) {
+            Log.e("bad url", e.getMessage());
+        }
+    }
     public void setTitle(String title) {
         this.marker.setTitle(title);
     }
