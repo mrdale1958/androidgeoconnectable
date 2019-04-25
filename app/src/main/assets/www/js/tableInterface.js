@@ -1,6 +1,7 @@
 
 
 const minScaler = 0.1;
+const slideDivWidth = 1080;
 
 const machine = {
   dispatch(actionName, ...payload) {
@@ -20,9 +21,19 @@ const machine = {
     this.mainDiv = newMainDiv;
     // if (this.mainDiv.classList.contains("hotspot_box") { do good things otherwise need to complain }
     this.slideShow = this.mainDiv.getElementsByClassName("hotspot_slide");
+    if (this.slideShow.length > 0 )
+    {
+        defaultSlide = this.mainDiv.getElementById("0");
+        if (defaultSlide == null || ! defaultSlide.classList.contains("hotspot_slide"))  {
+            defaultSlide = this.slideShow[0];
+        }
+        defaultSlide.classList.add('left_slide');
+        defaultSlide.style.display = "block";
+    }
 
   },
   mainDiv: null,
+  firstSlideInTray: null,
   state: 'idle',
   transitions: {
     'idle': {
@@ -33,22 +44,68 @@ const machine = {
       }
     },
     'zoomingIn': {
-        fully_zoomed_in: function(){
-            if (this.slideShow.length > 0) {
+        fully_zoomed_in: function() {
+            switch (this.slideShow.length) {
+            case 0:
+                this.changeStateTo('open');
+                if (video)  playvideo;
+                break;
+            case 1:
                 this.currentSlide = this.mainDiv.getElementById("0");
                 if (this.currentSlide == null || ! this.currentSlide.classList.contains("hotspot_slide"))  {
                     this.currentSlide = this.slideShow[0];
                 }
-                this.nextSlide = this.mainDiv.getElementById("1");
-                if (this.nextSlide == null || ! this.nextSlide.classList.contains("hotspot_slide"))  {
-                    this.nextSlide = this.slideShow[1];
-                }
+                firstSlideInTray = 0;
                 this.changeStateTo('paging');
-            } else
-            {
-                this.changeStateTo('open');
-                if (video)  playvideo;
-            }
+                break;
+            case 2:
+                this.mainDiv.className = ""; // clears the list fast
+                this.mainDiv.classList.add('hotspot_box');
+                this.mainDiv.classList.add('two_slide_tray');
+                this.currentSlide = this.mainDiv.getElementById("0");
+                if (this.currentSlide == null || ! this.currentSlide.classList.contains("hotspot_slide"))  {
+                    this.currentSlide = this.slideShow[0];
+                }
+                this.currentSlide.classList.add('left_slide');
+                this.lastSlide = this.mainDiv.getElementById("1");
+                if (this.lastSlide == null || ! this.lastSlide.classList.contains("hotspot_slide"))  {
+                 this.lastSlide = this.slideShow[1];
+                }
+                this.lastSlide.classList.add('right_slide');
+                this.mainDiv.left == 0;
+                firstSlideInTray = 0;
+                this.changeStateTo('paging');
+                break;
+            case 3:
+            default:
+                this.mainDiv.className = ""; // clears the list fast
+                this.mainDiv.classList.add('hotspot_box');
+                this.mainDiv.classList.add('three_slide_tray');
+                this.currentSlide = this.mainDiv.getElementById("0");
+                if (this.currentSlide == null || ! this.currentSlide.classList.contains("hotspot_slide"))  {
+                    this.currentSlide = this.slideShow[0];
+                }
+                this.currentSlide.classList.remove('right_slide');
+                this.currentSlide.classList.remove('center_slide');
+                this.currentSlide.classList.add('left_slide');
+                this.middleSlide = this.mainDiv.getElementById("1");
+                if (this.middleSlide == null || ! this.middleSlide.classList.contains("hotspot_slide"))  {
+                    this.middleSlide = this.slideShow[1];
+                }
+                this.middleSlide.classList.remove('left_slide');
+                this.middleSlide.classList.remove('right_slide');
+                this.middleSlide.classList.add('center_slide');
+                this.lastSlide = this.mainDiv.getElementById("2");
+                if (this.lastSlide == null || ! this.lastSlide.classList.contains("hotspot_slide"))  {
+                 this.lastSlide = this.slideShow[21];
+                }
+                this.lastSlide.classList.remove('left_slide');
+                this.lastSlide.classList.remove('center_slide');
+                this.lastSlide.classList.add('right_slide');
+                firstSlideInTray = 0;
+                this.changeStateTo('paging');
+                break;
+         }
         },
         zoom_in: function(){
             atMax = increaseZoomOnMainDiv();
@@ -110,6 +167,8 @@ const machine = {
      },
      'paging': {
         page_complete: function() {
+        // this probably wants to implement a sort of detent to hold each slide for a moment
+
         },
         click_left: function(){
         },
@@ -164,7 +223,7 @@ const machine = {
 
 
 function increaseZoomOnMainDiv() {
-    var currentTransform = mainDiv.style.transform;
+    var currentTransform = machine.mainDiv.style.transform;
     var scaler = 0.0;
 
     if (currentTransform.indexOf('scale(' == 0))
@@ -176,12 +235,12 @@ function increaseZoomOnMainDiv() {
         scaler = minScaler;
     }
     currentTransform = 'scale(' + scaler +');';
-    mainDiv.style.transform = currentTransform;
+    machine.mainDiv.style.transform = currentTransform;
     return scaler;
 }
 
 function decreaseZoomOnMainDiv() {
-    var currentTransform = mainDiv.style.transform;
+    var currentTransform = machine.mainDiv.style.transform;
     var scaler = 0.0;
     if (currentTransform.indexOf('scale(' == 0))
     {
@@ -193,7 +252,7 @@ function decreaseZoomOnMainDiv() {
               scaler = 1.0;
     }
     currentTransform = 'scale(' + scaler +');';
-    mainDiv.style.transform = currentTransform;
+    machine.mainDiv.style.transform = currentTransform;
     return scaler;
 
 }
@@ -220,14 +279,102 @@ function  moveCurrentDivDown()
 
 function pageDivs(direction) {
 
-
+    var done = true;
+    const defaultIncrement = 1;
     var increment;
-    var
+    var dir = 0; // 0 for horizontal, 1 for vertical
+    switch (direction)
+    {
+        case 'up':
+            increment = defaultIncrement;
+            dir = 1;
+            break;
+        case 'down':
+            increment = -defaultIncrement;
+            dir = 1;
+            break;
+        case 'left':
+            increment = -defaultIncrement;
+            dir = 0;
+            break;
+        case 'right':
+            increment = defaultIncrement;
+            dir = 0;
+            break;
+        default:
+            break;
+
+    }
+
+    switch (machine.slideShow.length)
+    {
+        case 0:
+            break;
+        case 1:
+            break;
+        case 2:
+           done = false;
+           if (dir === 0) {
+                mainDiv.style.left += increment;
+                mainDiv.style.left = Math.min(( mainDiv.style.width - slideDivWidth ), Math.max( 0, mainDiv.style.left ));
+                if ( mainDiv.style.left === 0 || mainDiv.style.left === -slideDivWidth) done = true;
+           }
+           else {
+                mainDiv.style.top += increment;
+                mainDiv.style.top = Math.min(( mainDiv.style.height - slideDivWidth ), Math.max( 0, mainDiv.style.top ));
+                if ( mainDiv.style.top === 0 || mainDiv.style.top === -slideDivWidth) done = true;
+           }
+            break;
+        case 3:
+            done = false;
+            if (dir === 0) {
+                 mainDiv.style.left += increment;
+                 mainDiv.style.left = Math.min(( mainDiv.style.width - ( 2 * slideDivWidth )), Math.max( 0, mainDiv.style.left ));
+                 if ( mainDiv.style.left === 0 || mainDiv.style.left === -slideDivWidth || mainDiv.style.left === -2 * slideDivWidth) done = true;
+             }
+             else {
+                 mainDiv.style.top += increment;
+                 mainDiv.style.top = Math.min(( mainDiv.style.height - ( 2 * slideDivWidth )), Math.max( 0, mainDiv.style.top ));
+                 if ( mainDiv.style.top === 0 || mainDiv.style.top === -slideDivWidth || mainDiv.style.top === -2 * slideDivWidth) done = true;
+            }
+             break;
+
+        default:
+            done = false;
+            if (dir === 0) {
+                 mainDiv.style.left += increment;
+                 mainDiv.style.left = Math.min(( mainDiv.style.width - ( 2 * slideDivWidth )), Math.max( 0, mainDiv.style.left ));
+                 if ( mainDiv.style.left === 0 || mainDiv.style.left === -slideDivWidth || mainDiv.style.left === -2 * slideDivWidth) done = true;
+             }
+             else {
+                 mainDiv.style.top += increment;
+                 mainDiv.style.top = Math.min(( mainDiv.style.height - ( 2 * slideDivWidth )), Math.max( 0, mainDiv.style.top ));
+                 if ( mainDiv.style.top === 0 || mainDiv.style.top === -slideDivWidth || mainDiv.style.top === -2 * slideDivWidth) done = true;
+            }
+            if (done) {
+                switch ( mainDiv.style.left )
+                {
+                    case 0:
+                    // if there's another slide to the left then push first two to right and then add new one on the right and move the tray div to center pos
+                    if (machine.firstSlideInTray > 0) {
+                        }
+                    break;
+                    case -slideDivWidth:
+                    // no action
+                    break;
+                    case -2 * slideDivWidth:
+                    // if there's another slide to the right then push last two to left and then add new one on the right
+                    break;
+
+                }
+            }
+             break;
+    }
 
     /*
     move a three slide view accroding to tilt
 */
-    return mainDiv.style.left == 0;
+    return done;
 }
 
 var TableInterface = {
