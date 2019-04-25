@@ -22,11 +22,11 @@
 
       // 3. This function creates an <iframe> (and YouTube player)
       //    after the API code downloads.
-      var player;
+
       function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player', {
-          height: '390',
-          width: '640',
+        table.fsm.player = new YT.Player('player', {
+          height: '720',
+          width: '1080',
           videoId: '21arnoqLVPw',
           events: {
             'onReady': onPlayerReady,
@@ -51,7 +51,7 @@
         }
       }
       function stopVideo() {
-        player.stopVideo();
+        table.fsm.player.stopVideo();
       }
     </script>
     <h2>HTML Image</h2><img src="CCicon.png" width="500" height="300">
