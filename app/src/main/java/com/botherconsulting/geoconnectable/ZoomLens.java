@@ -15,7 +15,7 @@ public class ZoomLens {
     public double minZoom = 0; // needs to be in settings
     public double currentZoom = 0;
     private int currentSpinPosition = 0;
-    public int clicksPerRev = 2400; // in settings
+    public int clicksPerRev = 4800; // in settings
     public int revsPerFullZoom = 19;  // in settings
     private int clicksPerZoomLevel;
     private int idleSpin = 0;
