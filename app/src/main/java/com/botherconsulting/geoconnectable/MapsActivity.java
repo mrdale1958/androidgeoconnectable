@@ -129,7 +129,8 @@ public class MapsActivity
     private double currScreenHeight;
 
     String idleTitle = "Clark Planetarium"; // needs to be in settings
-    String sensorServerAddress = "192.168.1.73";  // in settings
+    String sensorServerAddress = "10.240.100.239";  // in settings
+    //String sensorServerAddress = "192.168.1.73";  // in settings
     //String sensorServerAddress = "10.21.3.42";  // in settings
     String sensorServerPort = "5678";  // in settings
     BackgroundWebSocket bws;
@@ -385,6 +386,16 @@ public class MapsActivity
         public void bindMZS(String mzs){
             Log.w("bindMZS", mzs);
         }
+
+        public void returnTableControlToMap()
+        {
+            hotSpotActive = false;
+            WebView hotspot = (WebView) findViewById(R.id.hotSpotWebView);
+            View mapView =  (View) findViewById(R.id.map);
+            hotspot.setVisibility(View.INVISIBLE);
+            mapView.bringToFront();
+
+        }
     }
 
     public void checkMaxZoom(float newZoom) {
@@ -454,7 +465,7 @@ public class MapsActivity
                                 newPos.longitude-targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
                 if (hotSpotActive) {
-                    WebView hotspot = (WebView) findViewById(R.id.hotSpotView);
+                    WebView hotspot = (WebView) findViewById(R.id.hotSpotWebView);
                     // deal with animating hotSpot
                     // need a mechanism to get clear of target voxel  before redisplaying
 /* Classes
@@ -484,6 +495,9 @@ Sequence
                                 hotSpotActive = true;
                                 liveHotSpot = hotspots[hs];
                                 WebView hotspot = (WebView) findViewById(R.id.hotSpotWebView);
+                                View mapView =  (View) findViewById(R.id.map);
+                                //mapView.setVisibility(View.INVISIBLE);
+                                hotspot.bringToFront();
                                 hotspot.loadUrl(liveHotSpot.URL.toString());
                                 break;
                             }
@@ -912,66 +926,67 @@ Sequence
         //Intent i = new Intent(this,TablePreferencesActivity.class);
         //startActivityForResult(i, SHOW_PREFERENCES);
         WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
+        String urlPrefix = "file:///android_asset/www/";
         hotspots[0] = new Hotspot(mMap, hotSpotWebView);
         hotspots[0].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[0].setPosition(new LatLng(40.06667,-111.903373));
-        hotspots[0].setURL("file:mostbasichotspot.html");
+        hotspots[0].setURL(urlPrefix + "mostbasichotspot.html");
         hotspots[1] = new Hotspot(mMap, hotSpotWebView);
         hotspots[1].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/AmbassadorPin.jpg"));
         hotspots[1].setPosition(new LatLng(32.771510, -96.804370));
-        hotspots[1].setURL("file:ambassador.html");
+        hotspots[1].setURL(urlPrefix + "ambassador.html");
         hotspots[2] = new Hotspot(mMap, hotSpotWebView);
         hotspots[2].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[2].setPosition(new LatLng(32.8042222, -96.8154167));
-        hotspots[2].setURL("file:parkland1.html");
+        hotspots[2].setURL(urlPrefix + "parkland1.html");
         hotspots[3] = new Hotspot(mMap, hotSpotWebView);
         hotspots[3].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[3].setPosition(new LatLng(32.8112778, -96.8373889));
-        hotspots[3].setURL("file:parkland2.html");
+        hotspots[3].setURL(urlPrefix + "parkland2.html");
         hotspots[13] = new Hotspot(mMap, hotSpotWebView);
         hotspots[13].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[13].setPosition(new LatLng(32.8141667, -96.8335278));
-        hotspots[13].setURL("file:parkland3.html");
+        hotspots[13].setURL(urlPrefix + "parkland3.html");
         hotspots[4] = new Hotspot(mMap, hotSpotWebView);
         hotspots[4].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.jpg"));
         hotspots[4].setPosition(new LatLng(32.985634, -96.748261));
-        hotspots[4].setURL("file:pin-chess.html");
+        hotspots[4].setURL(urlPrefix + "pin-chess.html");
         hotspots[5] = new Hotspot(mMap, hotSpotWebView);
         hotspots[5].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.jpg"));
         hotspots[5].setPosition(new LatLng(32.986060, -96.749393));
-        hotspots[5].setURL("file:oops-esports.html");
+        hotspots[5].setURL(urlPrefix + "oops-esports.html");
         hotspots[6] = new Hotspot(mMap, hotSpotWebView);
         hotspots[6].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.jpg"));
         hotspots[6].setPosition(new LatLng(32.982221, -96.752729));
-        hotspots[6].setURL("file:pin-pinball.html");
+        hotspots[6].setURL(urlPrefix + "pin-pinball.html");
         hotspots[7] = new Hotspot(mMap, hotSpotWebView);
         hotspots[7].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/ResearchPin.jpg"));
         hotspots[7].setPosition(new LatLng(32.987541, -96.750832));
-        hotspots[7].setURL("file:pinResearch-berkner.html");
+        hotspots[7].setURL(urlPrefix + "pinResearch-berkner.html");
         hotspots[8] = new Hotspot(mMap, hotSpotWebView);
         hotspots[8].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/ResearchPin.jpg"));
         hotspots[8].setPosition(new LatLng(32.991436, -96.750071));
-        hotspots[8].setURL("file:pinResearch-pancrazio.html");
+        hotspots[8].setURL(urlPrefix + "pinResearch-pancrazio.html");
         hotspots[9] = new Hotspot(mMap, hotSpotWebView);
         hotspots[9].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/ResearchPin.jpg"));
         hotspots[9].setPosition(new LatLng(32.993464, -96.752238));
-        hotspots[9].setURL("file:pinResearch-zielke.html");
+        hotspots[9].setURL(urlPrefix + "pinResearch-zielke.html");
         hotspots[10] = new Hotspot(mMap, hotSpotWebView);
         hotspots[10].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/TIPin.jpg"));
         hotspots[10].setPosition(new LatLng(32.987575, -96.748496));
-        hotspots[10].setURL("file:oops-founders.html");
+        hotspots[10].setURL(urlPrefix + "oops-founders.html");
         hotspots[11] = new Hotspot(mMap, hotSpotWebView);
         hotspots[11].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/TIPin.jpg"));
         hotspots[11].setPosition(new LatLng(32.803456, -96.826610));
-        hotspots[11].setURL("file:pinTI-FK.html");
+        hotspots[11].setURL(urlPrefix + "pinTI-FK.html");
         hotspots[12] = new Hotspot(mMap, hotSpotWebView);
         hotspots[12].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/TIPin.jpg"));
         hotspots[12].setPosition(new LatLng(32.930318, -96.754397));
-        hotspots[12].setURL("file:pinTI-TIheadquarters.html");
+        hotspots[12].setURL(urlPrefix + "pinTI-TIheadquarters.html");
         hotspots[14] = new Hotspot(mMap, hotSpotWebView);
         hotspots[14].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/CCicon.png"));
         hotspots[14].setPosition(new LatLng(33.0135, -96.7129));
-        hotspots[14].setURL("file:CCMall.html");
+        hotspots[14].setURL(urlPrefix + "CCMall.html");
 
     }
 

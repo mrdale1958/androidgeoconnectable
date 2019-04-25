@@ -1,6 +1,7 @@
 package com.botherconsulting.geoconnectable;
 
 import android.util.Log;
+import android.view.View;
 import android.webkit.WebView;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -210,7 +211,7 @@ public class Hotspot {
     }
 
 
-    public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
+    public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
         {
             String gestureType;
             try {
@@ -218,7 +219,7 @@ public class Hotspot {
                 //Log.i("incoming message",message.toString());
             } catch (org.json.JSONException e) {
                 Log.i("no gesture message",message.toString());
-                return;
+                return false;
             }
             if (gestureType.equals("pan")) {
                 double deltaX = 0.0;
@@ -247,7 +248,7 @@ public class Hotspot {
                             Log.d("rejected pan update", " raw x: " + Double.toString(rawX) +
                                     " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
                         }
-                        return;
+                        return false;
                     } else {
 
                         //double zoomFudge = (minZoom + 7) +
@@ -333,8 +334,11 @@ public class Hotspot {
             }
             if (newData)
             {
+                displaySurface.setVisibility(View.VISIBLE);
                 displaySurface.loadUrl("javascript://table.update(" + currentTilt + " , " + currentZoom + ")" );
+                return true;
             }
 
+            return false;
         }
 }

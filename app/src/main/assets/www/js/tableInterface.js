@@ -34,6 +34,7 @@ const machine = {
   },
   mainDiv: null,
   firstSlideInTray: null,
+  player: null,
   state: 'idle',
   transitions: {
     'idle': {
@@ -48,7 +49,7 @@ const machine = {
             switch (this.slideShow.length) {
             case 0:
                 this.changeStateTo('open');
-                if (video)  playvideo;
+                if (player)  player.play();
                 break;
             case 1:
                 this.currentSlide = this.mainDiv.getElementById("0");
@@ -120,6 +121,7 @@ const machine = {
      },
     'zoomingOut': {
         fully_zoomed_out: function(){
+        Android.returnTableControlToMap();
         this.changeStateTo('idle');
         },
         zoom_in: function(){
