@@ -12,15 +12,40 @@
     overflow: hidden;
     height: 1080px;
     vertical-align: middle;
+    display: none;
 
 }
 
-.left-slide
+.two_slide_tray
+{
+    width: 2160px;
+}
+
+.three_slide_tray
+{
+    width: 3240px;
+
+}
+
+.left_slide
 {
     float: left;
 }
 
-.right-slide
+.two_slide_tray
+.right_slide
 {
     margin-left: 50%;
+}
+
+.three_slide_tray
+.right_slide
+{
+    margin-left: 67%;
+}
+
+.three_slide_tray
+.center_slide
+{
+    margin-left: 33%;
 }
