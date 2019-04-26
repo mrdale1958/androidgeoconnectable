@@ -388,6 +388,9 @@ var TableInterface = {
 	},
 	update: function update(tiltVector, zoom) {
 	    this.tiltVector = [this.tiltVector[0] + tiltVector[0], this.tiltVector[1] + tiltVector[1]];
+	    if (this.mainDiv.getElementById("xtilt")) this.mainDiv.getElementById("xtilt").html=this.tiltVector[0] + " delta: " + tiltVector[0];
+	    if (this.mainDiv.getElementById("ytilt")) this.mainDiv.getElementById("ytilt").html=this.tiltVector[1] + " delta: " + tiltVector[1];
+	    if (this.mainDiv.getElementById("zoom")) this.mainDiv.getElementById("zoom").html=this.zoom + " delta: " + zoom;
 	    if (Math.abs(this.tiltVector[0]) > tiltClickThreshold)
 	    {
 	        if (this.tiltVector[0] > 0)
