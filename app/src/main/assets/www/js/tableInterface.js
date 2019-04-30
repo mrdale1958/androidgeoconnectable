@@ -379,14 +379,13 @@ function pageDivs(direction) {
     return done;
 }
 
-var TableInterface = {
-    constructor: function(mainDiv,transitionType,...internals) {
-		this.tiltVector = [0.0, 0.0];
-		this.zoom = 0.0;
-		this.mainDiv = mainDiv;
-		this.fsm = machine;
-	},
-	update: function update(tiltVector, zoom) {
+function TableInterface (mainDiv) {
+    this.tiltVector = [0.0, 0.0];
+    this.zoom = 0.0;
+    this.mainDiv = mainDiv;
+    this.fsm = machine;
+
+    this.update = function(tiltVector, zoom) {
 	    this.tiltVector = [this.tiltVector[0] + tiltVector[0], this.tiltVector[1] + tiltVector[1]];
 	    if (this.mainDiv.getElementById("xtilt")) this.mainDiv.getElementById("xtilt").html=this.tiltVector[0] + " delta: " + tiltVector[0];
 	    if (this.mainDiv.getElementById("ytilt")) this.mainDiv.getElementById("ytilt").html=this.tiltVector[1] + " delta: " + tiltVector[1];
@@ -445,8 +444,8 @@ var TableInterface = {
         }
 
 
-	},
-	start: function()
+	}
+	this.start = function()
 	{
 	    this.machine.dispatch('click');
 	}
