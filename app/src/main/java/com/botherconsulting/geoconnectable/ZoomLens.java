@@ -32,6 +32,7 @@ public class ZoomLens {
     long sumSquaredElapsedTimes = 0;
     int lastMessageID = 0;
     private  int delta = 0;
+    private  long bigDataArrivalGap = 150000000; // 150ms
 
 
     public ZoomLens(int _clicksPerRev, int _revsPerFullZoom, double _maxZoom, double _minZoom, double _idleZoom) {
@@ -58,7 +59,7 @@ public class ZoomLens {
         }
         double diff = (windowSumSquared - eventWindow.length * (windowSum / eventWindowLength)*(windowSum / eventWindowLength));
 
-        Log.i("Zoom data flow stats",
+        Log.i("GCT: Zoom data flow stats",
                 "\nTotal events: " + eventCount +
                         "\nTotal mean elapsed Time: " + (sumElapsedTimes/eventCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventWindowLength) +
@@ -75,7 +76,7 @@ public class ZoomLens {
         long elapsedTime = System.nanoTime() - lastZoomMessageTime;
 
         lastZoomMessageTime = System.nanoTime();
-        if (elapsedTime > 150000000) Log.i("Big data gap", Long.toString(elapsedTime));
+        if (elapsedTime > bigDataArrivalGap) Log.i("GCT: zoom Big data gap", Long.toString(elapsedTime / 1000000)+"ms");
         eventCount++;
         sumElapsedTimes += elapsedTime;
         sumSquaredElapsedTimes += elapsedTime * elapsedTime;
@@ -93,7 +94,7 @@ public class ZoomLens {
         try {
             vector = message.getJSONObject("vector");
         } catch (org.json.JSONException e) {
-            Log.e("reading zoom message", "no vector " + message.toString());
+            Log.e("GCT error: reading zoom message", "no vector " + message.toString());
         }
         try {
             delta = vector.getInt("delta");
@@ -102,14 +103,14 @@ public class ZoomLens {
             //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
             lastMessageID = messageID;
         } catch (org.json.JSONException e) {
-            Log.e("reading zoom message", "invalid vector " + vector.toString());
+            Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString());
         }
         currentSpinPosition += delta;
         currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
 
         double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
         if (doLog) {
-            Log.i("zoom update", "delta:" + Integer.toString(delta) +
+            Log.i("GCT: zoom update", "delta:" + Integer.toString(delta) +
                     " new zoom: " +
                     //String.format ("%.2d", proposedZoom) +
                      proposedZoom +
