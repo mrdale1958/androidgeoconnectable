@@ -457,17 +457,29 @@ public class MapsActivity
                 double currTop = visibleRegion.farLeft.latitude;
                 double currBottom = visibleRegion.nearRight.latitude;
                 currScreenWidth = currLeft - currRight;
+                if (currScreenWidth > 180) currScreenWidth -= 180;
                 currScreenHeight = currTop - currBottom;
+                if (currScreenHeight > 180) currScreenHeight -= 180;
                 LatLngBounds hotBounds = new LatLngBounds(
                         new LatLng(newPos.latitude-targetWidth*currScreenHeight,
                                 newPos.longitude+targetWidth*currScreenWidth),
                         new LatLng(newPos.latitude+targetWidth*currScreenHeight,
                                 newPos.longitude-targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
+                WebView displaySurface = (WebView) findViewById(R.id.hotSpotWebView);
                 if (hotSpotActive) {
-                    WebView hotspot = (WebView) findViewById(R.id.hotSpotWebView);
                     // deal with animating hotSpot
                     // need a mechanism to get clear of target voxel  before redisplaying
+                    if (liveHotSpot.newData)
+                    {
+                        displaySurface.setVisibility(View.VISIBLE);
+                        String updateURL = "javascript://table.update(" + liveHotSpot.currentTilt + " , " + liveHotSpot.currentZoom + ")";
+                        if (logTilt || logZoom) {
+                            Log.i("GCT HotSpot: notify webView" , updateURL);
+                        }
+                        displaySurface.loadUrl(updateURL);
+                    }
+
 /* Classes
 Zoom
 Pan
@@ -494,11 +506,10 @@ Sequence
                                     newZoom <  hotspots[hs].hotSpotZoomTriggerRange[1]) {
                                 hotSpotActive = true;
                                 liveHotSpot = hotspots[hs];
-                                WebView hotspot = (WebView) findViewById(R.id.hotSpotWebView);
                                 View mapView =  (View) findViewById(R.id.map);
                                 //mapView.setVisibility(View.INVISIBLE);
-                                hotspot.bringToFront();
-                                hotspot.loadUrl(liveHotSpot.URL.toString());
+                                displaySurface.bringToFront();
+                                displaySurface.loadUrl(liveHotSpot.URL.toString());
                                 break;
                             }
                         }
@@ -755,7 +766,7 @@ Sequence
 
                 //paintTarget();
             } else if (gestureType.equals("zoom")) {
-                    zoomer.handleJSON(message, mMap, logSensors || logZoom);
+                zoomer.handleJSON(message, mMap, logSensors || logZoom);
             }
 
         } else {
@@ -890,6 +901,7 @@ Sequence
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        WebView.setWebContentsDebuggingEnabled(true);
         mMap = googleMap;
         if (useHybridMap) {
             mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);

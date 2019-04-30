@@ -25,11 +25,12 @@ public class TablePanner {
     private LatLng idleHome;
     public boolean newData = false;
     private int eventCount = 0;
-    long lastZoomMessageTime = uptimeMillis();
+    long lastTiltMessageTime = uptimeMillis();
     static final int eventWindowLength = 100;
     long[] eventWindow = new long[eventWindowLength];
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
+    private  long bigDataArrivalGap = 150000000; // 150ms
 
     public TablePanner(double _maxZoom, double _minZoom) {
         maxZoom = _maxZoom;
@@ -47,11 +48,11 @@ public class TablePanner {
 
     public Object[] getCurrentPosition() {
         newData = false;
-        return new Object[]{position, lastZoomMessageTime};
+        return new Object[]{position, lastTiltMessageTime};
     }
 
     private void logstate() {
-        Log.i("zoom state", "TiltScaleX:" + String.format ("%.2f", TiltScaleX) +
+        Log.i("GCT: tilt state", "TiltScaleX:" + String.format ("%.2f", TiltScaleX) +
                 " TiltScaleY:" + String.format ("%.2f", TiltScaleY) +
                 "\ncurrentPosition:" + currentPosition.toString() +
                 " idleHome: " + idleHome.toString()
@@ -69,7 +70,7 @@ public class TablePanner {
             maxEt = Math.max(maxEt, i);
             minEt = Math.min(minEt, i);
         }
-        Log.i("Tilt data flow stats",
+        Log.i("GCT: Tilt data flow stats",
                 "\nTotal events: " + eventCount +
                         "\nTotal mean elapsed Time: " + (sumElapsedTimes/eventCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventWindowLength) +
@@ -79,14 +80,15 @@ public class TablePanner {
     }
 
     private void updateStats() {
-        long elapsedTime = uptimeMillis() - lastZoomMessageTime;
-        lastZoomMessageTime = uptimeMillis();
+        long elapsedTime = uptimeMillis() - lastTiltMessageTime;
+        lastTiltMessageTime = uptimeMillis();
+        if (elapsedTime > bigDataArrivalGap) Log.i("GCT: tilt Big data gap", Long.toString(elapsedTime / 1000000)+"ms");
         eventCount++;
         sumElapsedTimes += elapsedTime;
         sumSquaredElapsedTimes += elapsedTime * elapsedTime;
         eventWindow[eventCount % eventWindowLength] = elapsedTime;
         if (eventCount % eventWindowLength == 0) {
-            //reportStats();
+            reportStats();
         }
     }
 
@@ -103,7 +105,7 @@ public class TablePanner {
         try {
             vector = message.getJSONObject("vector");
         } catch (org.json.JSONException e) {
-            Log.e("reading pan message", "no vector " + message.toString());
+            Log.e("GCT error: reading pan message", "no vector " + message.toString());
         }
         try {
             //double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
@@ -114,13 +116,13 @@ public class TablePanner {
             double rawY = vector.getDouble("y");
 
             if (doLog) {
-                Log.i("pan update", " raw x: " + Double.toString(rawX) +
+                Log.i("GCT: pan incoming message", " raw x: " + Double.toString(rawX) +
                         " raw y: " + Double.toString(rawY) + " screenWidthDegrees: " + Double.toString(screenWidthDegrees) +
                         " screenHeightDegrees: " + Double.toString(screenHeightDegrees) );
             }
             if (Math.abs(rawX) < validTiltThreshold && Math.abs(rawY) < validTiltThreshold) {
                 if (doLog) {
-                    Log.d("rejected pan update", " raw x: " + Double.toString(rawX) +
+                    Log.d("GCT: rejected pan update", " raw x: " + Double.toString(rawX) +
                             " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
                 }
                 return;
@@ -145,7 +147,7 @@ public class TablePanner {
             //if (zoomLayers[currentZoom]["pannable"])
             //Log.i("incoming pan",x + "," + y);
             if (doLog) {
-                Log.i("pan update", "%x: " + Double.toString(percentChangeInX) +
+                Log.i("GCT: pan update", "%x: " + Double.toString(percentChangeInX) +
                         " %y: " + Double.toString(percentChangeInY) +
                         " deltax: " + Double.toString(deltaX) +
                         " deltay: " + Double.toString(deltaY) +
@@ -168,6 +170,6 @@ public class TablePanner {
             //mMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
 
         } catch (org.json.JSONException e) {
-            Log.e("reading pan message", "invalid vector " + vector.toString());
+            Log.e("GCT error: reading pan message", "invalid vector " + vector.toString());
     }
 }}
