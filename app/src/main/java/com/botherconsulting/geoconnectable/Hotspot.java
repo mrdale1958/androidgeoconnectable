@@ -6,14 +6,11 @@ import android.webkit.WebView;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
-
-import static android.os.SystemClock.uptimeMillis;
 
 /**
  * Created by dwm160130 on 3/22/18.
@@ -107,7 +104,7 @@ public class Hotspot {
             this.URL = new java.net.URL(url);
         }
         catch (java.net.MalformedURLException e) {
-            Log.e("bad url", e.getMessage());
+            Log.e("GCT HotSpot error: bad url", e.getMessage());
         }
     }
     public void setTitle(String title) {
@@ -151,7 +148,7 @@ public class Hotspot {
         }
         double diff = (windowSumSquared - eventZoomWindow.length * (windowSum / eventZoomWindowLength)*(windowSum / eventZoomWindowLength));
 
-        Log.i("Zoom data flow stats",
+        Log.i("GCT HotSpot: Zoom data flow stats",
                 "\nTotal events: " + eventZoomCount +
                         "\nTotal mean elapsed Time: " + (sumZoomElapsedTimes/eventZoomCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventZoomWindowLength) +
@@ -189,7 +186,7 @@ public class Hotspot {
             maxEt = Math.max(maxEt, i);
             minEt = Math.min(minEt, i);
         }
-        Log.i("Tilt data flow stats",
+        Log.i("GCT Hotspot: Tilt data flow stats",
                 "\nTotal events: " + eventTiltCount +
                         "\nTotal mean elapsed Time: " + (sumTiltElapsedTimes/eventTiltCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventTiltWindowLength) +
@@ -218,7 +215,7 @@ public class Hotspot {
                 gestureType = message.getString("gesture");
                 //Log.i("incoming message",message.toString());
             } catch (org.json.JSONException e) {
-                Log.i("no gesture message",message.toString());
+                Log.i("GCT HotSpot: no gesture message",message.toString());
                 return false;
             }
             if (gestureType.equals("pan")) {
@@ -229,7 +226,7 @@ public class Hotspot {
                 try {
                     vector = message.getJSONObject("vector");
                 } catch (org.json.JSONException e) {
-                    Log.e("reading pan message", "no vector " + message.toString());
+                    Log.e("GCT HotSpot: reading pan message", "no vector " + message.toString());
                 }
                 try {
                     //double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
@@ -240,12 +237,12 @@ public class Hotspot {
                     double rawY = vector.getDouble("y");
 
                     if (doLog) {
-                        Log.i("pan update", " raw x: " + Double.toString(rawX) +
+                        Log.i("GCT HotSpot: : pan update", " raw x: " + Double.toString(rawX) +
                                 " raw y: " + Double.toString(rawY));
                     }
                     if (Math.abs(rawX) < validTiltThreshold && Math.abs(rawY) < validTiltThreshold) {
                         if (doLog) {
-                            Log.d("rejected pan update", " raw x: " + Double.toString(rawX) +
+                            Log.d("GCT HotSpot: : rejected pan update", " raw x: " + Double.toString(rawX) +
                                     " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
                         }
                         return false;
@@ -268,7 +265,7 @@ public class Hotspot {
                     //if (zoomLayers[currentZoom]["pannable"])
                     //Log.i("incoming pan",x + "," + y);
                     if (doLog) {
-                        Log.i("pan hotspot update", " deltax: " + Double.toString(deltaX) +
+                        Log.i("GCT HotSpot: pan hotspot update", " deltax: " + Double.toString(deltaX) +
                                 " deltay: " + Double.toString(deltaY)
                         );
                     }
@@ -283,7 +280,7 @@ public class Hotspot {
                     //mMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
 
                 } catch (org.json.JSONException e) {
-                    Log.e("reading pan message", "invalid vector " + vector.toString());
+                    Log.e("GCT HotSpot error:  reading pan message", "invalid vector " + vector.toString());
                 }
             }
             else
@@ -293,7 +290,7 @@ public class Hotspot {
                 try {
                     vector = message.getJSONObject("vector");
                 } catch (org.json.JSONException e) {
-                    Log.e("reading zoom message", "no vector " + message.toString());
+                    Log.e("GCT HotSpot error:  reading zoom message", "no vector " + message.toString());
                 }
                 try {
                     deltaZ = vector.getInt("delta");
@@ -302,14 +299,14 @@ public class Hotspot {
                     //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
                     lastZoomMessageID = messageID;
                 } catch (org.json.JSONException e) {
-                    Log.e("reading zoom message", "invalid vector " + vector.toString());
+                    Log.e("GCT HotSpot error:  reading zoom message", "invalid vector " + vector.toString());
                 }
                 currentSpinPosition += deltaZ;
                 currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
 
                 double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
                 if (doLog) {
-                    Log.i("zoom update", "delta:" + Integer.toString(deltaZ) +
+                    Log.i("GCT HotSpot:  zoom update", "delta:" + Integer.toString(deltaZ) +
                             " new zoom: " +
                             //String.format ("%.2d", proposedZoom) +
                             proposedZoom +
@@ -335,7 +332,11 @@ public class Hotspot {
             if (newData)
             {
                 displaySurface.setVisibility(View.VISIBLE);
-                displaySurface.loadUrl("javascript://table.update(" + currentTilt + " , " + currentZoom + ")" );
+                String updateURL = "javascript://table.update(" + currentTilt + " , " + currentZoom + ")";
+                if (doLog) {
+                    Log.i("GCT HotSpot: notify webView" , updateURL);
+                }
+                displaySurface.loadUrl(updateURL);
                 return true;
             }
 
