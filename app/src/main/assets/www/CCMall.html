@@ -3,16 +3,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <title>Default HotSpot Page for GeoConnecTable</title>
     <link rel="stylesheet" type="text/css" href="hotspot.css" />
-    <script src="js/tableInterface.js"/>
-    <script  type='text/javascript'>
-        var table = new TableInterface();
-    </script>
-</head>
-<body>
-<div class="hotspot_box" id="basicDiv">
-    <div id="player"></div>
-
-    <script>
+    <script src="js/tableInterface.js" ></script>
+    <script type='text/javascript'>
+        var TiltyTable = new TableInterface(document.getElementById('basicDiv'));
       // 2. This code loads the IFrame Player API code asynchronously.
       var tag = document.createElement('script');
 
@@ -24,7 +17,7 @@
       //    after the API code downloads.
 
       function onYouTubeIframeAPIReady() {
-        table.fsm.player = new YT.Player('player', {
+        TiltyTable.fsm.player = new YT.Player('player', {
           height: '720',
           width: '1080',
           videoId: '21arnoqLVPw',
@@ -51,9 +44,14 @@
         }
       }
       function stopVideo() {
-        table.fsm.player.stopVideo();
+        TiltyTable.fsm.player.stopVideo();
       }
-    </script>
+    </script></head>
+<body>
+<div class="hotspot_box" id="basicDiv">
+    <div id="player"></div>
+
+
     <h2>HTML Image</h2><img src="CCicon.png" width="500" height="300">
 </div>
 </body>
