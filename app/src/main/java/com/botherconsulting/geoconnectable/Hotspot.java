@@ -21,7 +21,7 @@ public class Hotspot {
     public double TiltScaleX = 0.04; // in settings
     public double TiltScaleY = 0.04; // in settings
     private double panMax = 0.01;
-    private int minSpin;
+    private int minSpin = -100;
     private int maxSpin = 100000000;
     private double validTiltThreshold = 0.025; // needs to be in settings
     long lastTiltMessageTime = System.nanoTime();
@@ -39,10 +39,10 @@ public class Hotspot {
     private int currentSpinPosition = 0;
     public int clicksPerRev = 2400; // in settings
     public int revsPerFullZoom = 19;  // in settings
-    private int clicksPerZoomLevel;
+    private int clicksPerZoomLevel = 1000;
     private int idleSpin = 0;
     public double idleZoom = 13.5; // in settings
-    public double zoom;
+    public double zoom = 0d;
     private  int deltaZ = 0;
     long lastZoomMessageTime = System.nanoTime();
     private int eventZoomCount = 0;
@@ -58,7 +58,7 @@ public class Hotspot {
     public String set;
     public java.net.URL URL;
     public Marker marker;
-    public Double[] hotSpotZoomTriggerRange = {12.0, 15.0};
+    public Double[] hotSpotZoomTriggerRange = {15.0, 19.0};
     public Double[] currentTilt = {0.0, 0.0};
     private WebView displaySurface;
     private GoogleMap mMap;
@@ -165,7 +165,7 @@ public class Hotspot {
         long elapsedTime = System.nanoTime() - lastZoomMessageTime;
 
         lastZoomMessageTime = System.nanoTime();
-        if (elapsedTime > 150000000) Log.i("Big data gap", Long.toString(elapsedTime));
+        if (elapsedTime > 150000000) Log.w("Big data gap", Long.toString(elapsedTime));
         eventZoomCount++;
         sumZoomElapsedTimes += elapsedTime;
         sumZoomSquaredElapsedTimes += elapsedTime * elapsedTime;
@@ -218,10 +218,11 @@ public class Hotspot {
                 Log.i("GCT HS: no gesture msg",message.toString());
                 return false;
             }
-            if (gestureType.equals("pan")) {
-                double deltaX = 0.0;
+            double deltaX = 0.0;
 
-                double deltaY = 0.0;
+            double deltaY = 0.0;
+            deltaZ = 0;
+            if (gestureType.equals("pan")) {
                 JSONObject vector = new JSONObject();
                 try {
                     vector = message.getJSONObject("vector");
@@ -329,7 +330,7 @@ public class Hotspot {
 
 
             }
-            if (newData)
+ /*           if (newData)
             {
                 displaySurface.setVisibility(View.VISIBLE);
                 String updateURL = "javascript://table.update(" + currentTilt + " , " + currentZoom + ")";
@@ -339,7 +340,7 @@ public class Hotspot {
                 displaySurface.loadUrl(updateURL);
                 return true;
             }
-
+*/
             return false;
         }
 }
