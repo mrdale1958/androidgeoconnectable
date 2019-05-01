@@ -3,17 +3,19 @@
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <title>Default HotSpot Page for GeoConnecTable</title>
     <link rel="stylesheet" type="text/css" href="hotspot.css" />
-    <script src="js/tableInterface.js"/>
-    <script  type='text/javascript'>
-        var table = new TableInterface();
-    </script>
-</head>
+    <script src="js/tableInterface.js"></script>
+ </head>
 <body>
 <div class="hotspot_box" id="basicDiv">
     <h1>basic div</h1>
     <div>x: <span id="xtilt">0</span></div>
     <div>y: <span id="ytilt">0</span></div>
     <div>z: <span id="zoom">0</span></div>
+    <div>z: <span id="mumble">beware the jabberwock</span></div>
+    <script  type='text/javascript'>
+        var TiltyTable = new TableInterface(document.getElementById('basicDiv'));
+    </script>
+    <script type='text/javascript'>TiltyTable.update(3.0, -110.45, 50);</script>
 </div>
 </body>
 </html>

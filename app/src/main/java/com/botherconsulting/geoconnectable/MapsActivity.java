@@ -113,7 +113,7 @@ public class MapsActivity
     private String idleMessageBottom = "Tilt tabletop to pan";  // in settings
     private int idleTime = 600; // in settings
     private int idleCheckTime = 60000; // once a minute look aat last interaction time
-    private LatLng idleHome = new LatLng(40.76667,-111.903373);  // in settings
+    private LatLng idleHome = new LatLng(33.1135, -96.7129); //41.76667,-111.903373);  // in settings
     private long lastInteractionTime = uptimeMillis();
     private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
     private boolean idling = false;
@@ -449,36 +449,23 @@ public class MapsActivity
 
 
             }
-            //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
-            if (doAnimate) {
-                VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
-                double currLeft = visibleRegion.farLeft.longitude;
-                double currRight = visibleRegion.farRight.longitude;
-                double currTop = visibleRegion.farLeft.latitude;
-                double currBottom = visibleRegion.nearRight.latitude;
-                currScreenWidth = Math.abs(currLeft - currRight);
-                if (currScreenWidth > 180) currScreenWidth -= 180;
-                currScreenHeight = Math.abs(currTop - currBottom);
-                if (currScreenHeight > 180) currScreenHeight -= 180;
-                LatLngBounds hotBounds = new LatLngBounds(
-                        new LatLng(newPos.latitude-targetWidth*currScreenHeight,
-                                newPos.longitude+targetWidth*currScreenWidth),
-                        new LatLng(newPos.latitude+targetWidth*currScreenHeight,
-                                newPos.longitude-targetWidth*currScreenWidth));
-                Boolean hotspotFound = false;
-                WebView displaySurface = (WebView) findViewById(R.id.hotSpotWebView);
-                if (hotSpotActive) {
-                    // deal with animating hotSpot
-                    // need a mechanism to get clear of target voxel  before redisplaying
-                    if (liveHotSpot.newData)
-                    {
-                        displaySurface.setVisibility(View.VISIBLE);
-                        String updateURL = "javascript://table.update(" + liveHotSpot.currentTilt + " , " + liveHotSpot.currentZoom + ")";
-                        if (logTilt || logZoom) {
-                            Log.i("GCT HotSpot: notify webView" , updateURL);
-                        }
-                        displaySurface.loadUrl(updateURL);
+            WebView displaySurface = (WebView) findViewById(R.id.hotSpotWebView);
+            if (hotSpotActive) {
+                // deal with animating hotSpot
+                // need a mechanism to get clear of target voxel  before redisplaying
+                if (liveHotSpot.newData)
+                {
+                    displaySurface.setVisibility(View.VISIBLE);
+                    String updateScript = "TiltyTable.update(" + liveHotSpot.currentTilt[0] + " , " +  + liveHotSpot.currentTilt[1] + " , " + liveHotSpot.currentZoom + ")";
+                    if (logTilt || logZoom) {
+                        Log.i("GCT HotSpot: notify webView" , updateScript);
                     }
+                    displaySurface.evaluateJavascript(updateScript, null);
+                    if (!idling){
+                        //Log.i("animateByTable", "now");
+                        asyncTaskHandler.post(animateByTable);
+                    }
+                }
 
 /* Classes
 Zoom
@@ -499,25 +486,59 @@ Sequence
 
 
 
-                } else {
-                    for (int hs = 0; hs < hotspots.length; hs++) {
-                        if (hotBounds.contains(hotspots[hs].marker.getPosition())) {
-                            if (newZoom >  hotspots[hs].hotSpotZoomTriggerRange[0] &&
-                                    newZoom <  hotspots[hs].hotSpotZoomTriggerRange[1]) {
-                                hotSpotActive = true;
-                                liveHotSpot = hotspots[hs];
-                                View mapView =  (View) findViewById(R.id.map);
-                                //mapView.setVisibility(View.INVISIBLE);
-                                displaySurface.bringToFront();
-                                displaySurface.loadUrl(liveHotSpot.URL.toString());
-                                break;
-                            }
+            } else {
+                VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                double currLeft = visibleRegion.farLeft.longitude;
+                double currRight = visibleRegion.farRight.longitude;
+                double currTop = visibleRegion.farLeft.latitude;
+                double currBottom = visibleRegion.nearRight.latitude;
+                currScreenWidth = Math.abs(currLeft - currRight);
+                if (currScreenWidth > 180) currScreenWidth -= 180;
+                currScreenHeight = Math.abs(currTop - currBottom);
+                if (currScreenHeight > 180) currScreenHeight -= 180;
+                LatLngBounds hotBounds = new LatLngBounds(
+                        new LatLng(newPos.latitude-targetWidth*currScreenHeight,
+                                newPos.longitude+targetWidth*currScreenWidth),
+                        new LatLng(newPos.latitude+targetWidth*currScreenHeight,
+                                newPos.longitude-targetWidth*currScreenWidth));
+                Boolean hotspotFound = false;
+                for (int hs = 0; hs < hotspots.length; hs++) {
+                    if (hotBounds.contains(hotspots[hs].marker.getPosition())) {
+                        if (newZoom >  hotspots[hs].hotSpotZoomTriggerRange[0] &&
+                                newZoom <  hotspots[hs].hotSpotZoomTriggerRange[1]) {
+                            hotSpotActive = true;
+                            liveHotSpot = hotspots[hs];
+                            View mapView =  (View) findViewById(R.id.map);
+                            //mapView.setVisibility(View.INVISIBLE);
+                            displaySurface.bringToFront();
+                            Log.w("hotspot loading ", hs + ":" + liveHotSpot.URL.toString());
+                            displaySurface.loadUrl(liveHotSpot.URL.toString());
+                            break;
                         }
                     }
                 }
+            }
+            //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
+            if (doAnimate) {
+                /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                double currLeft = visibleRegion.farLeft.longitude;
+                double currRight = visibleRegion.farRight.longitude;
+                double currTop = visibleRegion.farLeft.latitude;
+                double currBottom = visibleRegion.nearRight.latitude;
+                currScreenWidth = Math.abs(currLeft - currRight);
+                if (currScreenWidth > 180) currScreenWidth -= 180;
+                currScreenHeight = Math.abs(currTop - currBottom);
+                if (currScreenHeight > 180) currScreenHeight -= 180;
+                LatLngBounds hotBounds = new LatLngBounds(
+                        new LatLng(newPos.latitude-targetWidth*currScreenHeight,
+                                newPos.longitude+targetWidth*currScreenWidth),
+                        new LatLng(newPos.latitude+targetWidth*currScreenHeight,
+                                newPos.longitude-targetWidth*currScreenWidth));
+                Boolean hotspotFound = false;
+                */
 
                 int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
-                Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
+                //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onFinish() {
@@ -567,6 +588,7 @@ Sequence
     protected void emergeFromIdle() {
         Log.i("Idle", "emerging from idle");
         idling = false;
+        if (hotSpotActive) {} // needs to switch to map mode
         asyncTaskHandler.post(animateByTable);
         idleMessageTopView.setText("");
         idleMessageBottomView.setText("");
@@ -941,7 +963,7 @@ Sequence
         String urlPrefix = "file:///android_asset/www/";
         hotspots[0] = new Hotspot(mMap, hotSpotWebView);
         hotspots[0].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-        hotspots[0].setPosition(new LatLng(40.06667,-111.903373));
+        hotspots[0].setPosition(new LatLng(40.75867,-111.903373));
         hotspots[0].setURL(urlPrefix + "mostbasichotspot.html");
         hotspots[1] = new Hotspot(mMap, hotSpotWebView);
         hotspots[1].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/AmbassadorPin.jpg"));
@@ -963,10 +985,10 @@ Sequence
         hotspots[4].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.png"));
         hotspots[4].setPosition(new LatLng(32.985634, -96.748261));
         hotspots[4].setURL(urlPrefix + "gamepin-chess.html");
-        /*hotspots[5] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[5] = new Hotspot(mMap, hotSpotWebView);
         hotspots[5].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.png"));
         hotspots[5].setPosition(new LatLng(32.986060, -96.749393));
-        hotspots[5].setURL(urlPrefix + "gamepin-esports.html");*/
+        hotspots[5].setURL(urlPrefix + "gamepin-esports.html");
         hotspots[6] = new Hotspot(mMap, hotSpotWebView);
         hotspots[6].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.png"));
         hotspots[6].setPosition(new LatLng(32.982221, -96.752729));
@@ -994,7 +1016,7 @@ Sequence
         hotspots[12] = new Hotspot(mMap, hotSpotWebView);
         hotspots[12].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/TIPin.png"));
         hotspots[12].setPosition(new LatLng(32.930318, -96.754397));
-        hotspots[12].setURL(urlPrefix + "TIPin-TIheadquarters.html");
+        hotspots[12].setURL(urlPrefix + "TIpin-TIheadquarters.html");
         hotspots[14] = new Hotspot(mMap, hotSpotWebView);
         hotspots[14].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/CCicon.png"));
         hotspots[14].setPosition(new LatLng(33.0135, -96.7129));
