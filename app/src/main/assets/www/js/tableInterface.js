@@ -4,17 +4,26 @@ const minScaler = 0.1;
 const slideDivWidth = 1080;
 
 const machine = {
+  mainDiv: null,
+  firstSlideInTray: null,
+  player: null,
+  state: 'idle',
+  myrender(template) {
+  mynode = document.getElementById("mumble");
+  mynode.innerHTML += "\n<br>" + template;
+  },
   dispatch(actionName, ...payload) {
     const actions = this.transitions[this.state];
     const action = this.transitions[this.state][actionName];
-
+    //this.myrender("<span>.....dispatching " + actionName + " to " + this.state + "</span>");
     if (action) {
-      render(`action dispatched: ${ actionName }`);
+      //render(`action dispatched: ${ actionName }`);
       action.apply(machine, payload);
     }
   },
   changeStateTo(newState) {
-    render(`state changed: ${ newState }`);
+    //this.myrender("<span>!!!!!changing state from  " + this.state + " to " + newState + "</span>");
+    //render(`state changed: ${ newState }`);
     this.state = newState;
   },
   setMainDiv(newMainDiv) {
@@ -23,7 +32,7 @@ const machine = {
     this.slideShow = this.mainDiv.getElementsByClassName("hotspot_slide");
     if (this.slideShow.length > 0 )
     {
-        defaultSlide = this.mainDiv.getElementById("0");
+        defaultSlide = document.getElementById("0");
         if (defaultSlide == null || ! defaultSlide.classList.contains("hotspot_slide"))  {
             defaultSlide = this.slideShow[0];
         }
@@ -31,28 +40,46 @@ const machine = {
         defaultSlide.style.display = "block";
     }
 
+
   },
-  mainDiv: null,
-  firstSlideInTray: null,
-  player: null,
-  state: 'idle',
   transitions: {
     'idle': {
       click: function () {
+       this.changeStateTo('zoomingIn');
+        this.dispatch('zoom_in');
+
+      },
+      click_down: function () {
+        this.changeStateTo('zoomingIn');
+        this.dispatch('zoom_in');
+
+      },
+      click_up: function () {
+        this.changeStateTo('zoomingIn');
+        this.dispatch('zoom_in');
+
+      },
+      click_left: function () {
+        this.changeStateTo('zoomingIn');
+        this.dispatch('zoom_in');
+
+      },
+      click_right: function () {
         this.changeStateTo('zoomingIn');
         this.dispatch('zoom_in');
 
       }
+
     },
     'zoomingIn': {
         fully_zoomed_in: function() {
             switch (this.slideShow.length) {
             case 0:
                 this.changeStateTo('open');
-                if (player)  player.play();
+                if (this.player)  this.player.play();
                 break;
             case 1:
-                this.currentSlide = this.mainDiv.getElementById("0");
+                this.currentSlide = document.getElementById("0");
                 if (this.currentSlide == null || ! this.currentSlide.classList.contains("hotspot_slide"))  {
                     this.currentSlide = this.slideShow[0];
                 }
@@ -63,12 +90,12 @@ const machine = {
                 this.mainDiv.className = ""; // clears the list fast
                 this.mainDiv.classList.add('hotspot_box');
                 this.mainDiv.classList.add('two_slide_tray');
-                this.currentSlide = this.mainDiv.getElementById("0");
+                this.currentSlide = document.getElementById("0");
                 if (this.currentSlide == null || ! this.currentSlide.classList.contains("hotspot_slide"))  {
                     this.currentSlide = this.slideShow[0];
                 }
                 this.currentSlide.classList.add('left_slide');
-                this.lastSlide = this.mainDiv.getElementById("1");
+                this.lastSlide = document.getElementById("1");
                 if (this.lastSlide == null || ! this.lastSlide.classList.contains("hotspot_slide"))  {
                  this.lastSlide = this.slideShow[1];
                 }
@@ -82,21 +109,21 @@ const machine = {
                 this.mainDiv.className = ""; // clears the list fast
                 this.mainDiv.classList.add('hotspot_box');
                 this.mainDiv.classList.add('three_slide_tray');
-                this.currentSlide = this.mainDiv.getElementById("0");
+                this.currentSlide = document.getElementById("0");
                 if (this.currentSlide == null || ! this.currentSlide.classList.contains("hotspot_slide"))  {
                     this.currentSlide = this.slideShow[0];
                 }
                 this.currentSlide.classList.remove('right_slide');
                 this.currentSlide.classList.remove('center_slide');
                 this.currentSlide.classList.add('left_slide');
-                this.middleSlide = this.mainDiv.getElementById("1");
+                this.middleSlide = document.getElementById("1");
                 if (this.middleSlide == null || ! this.middleSlide.classList.contains("hotspot_slide"))  {
                     this.middleSlide = this.slideShow[1];
                 }
                 this.middleSlide.classList.remove('left_slide');
                 this.middleSlide.classList.remove('right_slide');
                 this.middleSlide.classList.add('center_slide');
-                this.lastSlide = this.mainDiv.getElementById("2");
+                this.lastSlide = document.getElementById("2");
                 if (this.lastSlide == null || ! this.lastSlide.classList.contains("hotspot_slide"))  {
                  this.lastSlide = this.slideShow[21];
                 }
@@ -168,6 +195,8 @@ const machine = {
         },
      },
      'paging': {
+
+     // TODO: deal with video in a slide
         page_complete: function() {
         // this probably wants to implement a sort of detent to hold each slide for a moment
 
@@ -181,32 +210,32 @@ const machine = {
         click_down: function(){
         },
         slide_left: function(){
-            moveCurrentDivLeft();
-            atMax = moveNextDivLeft();
+            atMax = moveCurrentDivLeft();
+            //atMax = moveNextDivLeft();
             if (atMax)
             {
                 this.dispatch('page_complete');
             }
         },
         slide_right: function(){
-            moveCurrentDivRight();
-            atMax = moveNextDivRight ();
+            atMax = moveCurrentDivRight();
+            //atMax = moveNextDivRight ();
             if (atMax)
             {
                 this.dispatch('page_complete');
             }
         },
         slide_up: function(){
-            moveCurrentDivUp();
-            atMax = moveNextDivUp();
+            atMax = moveCurrentDivUp();
+            //atMax = moveNextDivUp();
             if (atMax)
             {
                 this.dispatch('page_complete');
             }
         },
         slide_down: function(){
-            moveCurrentDivDown();
-            atMax = moveNextDivDown();
+            atMax = moveCurrentDivDown();
+            //atMax = moveNextDivDown();
             if (atMax)
             {
                 this.dispatch('page_complete');
@@ -222,7 +251,7 @@ const machine = {
      }
   }
 }
-
+var zoomIncrement = 0.1;
 
 function increaseZoomOnMainDiv() {
     var currentTransform = machine.mainDiv.style.transform;
@@ -379,33 +408,39 @@ function pageDivs(direction) {
     return done;
 }
 
+var tiltClickThreshold = 100;
+
 function TableInterface (mainDiv) {
     this.tiltVector = [0.0, 0.0];
     this.zoom = 0.0;
     this.mainDiv = mainDiv;
     this.fsm = machine;
+    this.fsm.setMainDiv(this.mainDiv);
+    //this.fsm.myrender("is this thing on");
 
-    this.update = function(tiltVector, zoom) {
-	    this.tiltVector = [this.tiltVector[0] + tiltVector[0], this.tiltVector[1] + tiltVector[1]];
-	    if (this.mainDiv.getElementById("xtilt")) this.mainDiv.getElementById("xtilt").html=this.tiltVector[0] + " delta: " + tiltVector[0];
-	    if (this.mainDiv.getElementById("ytilt")) this.mainDiv.getElementById("ytilt").html=this.tiltVector[1] + " delta: " + tiltVector[1];
-	    if (this.mainDiv.getElementById("zoom")) this.mainDiv.getElementById("zoom").html=this.zoom + " delta: " + zoom;
+    this.update = function(tiltVectorX, tiltVectorY, zoom) {
+        //console.log("update html from table " + tiltVectorX + "," + tiltVectorY + " z: " + zoom);
+	    this.tiltVector = [this.tiltVector[0] + tiltVectorX, this.tiltVector[1] + tiltVectorY];
+	    if (document.getElementById("mumble")) document.getElementById("mumble").innerHTML="update html from table " + tiltVectorX + "," + tiltVectorY + " z: " + zoom;
+	    if (document.getElementById("xtilt")) document.getElementById("xtilt").innerHTML=this.tiltVector[0] + " delta: " + tiltVectorX;
+	    if (document.getElementById("ytilt")) document.getElementById("ytilt").innerHTML=this.tiltVector[1] + " delta: " + tiltVectorY;
+	    if (document.getElementById("zoom")) document.getElementById("zoom").innerHTML=this.zoom + " delta: " + zoom;
 	    if (Math.abs(this.tiltVector[0]) > tiltClickThreshold)
 	    {
 	        if (this.tiltVector[0] > 0)
 	        {
-	            this.machine.dispatch('click_right');
+	            this.fsm.dispatch('click_right');
 	        } else {
-	            this.machine.dispatch('click_left');
+	            this.fsm.dispatch('click_left');
 	        }
 	    }
 	    if (Math.abs(this.tiltVector[1]) > tiltClickThreshold)
 	    {
 	        if (this.tiltVector[1] > 0)
 	        {
-	            this.machine.dispatch('click_up');
+	            this.fsm.dispatch('click_up');
 	        } else {
-	            this.machine.dispatch('click_down');
+	            this.fsm.dispatch('click_down');
 	        }
 	    }
 	    this.zoom += zoom;
@@ -413,33 +448,33 @@ function TableInterface (mainDiv) {
         {
             if (this.zoom > 0)
             {
-                this.machine.dispatch('click_in');
+                this.fsm.dispatch('click_in');
             } else {
-                this.machine.dispatch('click_out');
+                this.fsm.dispatch('click_out');
             }
         }
-        if (tiltVector[0]) {
-            if (tiltVector[0] > 0)
+        if (this.tiltVector[0]) {
+            if (this.tiltVector[0] > 0)
             {
-                this.machine.dispatch('slide_right');
+                this.fsm.dispatch('slide_right');
             }  else {
-               this.machine.dispatch('slide_left');
+               this.fsm.dispatch('slide_left');
             }
         }
-        if (tiltVector[1]) {
-            if (tiltVector[1] > 0)
+        if (this.tiltVector[1]) {
+            if (this.tiltVector[1] > 0)
             {
-                this.machine.dispatch('slide_up');
+                this.fsm.dispatch('slide_up');
             } else {
-                this.machine.dispatch('slide_down');
+                this.fsm.dispatch('slide_down');
             }
         }
-        if (zoom) {
-            if (zoom > 0)
+        if (this.zoom) {
+            if (this.zoom > 0)
             {
-                this.machine.dispatch('zoom_in');
+                this.fsm.dispatch('zoom_in');
             } else {
-                this.machine.dispatch('zoom_out');
+                this.fsm.dispatch('zoom_out');
             }
         }
 
@@ -447,7 +482,7 @@ function TableInterface (mainDiv) {
 	}
 	this.start = function()
 	{
-	    this.machine.dispatch('click');
+	    this.fsm.dispatch('click');
 	}
 }
 
