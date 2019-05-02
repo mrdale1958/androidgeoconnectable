@@ -105,7 +105,7 @@ public class TablePanner {
         try {
             vector = message.getJSONObject("vector");
         } catch (org.json.JSONException e) {
-            Log.e("GCT error: reading pan message", "no vector " + message.toString());
+            Log.e("GCT pan: reading", "no vector " + message.toString());
         }
         try {
             //double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
@@ -116,13 +116,13 @@ public class TablePanner {
             double rawY = vector.getDouble("y");
 
             if (doLog) {
-                Log.i("GCT: pan incoming message", " raw x: " + Double.toString(rawX) +
+                Log.i("GCT pan: incoming", " raw x: " + Double.toString(rawX) +
                         " raw y: " + Double.toString(rawY) + " screenWidthDegrees: " + Double.toString(screenWidthDegrees) +
                         " screenHeightDegrees: " + Double.toString(screenHeightDegrees) );
             }
             if (Math.abs(rawX) < validTiltThreshold && Math.abs(rawY) < validTiltThreshold) {
                 if (doLog) {
-                    Log.d("GCT: rejected pan update", " raw x: " + Double.toString(rawX) +
+                    Log.d("GCT pan: rejected", " raw x: " + Double.toString(rawX) +
                             " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
                 }
                 return;
@@ -170,6 +170,6 @@ public class TablePanner {
             //mMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
 
         } catch (org.json.JSONException e) {
-            Log.e("GCT error: reading pan message", "invalid vector " + vector.toString());
+            Log.e("GCT pan: reading", "invalid vector " + vector.toString());
     }
 }}
