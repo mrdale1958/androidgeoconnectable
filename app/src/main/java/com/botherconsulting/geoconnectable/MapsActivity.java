@@ -1,6 +1,7 @@
 package com.botherconsulting.geoconnectable;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
@@ -65,7 +67,9 @@ import static android.os.SystemClock.uptimeMillis;
 
 public class MapsActivity
         extends FragmentActivity
-        implements OnMapReadyCallback,
+        implements View.OnClickListener,
+        View.OnTouchListener,
+        OnMapReadyCallback,
         GoogleMap.OnCameraMoveListener,
         GoogleMap.OnCameraIdleListener,
         GoogleMap.OnCameraChangeListener {
@@ -163,6 +167,8 @@ public class MapsActivity
             Log.e("writing maxZoomCache", "oops broke it" + e.getMessage());
         }
     }
+
+
     @Override
     protected void onStop() {
         // call the superclass method first
@@ -342,7 +348,6 @@ public class MapsActivity
         int width = size.x;
         int height = size.y;
         if (logSensors) Toast.makeText(MapsActivity.this, "Screen res in pixels" + Integer.toString(width)+"x" + Integer.toString(height), Toast.LENGTH_LONG).show();
-
         doIdle();
         if (idling) emergeFromIdle();
 
@@ -612,6 +617,20 @@ Sequence
 
         }
 
+    }
+
+    public void onClick(View v) {
+
+        int id = v.getId();
+        Log.i("ClickEvent:", "hmmm");
+
+    }
+
+    public boolean onTouch(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+        }
+        Log.i("TouchEvent:", event.getX() + "," + event.getY());
+        return true;
     }
 
     @Override
