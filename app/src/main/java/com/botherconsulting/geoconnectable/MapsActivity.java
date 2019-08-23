@@ -1,7 +1,6 @@
 package com.botherconsulting.geoconnectable;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -25,9 +24,8 @@ import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
-import android.webkit.WebView;
 import android.webkit.WebResourceRequest;
-import android.widget.GridLayout;
+import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -132,6 +130,7 @@ public class MapsActivity
     private Hotspot liveHotSpot;
     private double currScreenWidth;
     private double currScreenHeight;
+    private boolean mouseButtonState = false;
 
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     String sensorServerAddress = "192.168.1.73";  // in settings
@@ -334,6 +333,8 @@ public class MapsActivity
                                    0.85f * (float)Math.PI * instructionTextRadius * 2,
         -5f);
         idleMessageTopView.setText(idleMessageTop);
+        idleMessageTopView.setOnClickListener(this);
+        idleMessageTopView.setOnTouchListener(this);
         idleMessageBottomView = findViewById(R.id.IdleBottomText);
         idleMessageBottomView.setPath(1260,
                                         980,
@@ -342,6 +343,7 @@ public class MapsActivity
                                         0.6f * (float)Math.PI * instructionTextRadius * 2,
                                         20f);
         idleMessageBottomView.setText(idleMessageBottom);
+
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
@@ -627,10 +629,19 @@ Sequence
     }
 
     public boolean onTouch(View v, MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN ) {
+            mouseButtonState = true;
+        } else if  (event.getAction() == MotionEvent.ACTION_UP ) {
+            mouseButtonState = false;
+        } else if (mouseButtonState && event.getAction() == MotionEvent.ACTION_MOVE) {
+            onMessage("{ 'gesture': 'pan', 'vector': { 'x': " +
+                    (15 * (event.getX() - 960) / 1920) +
+                    ", 'y': " +
+                    (15 * (event.getY() - 540) / 1080) +
+                    "}}");
         }
-        Log.i("TouchEvent:", event.getX() + "," + event.getY());
-        return true;
+        Log.i("TouchEvent:", event.getX() + "," + event.getY() + " " + event.actionToString(event.getAction()) + " " + event.getButtonState());
+        return false;
     }
 
     @Override
