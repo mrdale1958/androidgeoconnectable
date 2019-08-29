@@ -103,7 +103,7 @@ public class Hotspot {
     }
     public void setURL(String url) {
         try {
-            this.URL = new java.net.URL(url);
+            this.URL = new java.net.URL("file://android_asset/www/" + url);
         }
         catch (java.net.MalformedURLException e) {
             Log.e("bad url", e.getMessage());

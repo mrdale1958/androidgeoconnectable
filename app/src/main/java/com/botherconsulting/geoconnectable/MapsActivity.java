@@ -17,6 +17,8 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
+import android.view.InputDevice;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -65,8 +67,7 @@ import static android.os.SystemClock.uptimeMillis;
 
 public class MapsActivity
         extends FragmentActivity
-        implements View.OnClickListener,
-        View.OnTouchListener,
+        implements View.OnTouchListener,
         OnMapReadyCallback,
         GoogleMap.OnCameraMoveListener,
         GoogleMap.OnCameraIdleListener,
@@ -100,6 +101,7 @@ public class MapsActivity
     private int[][] maxZoomCache = new int[181][361];
     private boolean logZoom = false;
     private boolean logTilt = false;
+    private boolean logHotspot = true;
     private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
@@ -131,6 +133,8 @@ public class MapsActivity
     private double currScreenWidth;
     private double currScreenHeight;
     private boolean mouseButtonState = false;
+    private boolean keyButtonState = false;
+    private int lastY = 0;
 
     String idleTitle = "Clark Planetarium"; // needs to be in settings
     String sensorServerAddress = "192.168.1.73";  // in settings
@@ -333,7 +337,6 @@ public class MapsActivity
                                    0.85f * (float)Math.PI * instructionTextRadius * 2,
         -5f);
         idleMessageTopView.setText(idleMessageTop);
-        idleMessageTopView.setOnClickListener(this);
         idleMessageTopView.setOnTouchListener(this);
         idleMessageBottomView = findViewById(R.id.IdleBottomText);
         idleMessageBottomView.setPath(1260,
@@ -490,6 +493,7 @@ Sequence
                             if (newZoom >  hotspots[hs].hotSpotZoomTriggerRange[0] &&
                                     newZoom <  hotspots[hs].hotSpotZoomTriggerRange[1]) {
                                 hotSpotActive = true;
+                                if (logHotspot) Log.i("Hotspot", "grabbing hotspot " + hotspots[hs].URL + " " + newZoom);
                                 liveHotSpot = hotspots[hs];
                                 break;
                             }
@@ -621,27 +625,56 @@ Sequence
 
     }
 
-    public void onClick(View v) {
-
-        int id = v.getId();
-        Log.i("ClickEvent:", "hmmm");
-
-    }
 
     public boolean onTouch(View v, MotionEvent event) {
+        Log.i("TouchEvent:", keyButtonState + " " + event.getX() + "," + event.getY() + " " + event.actionToString(event.getAction()) + " " + event.getToolType(0));
         if (event.getAction() == MotionEvent.ACTION_DOWN ) {
             mouseButtonState = true;
         } else if  (event.getAction() == MotionEvent.ACTION_UP ) {
             mouseButtonState = false;
+            lastY = 0;
         } else if (mouseButtonState && event.getAction() == MotionEvent.ACTION_MOVE) {
-            onMessage("{ 'gesture': 'pan', 'vector': { 'x': " +
-                    (15 * (event.getX() - 960) / 1920) +
-                    ", 'y': " +
-                    (15 * (event.getY() - 540) / 1080) +
-                    "}}");
+            if (keyButtonState) {
+                int nextZoom = (int) ((lastY != 0) ? (event.getY() - lastY) : 0);
+                onMessage("{ 'gesture': 'zoom', 'vector': { 'delta': " +
+                         nextZoom +
+                        "}, 'id': 0}");
+                lastY = (int) event.getY();
+            } else {
+                onMessage("{ 'gesture': 'pan', 'vector': { 'x': " +
+                        (15 * (event.getX() - 960) / 1920) +
+                        ", 'y': " +
+                        (15 * (event.getY() - 540) / 1080) +
+                        "}}");
+            }
         }
-        Log.i("TouchEvent:", event.getX() + "," + event.getY() + " " + event.actionToString(event.getAction()) + " " + event.getButtonState());
+        return true;
+    }
+
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //Log.i("KeyEventD:", keyCode + "," + event.toString());
+        if (event.getAction() == KeyEvent.ACTION_DOWN ) {
+            //keyButtonState = true;
+        }
         return false;
+    }
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        //Log.i("KeyEventL:", keyCode + "," + event.toString());
+        if (event.getAction() == KeyEvent.ACTION_DOWN ) {
+            //keyButtonState = true;
+        }//
+        return false;
+    }
+
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        Log.i("KeyEventU:", keyCode + "," + event.toString());
+        if  (keyCode == KeyEvent.KEYCODE_Z) {
+            keyButtonState = false;
+            lastY = 0;
+        } else if (keyCode == KeyEvent.KEYCODE_SHIFT_LEFT ){
+            keyButtonState = true;
+        }
+        return true;
     }
 
     @Override
@@ -776,11 +809,13 @@ Sequence
         } else {
             if (gestureType.equals("pan"))
             {
+                if (logHotspot) Log.i("Hotspot", "panning webpage " + message + " " + liveHotSpot.URL);
               liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
 
                 //paintTarget();
             } else if (gestureType.equals("zoom")) {
-               liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
+                if (logHotspot) Log.i("Hotspot", "zooming webpage " + message + " " + liveHotSpot.URL);
+                liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
             }
 
         }
@@ -1001,6 +1036,9 @@ Sequence
         hotspots[14].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/CCicon.png"));
         hotspots[14].setPosition(new LatLng(33.0135, -96.7129));
         hotspots[14].setURL("CCMall.html");
+        for (int hs = 0; hs < hotspots.length; hs++) {
+            if (logHotspot) Log.i("Hotspot", "built " + hotspots.length + " hotspots " + hotspots[hs].URL);
+        }
 
     }
 
