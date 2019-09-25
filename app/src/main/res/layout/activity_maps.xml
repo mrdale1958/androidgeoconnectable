@@ -44,7 +44,7 @@
         android:layout_gravity="center"
         android:background="@color/black"
         tools:context="com.botherconsulting.geoconnectable.MapsActivity" />
-   <!--
+
     <FrameLayout
         android:id="@+id/MaskingFrame"
         android:layout_width="800dp"
@@ -52,7 +52,7 @@
         android:layout_gravity="center"
         android:background="@drawable/mask1200" >
     </FrameLayout>
-    -->
+
     <!--
     <com.botherconsulting.geoconnectable.ScaleBarOverlay
         android:layout_width="match_parent"
@@ -173,5 +173,11 @@
              android:visibility="visible" /> -->
 
    </android.support.design.widget.CoordinatorLayout>
+    <FrameLayout
+        android:id="@+id/HotSpotImageFrame"
+        android:layout_width="800dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" >
+    </FrameLayout>
 
 </android.support.design.widget.CoordinatorLayout>
