@@ -28,30 +28,27 @@
         android:layout_marginRight="200dp"
         android:visibility="invisible"/>
 
-    <WebView
-        android:id="@+id/hotSpotWebView"
-        android:layout_width="800dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="@android:color/transparent"
-        android:visibility="visible" />
-
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="800dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="@color/black"
-        tools:context="com.botherconsulting.geoconnectable.MapsActivity" />
+    <FrameLayout
+        android:id="@+id/MapFrame"
+        android:layout_width="1080px"
+        android:layout_height="fill_parent"
+        android:layout_gravity="center">
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_gravity="center"
+            android:background="@color/black"
+            tools:context="com.botherconsulting.geoconnectable.MapsActivity" />
+     </FrameLayout>
 
     <FrameLayout
         android:id="@+id/MaskingFrame"
-        android:layout_width="800dp"
-        android:layout_height="match_parent"
+        android:layout_width="1080px"
+        android:layout_height="1080px"
         android:layout_gravity="center"
-        android:background="@drawable/mask1200" >
-    </FrameLayout>
+        android:background="@drawable/mask1200"/>
 
     <!--
     <com.botherconsulting.geoconnectable.ScaleBarOverlay
@@ -87,11 +84,20 @@
     </FrameLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/settings_Editor_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|left"
         android:layout_marginLeft="@dimen/fab_margin"
+        app:fabSize="normal"
+        app:backgroundTint="@color/settingsbutton"
+        app:rippleColor="@android:color/black" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/hotSpotEditor_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|right"
+        android:layout_marginRight="@dimen/fab_margin"
         app:fabSize="normal"
         app:backgroundTint="@color/settingsbutton"
         app:rippleColor="@android:color/black" />
@@ -174,10 +180,23 @@
 
    </android.support.design.widget.CoordinatorLayout>
     <FrameLayout
-        android:id="@+id/HotSpotImageFrame"
-        android:layout_width="800dp"
-        android:layout_height="match_parent"
+        android:id="@+id/HotSpotFrame"
+        android:layout_width="1080px"
+        android:layout_height="fill_parent"
         android:layout_gravity="center" >
+        <ImageView
+            android:id="@+id/hotSpotImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"/>
+        <WebView
+            android:id="@+id/hotSpotWebView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@android:color/transparent"
+            android:visibility="invisible" />
+
     </FrameLayout>
 
 </android.support.design.widget.CoordinatorLayout>
