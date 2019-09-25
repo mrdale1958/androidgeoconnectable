@@ -26,6 +26,7 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -284,19 +285,33 @@ public class MapsActivity
 
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleTime*idleTimeScaler);
         //idleHandler.postDelayed(runnable, idleTime+100);
-        final Intent intent = new Intent(this, SettingsActivity.class);
+        final Intent settingsIntent = new Intent(this, SettingsActivity.class);
 
-        FloatingActionButton floatingActionButton = findViewById(R.id.fab);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton settings_floatingActionButton = findViewById(R.id.settings_Editor_fab);
+        settings_floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(intent, EAT_PREFERENCES);
+                startActivityForResult(settingsIntent, EAT_PREFERENCES);
             }
         });
-        floatingActionButton.setBackgroundColor(0x0);
-        floatingActionButton.setRippleColor(0x0);
-        floatingActionButton.setBackground(null);
-        floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
+        settings_floatingActionButton.setBackgroundColor(0x0);
+        settings_floatingActionButton.setRippleColor(0x0);
+        settings_floatingActionButton.setBackground(null);
+        settings_floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
+
+        final Intent hotspotsIntent = new Intent(this, SettingsActivity.class);
+
+        FloatingActionButton hotspots_floatingActionButton = findViewById(R.id.hotSpotEditor_fab);
+        settings_floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(hotspotsIntent, EAT_HOTSPOTS);
+            }
+        });
+        hotspots_floatingActionButton.setBackgroundColor(0x0);
+        hotspots_floatingActionButton.setRippleColor(0x0);
+        hotspots_floatingActionButton.setBackground(null);
+        hotspots_floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
 
         final Intent htmlOverlayIntent = new Intent(this, ContentActivity.class);
 
@@ -657,6 +672,9 @@ Sequence
             case EAT_PREFERENCES:
                 eatPreferences();
                 break;
+            case EAT_HOTSPOTS:
+                eatHotspots();
+                break;
 
         }
 
@@ -960,6 +978,7 @@ Sequence
         //Intent i = new Intent(this,TablePreferencesActivity.class);
         //startActivityForResult(i, SHOW_PREFERENCES);
         WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
+        ImageView hotSpotImageView = (ImageView) findViewById(R.id.hotSpotImageView);
         String urlPrefix = "file:///android_asset/www/";
         hotspots[0] = new Hotspot(mMap, hotSpotWebView);
         hotspots[0].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
