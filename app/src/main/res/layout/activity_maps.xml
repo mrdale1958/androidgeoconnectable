@@ -30,7 +30,7 @@
 
     <FrameLayout
         android:id="@+id/MapFrame"
-        android:layout_width="1080px"
+        android:layout_width="1200px"
         android:layout_height="fill_parent"
         android:layout_gravity="center">
         <fragment
@@ -45,8 +45,8 @@
 
     <FrameLayout
         android:id="@+id/MaskingFrame"
-        android:layout_width="1080px"
-        android:layout_height="1080px"
+        android:layout_width="1200px"
+        android:layout_height="1200px"
         android:layout_gravity="center"
         android:background="@drawable/mask1200"/>
 
@@ -181,7 +181,7 @@
    </android.support.design.widget.CoordinatorLayout>
     <FrameLayout
         android:id="@+id/HotSpotFrame"
-        android:layout_width="1080px"
+        android:layout_width="1200px"
         android:layout_height="fill_parent"
         android:layout_gravity="center" >
         <ImageView
