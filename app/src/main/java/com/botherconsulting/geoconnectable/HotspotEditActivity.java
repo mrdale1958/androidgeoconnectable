@@ -56,7 +56,7 @@ public class HotspotEditActivity
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getSupportFragmentManager().beginTransaction()
-                .replace(android.R.id.content, new HotspotEditFragment())
+                .replace(android.R.id.content, new HotSpotEditFragment())
             .commit();
     }
 
