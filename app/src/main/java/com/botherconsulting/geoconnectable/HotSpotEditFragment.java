@@ -15,6 +15,6 @@ public class HotSpotEditFragment
     @Override
     public void onCreatePreferences(Bundle bundle, String rootKey) {
         // Load the Preferences from the XML file
-        setPreferencesFromResource(R.xml.gct_preferences, rootKey); //
+        setPreferencesFromResource(R.xml.hotspoteditfields, rootKey); //
     }
  }
