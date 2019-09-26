@@ -1,12 +1,13 @@
 package com.botherconsulting.geoconnectable;
 
+import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.ImageView;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
 
@@ -86,10 +87,23 @@ public class ImageHotspot extends Hotspot {
     int lastZoomMessageID = 0;
     GoogleMap mMap;
 
+    Uri baseUri;
+
     private ImageView displaySurface;
+    private Context context;
+    private MediaPlayer mediaPlayer;
 
 
-    public ImageHotspot(GoogleMap map, ImageView imageView) {
+    public enum Languages {
+        ENGLISH,
+        CHINESE,
+        JAPANESE,
+        KOREAN,
+        SPANISH
+    }
+
+
+    public ImageHotspot(GoogleMap map, ImageView imageView, Context context) {
         super(map);
         state = States.CLOSED;
         this.displaySurface = imageView;
@@ -97,6 +111,7 @@ public class ImageHotspot extends Hotspot {
         this.set = "default";
         this.marker=null;
         this.mMap = map;
+        this.context = context;
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
                 .title("some pithy name")
@@ -105,35 +120,50 @@ public class ImageHotspot extends Hotspot {
 */
     }
 
-    public void setIcon(BitmapDescriptor icon) {
-        if (this.marker == null) {
-            this.marker = this.mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(0.0,0.0))
-                    .title("some pithy name")
-                    .snippet("Even pithier label"));
-        }
-        this.marker.setIcon(icon);
+    public void setBaseName(String location, String name) {
+        this.baseUri = Uri.parse(location+'/'+name);
+        this.setTitle(name);
     }
-    public void setURL(String url) {
+
+
+    public void setImageByLanguage(Languages language) {
+        Uri imageUri, soundUri;
+        this.mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        switch (language) {
+            case KOREAN:
+                imageUri = Uri.withAppendedPath(this.baseUri, "-Korean.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "-Korean.m4a");
+                break;
+            case CHINESE:
+                imageUri = Uri.withAppendedPath(this.baseUri, "-Chinese.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "-Chinese.m4a");
+                break;
+            case JAPANESE:
+                imageUri = Uri.withAppendedPath(this.baseUri, "-Japanese.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "-Japanese.m4a");
+                break;
+            case SPANISH:
+                imageUri = Uri.withAppendedPath(this.baseUri, "-Spanish.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "-Spanish.m4a");
+                break;
+            case ENGLISH:
+            default:
+                imageUri = Uri.withAppendedPath(this.baseUri, "-English.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "-English.m4a");
+                break;
+
+        }
+        this.displaySurface.setImageURI(imageUri);
         try {
-            this.URL = new java.net.URL(url);
+            this.mediaPlayer.setDataSource(this.context, soundUri);
+            this.mediaPlayer.prepare();
+            this.mediaPlayer.start();
         }
-        catch (java.net.MalformedURLException e) {
-            Log.e("GCT HotSpot error: bad url", e.getMessage());
+        catch (java.io.IOException e) {
+            Log.e("Hotspot audio", e.getMessage());
         }
-    }
-    public void setTitle(String title) {
-        this.marker.setTitle(title);
-    }
-    public void setSnippet(String snippet) {
-        this.marker.setSnippet(snippet);
-    }
-    public void setPosition(LatLng position) {
-        this.marker.setPosition(position);
-    }
-    public void setZoomTriggerRange(Double minZoom, Double maxZoom) {
-        this.hotSpotZoomTriggerRange[0] = minZoom;
-        this.hotSpotZoomTriggerRange[1] = maxZoom;
     }
 
     public void manageState() {
@@ -143,86 +173,18 @@ public class ImageHotspot extends Hotspot {
             case OPEN:
                 break;
             case OPENING:
+                this.setImageByLanguage(Languages.ENGLISH);
+                state = States.OPEN;
                 break;
             case CLOSING:
+                this.mediaPlayer.release();
+                state = States.CLOSED;
                 break;
 
         }
     }
 
-    private void reportZoomStats() {
-        long windowSum = 0;
-        long windowSumSquared = 0;
-        long maxEt = 0;
-        long minEt = Long.MAX_VALUE;
-        for (long i:eventZoomWindow) {
-            windowSum+=i;
-            windowSumSquared+= i*i;
-            maxEt = Math.max(maxEt, i);
-            minEt = Math.min(minEt, i);
-        }
-        double diff = (windowSumSquared - eventZoomWindow.length * (windowSum / eventZoomWindowLength)*(windowSum / eventZoomWindowLength));
-
-        Log.i("GCT HS: Zoom data stats",
-                "\nTotal events: " + eventZoomCount +
-                        "\nTotal mean elapsed Time: " + (sumZoomElapsedTimes/eventZoomCount) +
-                        "\nwindow mean elapsedTime: " + (windowSum / eventZoomWindowLength) +
-                        "\nWindow total ET: " + windowSum +
-                        "\nWindow sigma ET: " + Math.sqrt(diff/eventZoomWindowLength) +
-                        "\nWindow max ET: " + maxEt +
-                        "\nWindow min ET: " + minEt +
-                        "\nlast message ID: " + lastZoomMessageID +
-                        "\nlast delta: " + deltaZ
-        );
-    }
-
-    private void updateZoomStats() {
-        long elapsedTime = System.nanoTime() - lastZoomMessageTime;
-
-        lastZoomMessageTime = System.nanoTime();
-        if (elapsedTime > 150000000) Log.w("Big data gap", Long.toString(elapsedTime));
-        eventZoomCount++;
-        sumZoomElapsedTimes += elapsedTime;
-        sumZoomSquaredElapsedTimes += elapsedTime * elapsedTime;
-        eventZoomWindow[eventZoomCount % eventZoomWindowLength] = elapsedTime;
-        if (eventZoomCount % eventZoomWindowLength == 0) {
-            reportZoomStats();
-        }
-    }
-
-    private void reportTiltStats() {
-        long windowSum = 0;
-        long windowSumSquared = 0;
-        long maxEt = 0;
-        long minEt = Long.MAX_VALUE;
-        for (long i:eventTiltWindow) {
-            windowSum+=i;
-            windowSumSquared+= i*i;
-            maxEt = Math.max(maxEt, i);
-            minEt = Math.min(minEt, i);
-        }
-        Log.i("GCT HS: Tilt data stats",
-                "\nTotal events: " + eventTiltCount +
-                        "\nTotal mean elapsed Time: " + (sumTiltElapsedTimes/eventTiltCount) +
-                        "\nwindow mean elapsedTime: " + (windowSum / eventTiltWindowLength) +
-                        "\nWindow max ET: " + maxEt +
-                        "\nWindow min ET: " + minEt
-        );
-    }
-
-    private void updateTiltStats() {
-        long elapsedTime = System.nanoTime() - lastTiltMessageTime;
-        lastTiltMessageTime = System.nanoTime();
-        eventTiltCount++;
-        sumTiltElapsedTimes += elapsedTime;
-        sumTiltSquaredElapsedTimes += elapsedTime * elapsedTime;
-        eventTiltWindow[eventTiltCount % eventTiltWindowLength] = elapsedTime;
-        if (eventTiltCount % eventTiltWindowLength == 0) {
-            //reportTiltStats();
-        }
-    }
-
-
+@Override
     public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
         {
             String gestureType;
