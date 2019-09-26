@@ -71,6 +71,7 @@ public class MapsActivity
         GoogleMap.OnCameraChangeListener {
 
     static final int EAT_PREFERENCES = 12345;
+    static final int EAT_HOTSPOTS = 123456;
     final Handler asyncTaskHandler = new Handler();
     final Runnable idleMonitor = new Runnable(){
         public void run() {
@@ -291,7 +292,7 @@ public class MapsActivity
         settings_floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(settingsIntent, EAT_PREFERENCES);
+                startActivityForResult(settingsIntent, EAT_HOTSPOTS);
             }
         });
         settings_floatingActionButton.setBackgroundColor(0x0);
@@ -610,9 +611,12 @@ Sequence
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleCheckTime);
 
     }
+    protected void eatHotspots() {
+        PreferenceManager.setDefaultValues(this, R.xml.hotspoteditfields, true);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+    }
 
-
-    protected void eatPreferences() {
+        protected void eatPreferences() {
         PreferenceManager.setDefaultValues(this, R.xml.gct_preferences, true);
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         String oldServerAddress = sensorServerAddress;
