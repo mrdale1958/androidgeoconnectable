@@ -1,8 +1,6 @@
 package com.botherconsulting.geoconnectable;
 
 import android.util.Log;
-import android.view.View;
-import android.webkit.WebView;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -18,35 +16,35 @@ import org.json.JSONObject;
 
 public class Hotspot {
     // tilt stuff
-    public double TiltScaleX = 0.04; // in settings
-    public double TiltScaleY = 0.04; // in settings
-    private double panMax = 0.01;
-    private int minSpin = -100;
-    private int maxSpin = 100000000;
-    private double validTiltThreshold = 0.025; // needs to be in settings
-    long lastTiltMessageTime = System.nanoTime();
-    private int eventTiltCount = 0;
+    static double TiltScaleX = 0.04; // in settings
+    static double TiltScaleY = 0.04; // in settings
+    static double panMax = 0.01;
+    static int minSpin = -100;
+    static int maxSpin = 100000000;
+    static double validTiltThreshold = 0.025; // needs to be in settings
     static final int eventTiltWindowLength = 10000;
+    long lastTiltMessageTime = System.nanoTime();
+    int eventTiltCount = 0;
     long[] eventTiltWindow = new long[eventTiltWindowLength];
     long sumTiltElapsedTimes = 0;
     long sumTiltSquaredElapsedTimes = 0;
     int lastTiltMessageID = 0;
 
     //zoom stuff
-    public double maxZoom = 19; // needs to be in settings
-    public double minZoom = 3; // needs to be in settings
-    public double currentZoom = 0;
-    private int currentSpinPosition = 0;
-    public int clicksPerRev = 2400; // in settings
-    public int revsPerFullZoom = 19;  // in settings
-    private int clicksPerZoomLevel = 1000;
-    private int idleSpin = 0;
-    public double idleZoom = 13.5; // in settings
-    public double zoom = 0d;
-    private  int deltaZ = 0;
-    long lastZoomMessageTime = System.nanoTime();
-    private int eventZoomCount = 0;
+    static double maxZoom = 19; // needs to be in settings
+    static double minZoom = 3; // needs to be in settings
+    static double currentZoom = 0;
+    static int clicksPerRev = 2400; // in settings
+    static int revsPerFullZoom = 19;  // in settings
+    static int clicksPerZoomLevel = 1000;
+    static int idleSpin = 0;
+    static double idleZoom = 13.5; // in settings
+    static double zoom = 0d;
     static final int eventZoomWindowLength = 10000;
+    int currentSpinPosition = 0;
+      int deltaZ = 0;
+    long lastZoomMessageTime = System.nanoTime();
+     int eventZoomCount = 0;
     long[] eventZoomWindow = new long[eventZoomWindowLength];
     long sumZoomElapsedTimes = 0;
     long sumZoomSquaredElapsedTimes = 0;
@@ -60,9 +58,8 @@ public class Hotspot {
     public Marker marker;
     public Double[] hotSpotZoomTriggerRange = {15.0, 19.0};
     public Double[] currentTilt = {0.0, 0.0};
-    private WebView displaySurface;
-    private GoogleMap mMap;
-    public enum States {
+    GoogleMap mMap;
+    static enum States {
         CLOSED,
         OPENING,
         CLOSING,
@@ -72,12 +69,11 @@ public class Hotspot {
         SATURDAY;
 
     }
-    private States state;
+    States state;
 
 
-    public Hotspot(GoogleMap map, WebView webView) {
+    public Hotspot(GoogleMap map) {
         state = States.CLOSED;
-        this.displaySurface = webView;
         this.enabled = false;
         this.set = "default";
         this.marker=null;
@@ -135,7 +131,7 @@ public class Hotspot {
         }
     }
 
-    private void reportZoomStats() {
+    protected void reportZoomStats() {
         long windowSum = 0;
         long windowSumSquared = 0;
         long maxEt = 0;
@@ -161,7 +157,7 @@ public class Hotspot {
         );
     }
 
-    private void updateZoomStats() {
+    protected void updateZoomStats() {
         long elapsedTime = System.nanoTime() - lastZoomMessageTime;
 
         lastZoomMessageTime = System.nanoTime();
@@ -175,7 +171,7 @@ public class Hotspot {
         }
     }
 
-    private void reportTiltStats() {
+    protected void reportTiltStats() {
         long windowSum = 0;
         long windowSumSquared = 0;
         long maxEt = 0;
@@ -195,7 +191,7 @@ public class Hotspot {
         );
     }
 
-    private void updateTiltStats() {
+    protected void updateTiltStats() {
         long elapsedTime = System.nanoTime() - lastTiltMessageTime;
         lastTiltMessageTime = System.nanoTime();
         eventTiltCount++;
@@ -210,137 +206,6 @@ public class Hotspot {
 
     public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
         {
-            String gestureType;
-            try {
-                gestureType = message.getString("gesture");
-                //Log.i("incoming message",message.toString());
-            } catch (org.json.JSONException e) {
-                Log.i("GCT HS: no gesture msg",message.toString());
-                return false;
-            }
-            double deltaX = 0.0;
-
-            double deltaY = 0.0;
-            deltaZ = 0;
-            if (gestureType.equals("pan")) {
-                JSONObject vector = new JSONObject();
-                try {
-                    vector = message.getJSONObject("vector");
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS: reading pan msg", "no vector " + message.toString());
-                }
-                try {
-                    //double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
-                    //double screenHeightDegrees = Math.abs(curScreen.southwest.latitude - curScreen.northeast.latitude);
-                    double rawX = vector.getDouble("x");
-                    double percentChangeInX = 0;
-                    double percentChangeInY = 0;
-                    double rawY = vector.getDouble("y");
-
-                    if (doLog) {
-                        Log.i("GCT HS : pan update", " raw x: " + Double.toString(rawX) +
-                                " raw y: " + Double.toString(rawY));
-                    }
-                    if (Math.abs(rawX) < validTiltThreshold && Math.abs(rawY) < validTiltThreshold) {
-                        if (doLog) {
-                            Log.d("GCT HS: rejected pan", " raw x: " + Double.toString(rawX) +
-                                    " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
-                        }
-                        return false;
-                    } else {
-
-                        //double zoomFudge = (minZoom + 7) +
-                        //        ((minZoom + 7) - (maxZoom-3 ))/(minZoom-maxZoom) *
-                        //                (mMap.getCameraPosition().zoom-minZoom);
-                        //Log.i("fudge", Double.toString(zoomFudge) + ":" +  Double.toString(mMap.getCameraPosition().zoom));
-                /*percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
-                deltaY = screenHeightDegrees * percentChangeInY;
-
-                percentChangeInX = TiltScaleX * rawX *zoomFudge/maxZoom;
-                deltaX = screenWidthDegrees * percentChangeInX;*/
-                        deltaY = Math.min(Math.max(TiltScaleY * rawY, -panMax), panMax);
-
-                        deltaX = Math.min(Math.max(TiltScaleX * rawX, -panMax), panMax);
-                    }
-
-                    //if (zoomLayers[currentZoom]["pannable"])
-                    //Log.i("incoming pan",x + "," + y);
-                    if (doLog) {
-                        Log.i("GCT HS: pan hs update", " deltax: " + Double.toString(deltaX) +
-                                " deltay: " + Double.toString(deltaY)
-                        );
-                    }
-                    //mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
-                    Double[] nextTilt = { deltaY, deltaX };
-                    if (nextTilt != currentTilt) {
-                        updateTiltStats();
-                        Double[]  position = currentTilt;
-                        currentTilt = nextTilt;
-                        newData = true;
-                    }
-                    //mMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
-
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS error: pan msg", "invalid vector " + vector.toString());
-                }
-            }
-            else
-            {
-                deltaZ = 0;
-                JSONObject vector = new JSONObject();
-                try {
-                    vector = message.getJSONObject("vector");
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS error: zoom msg", "no vector " + message.toString());
-                }
-                try {
-                    deltaZ = vector.getInt("delta");
-                    int messageID = message.getInt("id");
-                    //if (messageID > lastMessageID + 1)
-                    //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
-                    lastZoomMessageID = messageID;
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
-                }
-                currentSpinPosition += deltaZ;
-                currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
-
-                double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
-                if (doLog) {
-                    Log.i("GCT HS: zoom update", "delta:" + Integer.toString(deltaZ) +
-                            " new zoom: " +
-                            //String.format ("%.2d", proposedZoom) +
-                            proposedZoom +
-                            " cSP: " +
-                            Integer.toString(currentSpinPosition) +
-                            " min:" + Integer.toString(minSpin) +
-                            " max:" + Integer.toString(maxSpin)
-                    );
-                }
-
-                //restartIdleTimer();
-                updateZoomStats();
-
-                if (proposedZoom != currentZoom) {
-                    zoom = currentZoom;
-                    currentZoom = proposedZoom;
-                    newData = true;
-
-                }
-
-
-            }
- /*           if (newData)
-            {
-                displaySurface.setVisibility(View.VISIBLE);
-                String updateURL = "javascript://table.update(" + currentTilt + " , " + currentZoom + ")";
-                if (doLog) {
-                    Log.i("GCT HotSpot: notify webView" , updateURL);
-                }
-                displaySurface.loadUrl(updateURL);
-                return true;
-            }
-*/
-            return false;
+             return false;
         }
 }
