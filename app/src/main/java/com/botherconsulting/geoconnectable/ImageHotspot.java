@@ -1,11 +1,11 @@
 package com.botherconsulting.geoconnectable;
 
 import android.util.Log;
+import android.widget.ImageView;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
@@ -14,37 +14,37 @@ import org.json.JSONObject;
  * Created by dwm160130 on 3/22/18.
  */
 
-public class Hotspot {
+public class ImageHotspot extends Hotspot {
     // tilt stuff
-    static double TiltScaleX = 0.04; // in settings
-    static double TiltScaleY = 0.04; // in settings
-    static double panMax = 0.01;
-    static int minSpin = -100;
-    static int maxSpin = 100000000;
-    static double validTiltThreshold = 0.025; // needs to be in settings
-    static final int eventTiltWindowLength = 10000;
+/*    public double TiltScaleX = 0.04; // in settings
+    public double TiltScaleY = 0.04; // in settings
+    private double panMax = 0.01;
+    private int minSpin = -100;
+    private int maxSpin = 100000000;
+    private double validTiltThreshold = 0.025; // needs to be in settings
     long lastTiltMessageTime = System.nanoTime();
-    int eventTiltCount = 0;
+    private int eventTiltCount = 0;
+    static final int eventTiltWindowLength = 10000;
     long[] eventTiltWindow = new long[eventTiltWindowLength];
     long sumTiltElapsedTimes = 0;
     long sumTiltSquaredElapsedTimes = 0;
     int lastTiltMessageID = 0;
 
     //zoom stuff
-    static double maxZoom = 19; // needs to be in settings
-    static double minZoom = 3; // needs to be in settings
-    static double currentZoom = 0;
-    static int clicksPerRev = 2400; // in settings
-    static int revsPerFullZoom = 19;  // in settings
-    static int clicksPerZoomLevel = 1000;
-    static int idleSpin = 0;
-    static double idleZoom = 13.5; // in settings
-    static double zoom = 0d;
-    static final int eventZoomWindowLength = 10000;
-    int currentSpinPosition = 0;
-      int deltaZ = 0;
+    public double maxZoom = 19; // needs to be in settings
+    public double minZoom = 3; // needs to be in settings
+    public double currentZoom = 0;
+    private int currentSpinPosition = 0;
+    public int clicksPerRev = 2400; // in settings
+    public int revsPerFullZoom = 19;  // in settings
+    private int clicksPerZoomLevel = 1000;
+    private int idleSpin = 0;
+    public double idleZoom = 13.5; // in settings
+    public double zoom = 0d;
+    private  int deltaZ = 0;
     long lastZoomMessageTime = System.nanoTime();
-     int eventZoomCount = 0;
+    private int eventZoomCount = 0;
+    static final int eventZoomWindowLength = 10000;
     long[] eventZoomWindow = new long[eventZoomWindowLength];
     long sumZoomElapsedTimes = 0;
     long sumZoomSquaredElapsedTimes = 0;
@@ -58,8 +58,8 @@ public class Hotspot {
     public Marker marker;
     public Double[] hotSpotZoomTriggerRange = {15.0, 19.0};
     public Double[] currentTilt = {0.0, 0.0};
-    GoogleMap mMap;
-    static enum States {
+    private GoogleMap mMap;
+     public enum States {
         CLOSED,
         OPENING,
         CLOSING,
@@ -69,11 +69,30 @@ public class Hotspot {
         SATURDAY;
 
     }
-    States state;
+*/    private States state;
+    long lastTiltMessageTime = System.nanoTime();
+    int eventTiltCount = 0;
+    long[] eventTiltWindow = new long[eventTiltWindowLength];
+    long sumTiltElapsedTimes = 0;
+    long sumTiltSquaredElapsedTimes = 0;
+    int lastTiltMessageID = 0;
+    int currentSpinPosition = 0;
+    int deltaZ = 0;
+    long lastZoomMessageTime = System.nanoTime();
+    int eventZoomCount = 0;
+    long[] eventZoomWindow = new long[eventZoomWindowLength];
+    long sumZoomElapsedTimes = 0;
+    long sumZoomSquaredElapsedTimes = 0;
+    int lastZoomMessageID = 0;
+    GoogleMap mMap;
+
+    private ImageView displaySurface;
 
 
-    public Hotspot(GoogleMap map) {
+    public ImageHotspot(GoogleMap map, ImageView imageView) {
+        super(map);
         state = States.CLOSED;
+        this.displaySurface = imageView;
         this.enabled = false;
         this.set = "default";
         this.marker=null;

@@ -71,6 +71,7 @@ public class MapsActivity
         GoogleMap.OnCameraChangeListener {
 
     static final int EAT_PREFERENCES = 12345;
+    static final int EAT_HOTSPOTS = 123456;
     final Handler asyncTaskHandler = new Handler();
     final Runnable idleMonitor = new Runnable(){
         public void run() {
@@ -123,13 +124,13 @@ public class MapsActivity
     private int animateToHomeMS = 10000; // needs to be in settings
     private double maxPanPercent = 0.01; // needs to be in settings
     private int settings_button_offset_x =  0;
-    private Hotspot[] hotspots= new Hotspot[15];
+    private WebHotspot[] hotspots= new WebHotspot[15];
     private Boolean hotSpotActive = false;
-    private Hotspot liveHotSpot;
+    private WebHotspot liveHotSpot;
     private double currScreenWidth;
     private double currScreenHeight;
 
-    String idleTitle = "Clark Planetarium"; // needs to be in settings
+    String idleTitle = "SFSU"; // needs to be in settings
     String sensorServerAddress = "10.240.100.239";  // in settings
     //String sensorServerAddress = "192.168.1.73";  // in settings
     //String sensorServerAddress = "10.21.3.42";  // in settings
@@ -405,9 +406,11 @@ public class MapsActivity
         public void returnTableControlToMap()
         {
             hotSpotActive = false;
-            WebView hotspot = (WebView) findViewById(R.id.hotSpotWebView);
+            WebView webhotspot = (WebView) findViewById(R.id.hotSpotWebView);
+            ImageView imagehotspot = (ImageView) findViewById(R.id.hotSpotImageView);
             View mapView =  (View) findViewById(R.id.map);
-            hotspot.setVisibility(View.INVISIBLE);
+            webhotspot.setVisibility(View.INVISIBLE);
+            imagehotspot.setVisibility(View.INVISIBLE);  // animate shrinking?
             mapView.bringToFront();
 
         }
@@ -464,18 +467,24 @@ public class MapsActivity
 
 
             }
-            WebView displaySurface = (WebView) findViewById(R.id.hotSpotWebView);
             if (hotSpotActive) {
                 // deal with animating hotSpot
                 // need a mechanism to get clear of target voxel  before redisplaying
                 if (liveHotSpot.newData)
                 {
-                    displaySurface.setVisibility(View.VISIBLE);
-                    String updateScript = "TiltyTable.update(" + liveHotSpot.currentTilt[0] + " , " +  + liveHotSpot.currentTilt[1] + " , " + liveHotSpot.currentZoom + ")";
-                    if (logTilt || logZoom) {
-                        Log.i("GCT HotSpot: notify webView" , updateScript);
+                    if (liveHotSpot instanceof WebHotspot ) {
+                        WebView displaySurface = (WebView) findViewById(R.id.hotSpotWebView);
+                        String updateScript = "TiltyTable.update(" + liveHotSpot.currentTilt[0] + " , " +  + liveHotSpot.currentTilt[1] + " , " + liveHotSpot.currentZoom + ")";
+                        displaySurface.evaluateJavascript(updateScript, null);
+                        displaySurface.setVisibility(View.VISIBLE);
+                        if (logTilt || logZoom) {
+                            Log.i("GCT HotSpot: notify webView" , updateScript);
+                        }
+                    } else {
+                        ImageView displaySurface = (ImageView) findViewById(R.id.hotSpotImageView);
+                        displaySurface.setVisibility(View.VISIBLE);
                     }
-                    displaySurface.evaluateJavascript(updateScript, null);
+
                     if (!idling){
                         //Log.i("animateByTable", "now");
                         asyncTaskHandler.post(animateByTable);
@@ -980,63 +989,63 @@ Sequence
         WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
         ImageView hotSpotImageView = (ImageView) findViewById(R.id.hotSpotImageView);
         String urlPrefix = "file:///android_asset/www/";
-        hotspots[0] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[0] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[0].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[0].setPosition(new LatLng(40.75867,-111.903373));
         hotspots[0].setURL(urlPrefix + "mostbasichotspot.html");
-        hotspots[1] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[1] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[1].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/AmbassadorPin.jpg"));
         hotspots[1].setPosition(new LatLng(32.771510, -96.804370));
         hotspots[1].setURL(urlPrefix + "ambassador.html");
-        hotspots[2] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[2] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[2].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[2].setPosition(new LatLng(32.8042222, -96.8154167));
         hotspots[2].setURL(urlPrefix + "parkland1.html");
-        hotspots[3] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[3] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[3].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[3].setPosition(new LatLng(32.8112778, -96.8373889));
         hotspots[3].setURL(urlPrefix + "parkland2.html");
-        hotspots[13] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[13] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[13].setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         hotspots[13].setPosition(new LatLng(32.8141667, -96.8335278));
         hotspots[13].setURL(urlPrefix + "parkland3.html");
-        hotspots[4] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[4] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[4].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.png"));
         hotspots[4].setPosition(new LatLng(32.985634, -96.748261));
         hotspots[4].setURL(urlPrefix + "gamepin-chess.html");
-        hotspots[5] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[5] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[5].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.png"));
         hotspots[5].setPosition(new LatLng(32.986060, -96.749393));
         hotspots[5].setURL(urlPrefix + "gamepin-esports.html");
-        hotspots[6] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[6] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[6].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/GamePin.png"));
         hotspots[6].setPosition(new LatLng(32.982221, -96.752729));
         hotspots[6].setURL(urlPrefix + "gamepin-pinball.html");
-        hotspots[7] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[7] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[7].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/ResearchPin.png"));
         hotspots[7].setPosition(new LatLng(32.987541, -96.750832));
         hotspots[7].setURL(urlPrefix + "ResearchPin-berkner.html");
-        hotspots[8] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[8] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[8].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/ResearchPin.png"));
         hotspots[8].setPosition(new LatLng(32.991436, -96.750071));
         hotspots[8].setURL(urlPrefix + "ResearchPin-pancrazio.html");
-        hotspots[9] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[9] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[9].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/ResearchPin.png"));
         hotspots[9].setPosition(new LatLng(32.993464, -96.752238));
         hotspots[9].setURL(urlPrefix + "ResearchPin-zielke.html");
-        hotspots[10] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[10] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[10].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/TIPin.png"));
         hotspots[10].setPosition(new LatLng(32.987575, -96.748496));
         hotspots[10].setURL(urlPrefix + "TIPin-Founders.html");
-        hotspots[11] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[11] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[11].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/TIPin.png"));
         hotspots[11].setPosition(new LatLng(32.803456, -96.826610));
         hotspots[11].setURL(urlPrefix + "TIPin-JFK.html");
-        hotspots[12] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[12] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[12].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/TIPin.png"));
         hotspots[12].setPosition(new LatLng(32.930318, -96.754397));
         hotspots[12].setURL(urlPrefix + "TIpin-TIheadquarters.html");
-        hotspots[14] = new Hotspot(mMap, hotSpotWebView);
+        hotspots[14] = new WebHotspot(mMap, hotSpotWebView);
         hotspots[14].setIcon(BitmapDescriptorFactory.fromAsset("www/Icons/CCicon.png"));
         hotspots[14].setPosition(new LatLng(33.0135, -96.7129));
         hotspots[14].setURL(urlPrefix + "CCMall.html");
