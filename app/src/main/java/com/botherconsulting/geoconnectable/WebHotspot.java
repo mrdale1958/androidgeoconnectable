@@ -153,79 +153,9 @@ public class WebHotspot extends Hotspot{
         }
     }
 
-    private void reportZoomStats() {
-        long windowSum = 0;
-        long windowSumSquared = 0;
-        long maxEt = 0;
-        long minEt = Long.MAX_VALUE;
-        for (long i:eventZoomWindow) {
-            windowSum+=i;
-            windowSumSquared+= i*i;
-            maxEt = Math.max(maxEt, i);
-            minEt = Math.min(minEt, i);
-        }
-        double diff = (windowSumSquared - eventZoomWindow.length * (windowSum / eventZoomWindowLength)*(windowSum / eventZoomWindowLength));
-
-        Log.i("GCT HS: Zoom data stats",
-                "\nTotal events: " + eventZoomCount +
-                        "\nTotal mean elapsed Time: " + (sumZoomElapsedTimes/eventZoomCount) +
-                        "\nwindow mean elapsedTime: " + (windowSum / eventZoomWindowLength) +
-                        "\nWindow total ET: " + windowSum +
-                        "\nWindow sigma ET: " + Math.sqrt(diff/eventZoomWindowLength) +
-                        "\nWindow max ET: " + maxEt +
-                        "\nWindow min ET: " + minEt +
-                        "\nlast message ID: " + lastZoomMessageID +
-                        "\nlast delta: " + deltaZ
-        );
-    }
-
-    private void updateZoomStats() {
-        long elapsedTime = System.nanoTime() - lastZoomMessageTime;
-
-        lastZoomMessageTime = System.nanoTime();
-        if (elapsedTime > 150000000) Log.w("Big data gap", Long.toString(elapsedTime));
-        eventZoomCount++;
-        sumZoomElapsedTimes += elapsedTime;
-        sumZoomSquaredElapsedTimes += elapsedTime * elapsedTime;
-        eventZoomWindow[eventZoomCount % eventZoomWindowLength] = elapsedTime;
-        if (eventZoomCount % eventZoomWindowLength == 0) {
-            reportZoomStats();
-        }
-    }
-
-    private void reportTiltStats() {
-        long windowSum = 0;
-        long windowSumSquared = 0;
-        long maxEt = 0;
-        long minEt = Long.MAX_VALUE;
-        for (long i:eventTiltWindow) {
-            windowSum+=i;
-            windowSumSquared+= i*i;
-            maxEt = Math.max(maxEt, i);
-            minEt = Math.min(minEt, i);
-        }
-        Log.i("GCT HS: Tilt data stats",
-                "\nTotal events: " + eventTiltCount +
-                        "\nTotal mean elapsed Time: " + (sumTiltElapsedTimes/eventTiltCount) +
-                        "\nwindow mean elapsedTime: " + (windowSum / eventTiltWindowLength) +
-                        "\nWindow max ET: " + maxEt +
-                        "\nWindow min ET: " + minEt
-        );
-    }
-
-    private void updateTiltStats() {
-        long elapsedTime = System.nanoTime() - lastTiltMessageTime;
-        lastTiltMessageTime = System.nanoTime();
-        eventTiltCount++;
-        sumTiltElapsedTimes += elapsedTime;
-        sumTiltSquaredElapsedTimes += elapsedTime * elapsedTime;
-        eventTiltWindow[eventTiltCount % eventTiltWindowLength] = elapsedTime;
-        if (eventTiltCount % eventTiltWindowLength == 0) {
-            //reportTiltStats();
-        }
-    }
 
 
+    @Override
     public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
         {
             String gestureType;
