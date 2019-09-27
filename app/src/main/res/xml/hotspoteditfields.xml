@@ -6,18 +6,21 @@
         android:title="Hot Spots">
 
         <android.support.v7.preference.ListPreference
-            android:key="@string/hotspots_list"
+            android:key="@string/hotspots_list_title"
             android:title="Hotspots"
             android:defaultValue="#00FFFF"
-            android:entries="@array/foreground_color_names_array"
-            android:entryValues="@array/foreground_color_values_array"
+
             android:summary="Select a hotspot to edit"
  />
         <android.support.v7.preference.ButtonPreference
             android:defaultValue="8"
             android:key="addhotspot"
             android:singleLine="true"
-            android:title="@string/Add Hotspot" />
+            android:title="@string/add_hotspot_button_label" />
 
     </android.support.v7.preference.PreferenceCategory>
 </android.support.v7.preference.PreferenceScreen>
+
+
+<!-- android:entries="@array/foreground_color_names_array"
+            android:entryValues="@array/foreground_color_values_array" -->
