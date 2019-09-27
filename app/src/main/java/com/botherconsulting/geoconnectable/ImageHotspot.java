@@ -1,7 +1,7 @@
 package com.botherconsulting.geoconnectable;
 
 import android.content.Context;
-import android.media.AudioManager;
+import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.Log;
@@ -129,7 +129,11 @@ public class ImageHotspot extends Hotspot {
     public void setImageByLanguage(Languages language) {
         Uri imageUri, soundUri;
         this.mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setAudioAttributes(
+                new AudioAttributes
+                        .Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build());
 
         switch (language) {
             case KOREAN:
