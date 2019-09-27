@@ -72,7 +72,7 @@ public class MapsActivity
         GoogleMap.OnCameraChangeListener {
 
     static final int EAT_PREFERENCES = 12345;
-    static final int EAT_HOTSPOTS = 123456;
+    static final int EAT_HOTSPOTS = 12346;
     final Handler asyncTaskHandler = new Handler();
     final Runnable idleMonitor = new Runnable(){
         public void run() {
