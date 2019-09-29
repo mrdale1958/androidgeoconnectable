@@ -17,6 +17,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -132,6 +133,7 @@ public class MapsActivity
     private double currScreenHeight;
 
     String idleTitle = "SFSU"; // needs to be in settings
+
     String sensorServerAddress = "10.240.100.239";  // in settings
     //String sensorServerAddress = "192.168.1.73";  // in settings
     //String sensorServerAddress = "10.21.3.42";  // in settings
@@ -140,6 +142,7 @@ public class MapsActivity
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
 
+    String hotspotsJSONFile = "GlobalMagic.json";
 
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
@@ -254,7 +257,7 @@ public class MapsActivity
             }
         });
 
-         WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
+        WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
         maxZoomWebView.getSettings().setJavaScriptEnabled(true);
         maxZoomWebView.getSettings().setDomStorageEnabled(true);
         maxZoomWebView.addJavascriptInterface(new WebAppInterface(), "Android");
@@ -336,18 +339,18 @@ public class MapsActivity
 // Add scale bar overlay
         scaleBarOverlay.setMetric();
         overlays.add(scaleBarOverlay);*/
-        float instructionTextRadius = 640f;
+        float instructionTextRadius = 580f;
         idleMessageTopView =  findViewById(R.id.IdleTopText);
-        idleMessageTopView.setPath(760,
-                                    640,
+        idleMessageTopView.setPath(600,
+                                    600,
                                     instructionTextRadius,
                                     Path.Direction.CCW,
                                    0.85f * (float)Math.PI * instructionTextRadius * 2,
         -5f);
         idleMessageTopView.setText(idleMessageTop);
         idleMessageBottomView = findViewById(R.id.IdleBottomText);
-        idleMessageBottomView.setPath(1260,
-                                        980,
+        idleMessageBottomView.setPath(600,
+                                        600,
                                         instructionTextRadius,
                                         Path.Direction.CW,
                                         0.6f * (float)Math.PI * instructionTextRadius * 2,
@@ -471,47 +474,11 @@ public class MapsActivity
             if (hotSpotActive) {
                 // deal with animating hotSpot
                 // need a mechanism to get clear of target voxel  before redisplaying
-                if (liveHotSpot.newData)
-                {
-                    /* when I figure out mixed type hotspots
-                    if (liveHotSpot instanceof WebHotspot ) {
-
-                        WebView displaySurface = (WebView) findViewById(R.id.hotSpotWebView);
-                        String updateScript = "TiltyTable.update(" + liveHotSpot.currentTilt[0] + " , " +  + liveHotSpot.currentTilt[1] + " , " + liveHotSpot.currentZoom + ")";
-                        displaySurface.evaluateJavascript(updateScript, null);
-                        displaySurface.setVisibility(View.VISIBLE);
-                        if (logTilt || logZoom) {
-                            Log.i("GCT HotSpot: notify webView" , updateScript);
-                        }
-                    } else {*/
-                        ImageView displaySurface = (ImageView) findViewById(R.id.hotSpotImageView);
-                        displaySurface.setVisibility(View.VISIBLE);
-                    //}
-
-                    if (!idling){
-                        //Log.i("animateByTable", "now");
-                        asyncTaskHandler.post(animateByTable);
-                    }
+                if (liveHotSpot.isClosed() ) {
+                    hotSpotActive = false;
+                    liveHotSpot = null;
                 }
-
-/* Classes
-Zoom
-Pan
-Pan_x
-Pan_y
-Click
-Click_x
-Click_y
-Fade
-Fade_x
-Fade_y
-Fade_z
-Sequence
-*/
-
-
-
-
+                asyncTaskHandler.post(animateByTable);
 
             } else {
                 VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
@@ -539,6 +506,7 @@ Sequence
                             //mapView.setVisibility(View.INVISIBLE);
                             Log.w("hotspot loading ", hs + ":" + liveHotSpot.URL.toString());
                             liveHotSpot.setImageByLanguage(ImageHotspot.Languages.ENGLISH);
+                            liveHotSpot.open();
                             break;
                         }
                     }
@@ -621,9 +589,50 @@ Sequence
         asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleCheckTime);
 
     }
+
+    private String readJSONFromAsset() {
+        String json = null;
+        try {
+            InputStream is = getAssets().open(hotspotsJSONFile);
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+    }
+    protected void loadHotspots() {
+        try {
+            JSONArray jArray = new JSONArray(readJSONFromAsset());
+            ImageView hotSpotImageView = (ImageView) findViewById(R.id.hotSpotImageView);
+            String urlPrefix = "https://botherconsulting.com/GlobalMagic/";
+            for (int i = 0; i < jArray.length(); ++i) {
+                String title = jArray.getJSONObject(i).getString("title");// name of the country
+                Double latitude = jArray.getJSONObject(i).getDouble("latitude"); // dial code of the country
+                Double longitude = jArray.getJSONObject(i).getDouble("longitude"); // code of the country
+                hotspots.add(i, new ImageHotspot(mMap, hotSpotImageView, this.getApplicationContext()));
+                hotspots.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                hotspots.get(i).setPosition(new LatLng(latitude,longitude));
+                hotspots.get(i).setBaseName(urlPrefix, title);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+    }
     protected void eatHotspots() {
         PreferenceManager.setDefaultValues(this, R.xml.hotspoteditfields, true);
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        /*
+        get hotspots array
+        kill the old array
+        parse the new array
+         */
     }
 
     protected void eatPreferences() {
@@ -635,6 +644,7 @@ Sequence
         sensorServerPort = sharedPref.getString(SettingsActivity.KEY_PREF_SENSOR_SERVER_PORT, sensorServerPort);
         if (!sensorServerAddress.equals(oldServerAddress) || !sensorServerPort.equals(oldServerPort)) {
            Log.i("wtf", "new " + sensorServerAddress+":"+sensorServerPort + " old " + oldServerAddress +":"+oldServerPort );
+            if (bws != null) bws.cancel(true);
            //ltime'saunchServerConnection();
         }
         zoomer.configure(Integer.valueOf(sharedPref.getString(SettingsActivity.KEY_PREF_SPIN_SENSOR_CLICKS_PER_REV,Integer.toString(zoomer.clicksPerRev))),
@@ -713,6 +723,36 @@ Sequence
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (hotSpotActive) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_E:
+                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.ENGLISH);
+                    return true;
+                case KeyEvent.KEYCODE_S:
+                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.SPANISH);
+                    return true;
+                case KeyEvent.KEYCODE_K:
+                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.KOREAN);
+                    return true;
+                case KeyEvent.KEYCODE_J:
+                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.JAPANESE);
+                    return true;
+                case KeyEvent.KEYCODE_C:
+                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.CHINESE);
+                    return true;
+                default:
+                    return super.onKeyUp(keyCode, event);
+            }
+        } else {
+            return super.onKeyUp(keyCode, event);
+
+        }
+    }
+
+
     private void hideSystemUI() {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -772,7 +812,13 @@ Sequence
 
     private void launchServerConnection() {
         if (mWebSocketClient != null && mWebSocketClient.isOpen()) mWebSocketClient.close();
-        bws = new BackgroundWebSocket();
+        if (bws==null) bws = new BackgroundWebSocket();
+        if (bws.getStatus()== AsyncTask.Status.RUNNING) return;
+        if (bws.getStatus()== AsyncTask.Status.FINISHED) {
+            BackgroundWebSocket deadBWS  =  bws;
+            deadBWS.cancel(true);
+            bws = new BackgroundWebSocket();
+        }
         Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
         bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
 
@@ -827,8 +873,6 @@ Sequence
             if (gestureType.equals("pan"))
             {
               liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
-
-                //paintTarget();
             } else if (gestureType.equals("zoom")) {
                liveHotSpot.handleJSON(message, mMap, logSensors || logZoom);
             }
@@ -993,12 +1037,7 @@ Sequence
         //startActivityForResult(i, SHOW_PREFERENCES);
 
         //WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
-        ImageView hotSpotImageView = (ImageView) findViewById(R.id.hotSpotImageView);
-        String urlPrefix = "file:///android_asset/www/";
-        hotspots.add(new ImageHotspot(mMap, hotSpotImageView, this.getApplicationContext()));
-        hotspots.get(0).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-        hotspots.get(0).setPosition(new LatLng(-6.082094,144.623664));
-        hotspots.get(0).setBaseName(urlPrefix, "Tapa or wuwusi (bark cloth)");
+        loadHotspots();
 
     }
 
