@@ -104,14 +104,14 @@
              android:singleLine="true"
              android:title="IDLE timeout" />
          <android.support.v7.preference.EditTextPreference
-             android:defaultValue="40.76667"
+             android:defaultValue="37.722075"
              android:numeric="decimal"
              android:key="idle_latitude"
              android:selectAllOnFocus="true"
              android:singleLine="true"
              android:title="IDLE latitude" />
          <android.support.v7.preference.EditTextPreference
-             android:defaultValue="-111.90337"
+             android:defaultValue="-122.479246"
              android:numeric="decimal"
              android:key="idle_longitude"
              android:selectAllOnFocus="true"

@@ -19,8 +19,7 @@ public class Hotspot {
     static double TiltScaleX = 0.04; // in settings
     static double TiltScaleY = 0.04; // in settings
     static double panMax = 0.01;
-    static int minSpin = -100;
-    static int maxSpin = 100000000;
+
     static double validTiltThreshold = 0.025; // needs to be in settings
     static final int eventTiltWindowLength = 10000;
     long lastTiltMessageTime = System.nanoTime();
@@ -58,6 +57,8 @@ public class Hotspot {
     public Marker marker;
     public Double[] hotSpotZoomTriggerRange = {15.0, 19.0};
     public Double[] currentTilt = {0.0, 0.0};
+    public int minSpin = -100;
+    public int maxSpin = 100000000;
     GoogleMap mMap;
     static enum States {
         CLOSED,
