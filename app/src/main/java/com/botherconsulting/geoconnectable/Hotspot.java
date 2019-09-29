@@ -107,6 +107,9 @@ public class Hotspot {
     public void setTitle(String title) {
         this.marker.setTitle(title);
     }
+    public String getTitle() {
+        return(this.marker.getTitle());
+    }
     public void setSnippet(String snippet) {
         this.marker.setSnippet(snippet);
     }
