@@ -1,5 +1,7 @@
 package com.botherconsulting.geoconnectable;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
@@ -70,7 +72,9 @@ public class ImageHotspot extends Hotspot {
         SATURDAY;
 
     }
-*/    private States state;
+*/  static int zoomOutTime = 2000; // milliseconds
+    static int zoomInTime = 1000; // milliseconds
+    private States state;
     long lastTiltMessageTime = System.nanoTime();
     int eventTiltCount = 0;
     long[] eventTiltWindow = new long[eventTiltWindowLength];
@@ -92,6 +96,8 @@ public class ImageHotspot extends Hotspot {
     private ImageView displaySurface;
     private Context context;
     private MediaPlayer mediaPlayer;
+    private Uri imageUri, soundUri;
+
 
 
     public enum Languages {
@@ -112,6 +118,8 @@ public class ImageHotspot extends Hotspot {
         this.marker=null;
         this.mMap = map;
         this.context = context;
+        this.minSpin = -20;
+        this.maxSpin = 2000;
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
                 .title("some pithy name")
@@ -121,7 +129,7 @@ public class ImageHotspot extends Hotspot {
     }
 
     public void setBaseName(String location, String name) {
-        this.baseUri = Uri.parse(location+'/'+name);
+        this.baseUri = Uri.parse(location+'/'+name+'/'+name+'_');
         this.setTitle(name);
     }
 
@@ -137,30 +145,84 @@ public class ImageHotspot extends Hotspot {
 
         switch (language) {
             case KOREAN:
-                imageUri = Uri.withAppendedPath(this.baseUri, "-Korean.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "-Korean.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, "Korean.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "Korean.m4a");
                 break;
             case CHINESE:
-                imageUri = Uri.withAppendedPath(this.baseUri, "-Chinese.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "-Chinese.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, "Chinese.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "Chinese.m4a");
                 break;
             case JAPANESE:
-                imageUri = Uri.withAppendedPath(this.baseUri, "-Japanese.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "-Japanese.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, "Japanese.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "Japanese.m4a");
                 break;
             case SPANISH:
-                imageUri = Uri.withAppendedPath(this.baseUri, "-Spanish.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "-Spanish.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, "Spanish.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "Spanish.m4a");
                 break;
             case ENGLISH:
             default:
-                imageUri = Uri.withAppendedPath(this.baseUri, "-English.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "-English.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, "English.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, "English.m4a");
                 break;
 
         }
         this.displaySurface.setImageURI(imageUri);
+        // if open playAudio();
+    }
+
+    public void open() {
+        if (state != States.CLOSED) return;
+        currentSpinPosition = 0;
+        ObjectAnimator scaleUpX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 1.0f);
+        ObjectAnimator scaleUpY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 1.0f);
+        scaleUpX.setDuration(zoomOutTime);
+        scaleUpY.setDuration(zoomOutTime);
+
+        AnimatorSet scaleUp = new AnimatorSet();
+        scaleUp.play(scaleUpX).with(scaleUpY);
+
+        scaleUp.start();
+        state = States.OPENING;
+
+        this.displaySurface.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                state = States.OPEN;
+                playAudio();
+            }
+
+        }, zoomOutTime + 500); // 500ms delay after zoom complete
+    }
+
+    public void close() {
+        if (state != States.OPEN) return;
+        state = States.CLOSING;
+        stopAudio();
+        ObjectAnimator scaleDownX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 1.0f);
+        ObjectAnimator scaleDownY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 1.0f);
+        scaleDownX.setDuration(zoomInTime);
+        scaleDownY.setDuration(zoomInTime);
+
+        AnimatorSet scaleDown = new AnimatorSet();
+        scaleDown.play(scaleDownX).with(scaleDownY);
+
+        scaleDown.start();
+        this.displaySurface.postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                state = States.CLOSED;
+            }
+
+        }, zoomInTime + 500); // 500ms delay after zoom complete
+
+    }
+
+    public void playAudio(){
         try {
+            // if audio playing stopit
             this.mediaPlayer.setDataSource(this.context, soundUri);
             this.mediaPlayer.prepare();
             this.mediaPlayer.start();
@@ -168,6 +230,15 @@ public class ImageHotspot extends Hotspot {
         catch (java.io.IOException e) {
             Log.e("Hotspot audio", e.getMessage());
         }
+    }
+
+    public void stopAudio() {
+        this.mediaPlayer.stop();
+
+    }
+
+    public boolean isClosed() {
+        return(state == States.CLOSED);
     }
 
     public void manageState() {
@@ -189,139 +260,76 @@ public class ImageHotspot extends Hotspot {
     }
 
 @Override
-    public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
-        {
-            String gestureType;
-            try {
-                gestureType = message.getString("gesture");
-                //Log.i("incoming message",message.toString());
-            } catch (org.json.JSONException e) {
-                Log.i("GCT HS: no gesture msg",message.toString());
-                return false;
-            }
-            double deltaX = 0.0;
-
-            double deltaY = 0.0;
-            deltaZ = 0;
-            if (gestureType.equals("pan")) {
-                JSONObject vector = new JSONObject();
-                try {
-                    vector = message.getJSONObject("vector");
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS: reading pan msg", "no vector " + message.toString());
-                }
-                try {
-                    //double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
-                    //double screenHeightDegrees = Math.abs(curScreen.southwest.latitude - curScreen.northeast.latitude);
-                    double rawX = vector.getDouble("x");
-                    double percentChangeInX = 0;
-                    double percentChangeInY = 0;
-                    double rawY = vector.getDouble("y");
-
-                    if (doLog) {
-                        Log.i("GCT HS : pan update", " raw x: " + Double.toString(rawX) +
-                                " raw y: " + Double.toString(rawY));
-                    }
-                    if (Math.abs(rawX) < validTiltThreshold && Math.abs(rawY) < validTiltThreshold) {
-                        if (doLog) {
-                            Log.d("GCT HS: rejected pan", " raw x: " + Double.toString(rawX) +
-                                    " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
-                        }
-                        return false;
-                    } else {
-
-                        //double zoomFudge = (minZoom + 7) +
-                        //        ((minZoom + 7) - (maxZoom-3 ))/(minZoom-maxZoom) *
-                        //                (mMap.getCameraPosition().zoom-minZoom);
-                        //Log.i("fudge", Double.toString(zoomFudge) + ":" +  Double.toString(mMap.getCameraPosition().zoom));
-                /*percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
-                deltaY = screenHeightDegrees * percentChangeInY;
-
-                percentChangeInX = TiltScaleX * rawX *zoomFudge/maxZoom;
-                deltaX = screenWidthDegrees * percentChangeInX;*/
-                        deltaY = Math.min(Math.max(TiltScaleY * rawY, -panMax), panMax);
-
-                        deltaX = Math.min(Math.max(TiltScaleX * rawX, -panMax), panMax);
-                    }
-
-                    //if (zoomLayers[currentZoom]["pannable"])
-                    //Log.i("incoming pan",x + "," + y);
-                    if (doLog) {
-                        Log.i("GCT HS: pan hs update", " deltax: " + Double.toString(deltaX) +
-                                " deltay: " + Double.toString(deltaY)
-                        );
-                    }
-                    //mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
-                    Double[] nextTilt = { deltaY, deltaX };
-                    if (nextTilt != currentTilt) {
-                        updateTiltStats();
-                        Double[]  position = currentTilt;
-                        currentTilt = nextTilt;
-                        newData = true;
-                    }
-                    //mMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
-
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS error: pan msg", "invalid vector " + vector.toString());
-                }
-            }
-            else
-            {
-                deltaZ = 0;
-                JSONObject vector = new JSONObject();
-                try {
-                    vector = message.getJSONObject("vector");
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS error: zoom msg", "no vector " + message.toString());
-                }
-                try {
-                    deltaZ = vector.getInt("delta");
-                    int messageID = message.getInt("id");
-                    //if (messageID > lastMessageID + 1)
-                    //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
-                    lastZoomMessageID = messageID;
-                } catch (org.json.JSONException e) {
-                    Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
-                }
-                currentSpinPosition += deltaZ;
-                currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
-
-                double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
-                if (doLog) {
-                    Log.i("GCT HS: zoom update", "delta:" + Integer.toString(deltaZ) +
-                            " new zoom: " +
-                            //String.format ("%.2d", proposedZoom) +
-                            proposedZoom +
-                            " cSP: " +
-                            Integer.toString(currentSpinPosition) +
-                            " min:" + Integer.toString(minSpin) +
-                            " max:" + Integer.toString(maxSpin)
-                    );
-                }
-
-                //restartIdleTimer();
-                updateZoomStats();
-
-                if (proposedZoom != currentZoom) {
-                    zoom = currentZoom;
-                    currentZoom = proposedZoom;
-                    newData = true;
-
-                }
-
-
-            }
- /*           if (newData)
-            {
-                displaySurface.setVisibility(View.VISIBLE);
-                String updateURL = "javascript://table.update(" + currentTilt + " , " + currentZoom + ")";
-                if (doLog) {
-                    Log.i("GCT HotSpot: notify webView" , updateURL);
-                }
-                displaySurface.loadUrl(updateURL);
-                return true;
-            }
-*/
+    public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
+        String gestureType;
+        try {
+            gestureType = message.getString("gesture");
+            //Log.i("incoming message",message.toString());
+        } catch (org.json.JSONException e) {
+            Log.i("GCT HS: no gesture msg", message.toString());
             return false;
         }
+        double deltaX = 0.0;
+
+        double deltaY = 0.0;
+        deltaZ = 0;
+        if (gestureType.equals("switch")) {
+            String keyCode;
+            JSONObject switchObj = new JSONObject();
+            try {
+                switchObj = message.getJSONObject("switch");
+            } catch (org.json.JSONException e) {
+                Log.e("GCT HS error: switch msg", "no switch " + message.toString());
+                return false;
+            }
+            try {
+                keyCode = switchObj.getString("switchCode");
+            } catch (org.json.JSONException e) {
+                Log.e("GCT HS error: switch msg", "invalid switch " + switchObj.toString());
+                return false;
+            }
+            switch (keyCode) {
+                case "e":
+                    this.setImageByLanguage(ImageHotspot.Languages.ENGLISH);
+                    return true;
+                case "s":
+                    this.setImageByLanguage(ImageHotspot.Languages.SPANISH);
+                    return true;
+                case "k":
+                    this.setImageByLanguage(ImageHotspot.Languages.KOREAN);
+                    return true;
+                case "j":
+                    this.setImageByLanguage(ImageHotspot.Languages.JAPANESE);
+                    return true;
+                case "c":
+                    this.setImageByLanguage(ImageHotspot.Languages.CHINESE);
+                    return true;
+            }
+        } else if (gestureType.equals("zoom")) {
+
+            deltaZ = 0;
+            JSONObject vector = new JSONObject();
+            try {
+                vector = message.getJSONObject("vector");
+            } catch (org.json.JSONException e) {
+                Log.e("GCT HS error: zoom msg", "no vector " + message.toString());
+                return false;
+            }
+            try {
+                deltaZ = vector.getInt("delta");
+                int messageID = message.getInt("id");
+                //if (messageID > lastMessageID + 1)
+                //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
+                lastZoomMessageID = messageID;
+            } catch (org.json.JSONException e) {
+                Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
+                return false;
+            }
+            currentSpinPosition += deltaZ;
+            if (currentSpinPosition > maxSpin || currentSpinPosition < minSpin) {
+                this.close();
+            }
+        }
+        return true;
+    }
 }
