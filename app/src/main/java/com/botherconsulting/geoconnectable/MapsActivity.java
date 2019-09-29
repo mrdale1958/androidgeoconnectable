@@ -143,6 +143,8 @@ public class MapsActivity
     OuterCircleTextView idleMessageBottomView;
 
     String hotspotsJSONFile = "GlobalMagic.json";
+    ImageHotspot.Languages  hotspotLanguage = ImageHotspot.Languages.ENGLISH;
+    int lastHotSpotShown = 0;
 
     /* need kml section as it appears in settings */
     /* need location stats params as they appear in settings */
@@ -505,7 +507,7 @@ public class MapsActivity
                             View mapView =  (View) findViewById(R.id.map);
                             //mapView.setVisibility(View.INVISIBLE);
                             Log.w("hotspot loading ", hs + ":" + liveHotSpot.URL.toString());
-                            liveHotSpot.setImageByLanguage(ImageHotspot.Languages.ENGLISH);
+                            liveHotSpot.setImageByLanguage(hotspotLanguage);
                             liveHotSpot.open();
                             break;
                         }
@@ -563,6 +565,27 @@ public class MapsActivity
         }
     };
 
+    private void showAHotSpot() {
+        hotSpotActive = true;
+        int nextSpot = (lastHotSpotShown + 1) % hotspots.size();
+        lastHotSpotShown = nextSpot;
+        // ToDo: move the camera
+        liveHotSpot = hotspots.get(nextSpot);
+        View mapView =  (View) findViewById(R.id.map);
+        //mapView.setVisibility(View.INVISIBLE);
+        Log.w("hotspot loading ", nextSpot + ":" + liveHotSpot.baseUri.toString());
+        liveHotSpot.setImageByLanguage(hotspotLanguage);
+        liveHotSpot.open();
+    }
+
+    private void closeTheHotSpot() {
+        liveHotSpot.close();
+        hotSpotActive = false;
+        liveHotSpot = null;
+
+        asyncTaskHandler.post(animateByTable);
+    }
+
     protected void doIdle() {
         Log.i("Idle", "going into idle");
         idling = true;
@@ -575,6 +598,7 @@ public class MapsActivity
             // close it
             hotSpotActive = false;
         }
+        hotspotLanguage = ImageHotspot.Languages.ENGLISH;
 // TODO: add animation rotating text
         // TODO: after long idle save maxZoom data
     }
@@ -609,7 +633,8 @@ public class MapsActivity
         try {
             JSONArray jArray = new JSONArray(readJSONFromAsset());
             ImageView hotSpotImageView = (ImageView) findViewById(R.id.hotSpotImageView);
-            String urlPrefix = "https://botherconsulting.com/GlobalMagic/";
+            //String urlPrefix = "https://botherconsulting.com/GlobalMagic/";
+            String urlPrefix = "www/GlobalMagic/";
             for (int i = 0; i < jArray.length(); ++i) {
                 String title = jArray.getJSONObject(i).getString("title");// name of the country
                 Double latitude = jArray.getJSONObject(i).getDouble("latitude"); // dial code of the country
@@ -726,30 +751,35 @@ public class MapsActivity
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (hotSpotActive) {
-            switch (keyCode) {
-                case KeyEvent.KEYCODE_E:
-                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.ENGLISH);
-                    return true;
-                case KeyEvent.KEYCODE_S:
-                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.SPANISH);
-                    return true;
-                case KeyEvent.KEYCODE_K:
-                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.KOREAN);
-                    return true;
-                case KeyEvent.KEYCODE_J:
-                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.JAPANESE);
-                    return true;
-                case KeyEvent.KEYCODE_C:
-                    liveHotSpot.setImageByLanguage(ImageHotspot.Languages.CHINESE);
-                    return true;
-                default:
-                    return super.onKeyUp(keyCode, event);
-            }
-        } else {
-            return super.onKeyUp(keyCode, event);
-
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_E:
+                hotspotLanguage = ImageHotspot.Languages.ENGLISH;
+                break;
+            case KeyEvent.KEYCODE_S:
+                hotspotLanguage = ImageHotspot.Languages.SPANISH;
+                break;
+            case KeyEvent.KEYCODE_K:
+                hotspotLanguage = ImageHotspot.Languages.KOREAN;
+                break;
+            case KeyEvent.KEYCODE_J:
+                hotspotLanguage = ImageHotspot.Languages.JAPANESE;
+                break;
+            case KeyEvent.KEYCODE_C:
+                hotspotLanguage = ImageHotspot.Languages.CHINESE;
+                break;
+            case KeyEvent.KEYCODE_H:
+                showAHotSpot();
+                break;
+            case KeyEvent.KEYCODE_L:
+                closeTheHotSpot();
+                break;
+            default:
+                return super.onKeyUp(keyCode, event);
         }
+        if (hotSpotActive) {
+            liveHotSpot.setImageByLanguage(hotspotLanguage);
+        }
+        return true;
     }
 
 
@@ -858,8 +888,40 @@ public class MapsActivity
 
         LatLngBounds curScreen = mMap.getProjection()
                .getVisibleRegion().latLngBounds;
-
-        if (!hotSpotActive) {
+       if (gestureType.equals("switchCode")) {
+           String keyCode;
+           JSONObject switchObj = new JSONObject();
+           try {
+               switchObj = message.getJSONObject("vector");
+           } catch (org.json.JSONException e) {
+               Log.e("GCT HS error: switch msg", "no switch " + message.toString());
+               return ;
+           }
+           try {
+               keyCode = switchObj.getString("code");
+           } catch (org.json.JSONException e) {
+               Log.e("GCT HS error: switch msg", "invalid switch " + switchObj.toString());
+               return ;
+           }
+           switch (keyCode) {
+               case "e":
+                   hotspotLanguage = ImageHotspot.Languages.ENGLISH;
+                   break;
+               case "s":
+                   hotspotLanguage = ImageHotspot.Languages.SPANISH;
+                   break;
+               case "k":
+                   hotspotLanguage = ImageHotspot.Languages.KOREAN;
+                   break;
+               case "j":
+                   hotspotLanguage = ImageHotspot.Languages.JAPANESE;
+                   break;
+               case "c":
+                   hotspotLanguage = ImageHotspot.Languages.CHINESE;
+                   break;
+           }
+       }
+       if (!hotSpotActive) {
             if (gestureType.equals("pan"))
              {
                 panner.handleJSON(message, mMap, logSensors || logTilt, currScreenWidth, currScreenHeight);
@@ -870,6 +932,7 @@ public class MapsActivity
             }
 
         } else {
+            liveHotSpot.setImageByLanguage(hotspotLanguage);
             if (gestureType.equals("pan"))
             {
               liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
