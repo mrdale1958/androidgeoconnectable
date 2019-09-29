@@ -3,6 +3,11 @@ package com.botherconsulting.geoconnectable;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -12,6 +17,9 @@ import android.widget.ImageView;
 import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by dwm160130 on 3/22/18.
@@ -120,6 +128,13 @@ public class ImageHotspot extends Hotspot {
         this.context = context;
         this.minSpin = -20;
         this.maxSpin = 2000;
+        this.mediaPlayer = new MediaPlayer();
+        this.mediaPlayer.setAudioAttributes(
+                new AudioAttributes
+                        .Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build());
+
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
                 .title("some pithy name")
@@ -129,45 +144,57 @@ public class ImageHotspot extends Hotspot {
     }
 
     public void setBaseName(String location, String name) {
-        this.baseUri = Uri.parse(location+'/'+name+'/'+name+'_');
+        this.baseUri = Uri.parse(location+name+'/');
         this.setTitle(name);
     }
 
 
     public void setImageByLanguage(Languages language) {
         Uri imageUri, soundUri;
-        this.mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioAttributes(
-                new AudioAttributes
-                        .Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build());
 
         switch (language) {
             case KOREAN:
-                imageUri = Uri.withAppendedPath(this.baseUri, "Korean.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "Korean.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Korean.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Korean.m4a");
                 break;
             case CHINESE:
-                imageUri = Uri.withAppendedPath(this.baseUri, "Chinese.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "Chinese.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Chinese.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Chinese.m4a");
                 break;
             case JAPANESE:
-                imageUri = Uri.withAppendedPath(this.baseUri, "Japanese.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "Japanese.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Japanese.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Japanese.m4a");
                 break;
             case SPANISH:
-                imageUri = Uri.withAppendedPath(this.baseUri, "Spanish.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "Spanish.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Spanish.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"Spanish.m4a");
                 break;
             case ENGLISH:
             default:
-                imageUri = Uri.withAppendedPath(this.baseUri, "English.png");
-                soundUri = Uri.withAppendedPath(this.baseUri, "English.m4a");
+                imageUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"English.png");
+                soundUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"English.m4a");
                 break;
 
         }
-        this.displaySurface.setImageURI(imageUri);
+        try {
+
+            // get input stream
+            String path = imageUri.getPath();
+            InputStream ims = this.displaySurface.getContext().getAssets().open(path);
+
+            // load image as Drawable
+            Drawable d = Drawable.createFromStream(ims, null);
+
+            // set image to ImageView
+            this.displaySurface.setImageDrawable(d);
+        }
+        catch(IOException ex) {
+
+            Log.e("I/O ERROR","Failed when ...");
+        }       //this.displaySurface.setImageURI(imageUri);
+       // Bitmap bmImg = BitmapFactory.decodeFile(imageUri.getEncodedPath());
+       // this.displaySurface.setImageBitmap(bmImg);
+        this.soundUri = soundUri;
         // if open playAudio();
     }
 
@@ -217,7 +244,7 @@ public class ImageHotspot extends Hotspot {
             }
 
         }, zoomInTime + 500); // 500ms delay after zoom complete
-
+        this.mediaPlayer.release();
     }
 
     public void playAudio(){
