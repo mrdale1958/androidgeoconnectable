@@ -9,7 +9,7 @@ import android.view.WindowManager;
 
 import java.util.Map;
 
-public class SettingsActivity
+public class    SettingsActivity
         extends AppCompatActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener
 {
