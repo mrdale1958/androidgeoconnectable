@@ -42,7 +42,9 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
 
     public void setText(String newText) {
         MY_TEXT = newText;
+
         invalidate();
+
     }
 
     public void setTextStyle (int flags, Paint.Style style, int color, float size) {
@@ -51,7 +53,7 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
         mPaintText.setColor(color);
         mPaintText.setTextSize(size);
         mPaintText.setShadowLayer(2.0f,2.0f,2.0f,0xff0000);
-        invalidate();
+        //invalidate();
     }
 
     public void setPath(int _x,
@@ -64,7 +66,7 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
         mArc.addCircle(_x,_y, _radius, _direction);
         hOffset = _hOffset;
         vOffset = _vOffset;
-        invalidate();
+        //invalidate();
     }
 
 
@@ -74,6 +76,6 @@ public class OuterCircleTextView extends android.support.v7.widget.AppCompatText
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.drawTextOnPath(MY_TEXT, mArc, hOffset, vOffset, mPaintText);
-        invalidate();
+        //invalidate();
     }
 }

@@ -13,6 +13,9 @@ public class HotspotEditActivity
         extends AppCompatActivity
         implements SharedPreferences.OnSharedPreferenceChangeListener
 {
+    // figure out list manipulation
+    // figure out editing list items
+    // list items consist of Title, Lat, Long
     public static final String
             KEY_PREF_SENSOR_SERVER = "sensor_server";
     public static final String
