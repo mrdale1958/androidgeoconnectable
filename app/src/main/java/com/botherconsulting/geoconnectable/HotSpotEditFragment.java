@@ -2,7 +2,8 @@ package com.botherconsulting.geoconnectable;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.preference.PreferenceFragmentCompat;
+
+import androidx.preference.PreferenceFragmentCompat;
 
 /**
  * Created by dalemacdonald on 11/19/17.

@@ -6,12 +6,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
+import android.widget.TextView;
 
 /**
  * Created by dalemacdonald on 11/21/17.
  */
 
-public class OuterCircleTextView extends android.support.v7.widget.AppCompatTextView {
+public class OuterCircleTextView extends TextView {
 
     private String MY_TEXT = "xjaphx: Draw Text on Curve";
     private Path mArc;
