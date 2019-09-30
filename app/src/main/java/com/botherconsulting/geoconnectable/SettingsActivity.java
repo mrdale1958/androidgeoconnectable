@@ -2,10 +2,12 @@ package com.botherconsulting.geoconnectable;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.preference.EditTextPreference;
+import android.preference.EditTextPreference;
+
 import android.util.Log;
 import android.view.WindowManager;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Map;
 

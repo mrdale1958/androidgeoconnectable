@@ -1,7 +1,7 @@
 package com.botherconsulting.geoconnectable;
 import android.content.Context;
-import  android.R.color;
-import android.support.v4.content.ContextCompat;
+//import  android.R.color;
+//import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
