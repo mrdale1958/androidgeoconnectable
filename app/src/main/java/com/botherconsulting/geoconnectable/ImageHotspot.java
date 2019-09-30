@@ -2,15 +2,23 @@ package com.botherconsulting.geoconnectable;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.IBinder;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -20,6 +28,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 /**
  * Created by dwm160130 on 3/22/18.
@@ -104,8 +113,10 @@ public class ImageHotspot extends Hotspot {
     private ImageView displaySurface;
     private Context context;
     private MediaPlayer mediaPlayer;
+    private boolean serviceBound = false;
     private Uri imageUri, soundUri;
-
+    private int resumePosition;
+    private ArrayList<String> audioList;
 
 
     public enum Languages {
@@ -128,12 +139,6 @@ public class ImageHotspot extends Hotspot {
         this.context = context;
         this.minSpin = -20;
         this.maxSpin = 2000;
-        this.mediaPlayer = new MediaPlayer();
-        this.mediaPlayer.setAudioAttributes(
-                new AudioAttributes
-                        .Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build());
 
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
@@ -143,6 +148,84 @@ public class ImageHotspot extends Hotspot {
 */
     }
 
+
+
+//    private void updateAudioSource(String mediaFile) {
+//        try {
+//            // Set the data source to the mediaFile location
+//            mediaPlayer.setDataSource(mediaFile);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            stopMedia();
+//        }
+//    }
+
+
+
+
+   /*     @Override
+       protected void onDestroy() {
+        super.onDestroy();
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            //service is active
+            player.stopSelf();
+        }
+    }
+*/
+ /*   private void stopMedia() {
+        if (mediaPlayer == null) return;
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+        }
+    }
+
+    private void pauseMedia() {
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            resumePosition = mediaPlayer.getCurrentPosition();
+        }
+    }
+
+    private void resumeMedia() {
+        if (!mediaPlayer.isPlaying()) {
+            mediaPlayer.seekTo(resumePosition);
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        //Invoked when playback of a media source has completed.
+        stopMedia();
+        //stop the service
+        stopSelf();
+    }
+
+    //Handle errors
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        //Invoked when there has been an error during an asynchronous operation
+        switch (what) {
+            case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
+                Log.d("MediaPlayer Error", "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + extra);
+                break;
+            case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                Log.d("MediaPlayer Error", "MEDIA ERROR SERVER DIED " + extra);
+                break;
+            case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                Log.d("MediaPlayer Error", "MEDIA ERROR UNKNOWN " + extra);
+                break;
+        }
+        return false;
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        //Invoked when the media source is ready for playback.
+        playMedia();
+    }
+*/
     public void setBaseName(String location, String name) {
         this.baseUri = Uri.parse(location+name+'/');
         this.setTitle(name);
@@ -217,7 +300,7 @@ public class ImageHotspot extends Hotspot {
             @Override
             public void run() {
                 state = States.OPEN;
-                playAudio();
+                //playAudio();
             }
 
         }, zoomOutTime + 500); // 500ms delay after zoom complete
@@ -226,7 +309,7 @@ public class ImageHotspot extends Hotspot {
     public void close() {
         if (state != States.OPEN) return;
         state = States.CLOSING;
-        stopAudio();
+        //stopAudio();
         ObjectAnimator scaleDownX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 1.0f);
         ObjectAnimator scaleDownY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 1.0f);
         scaleDownX.setDuration(zoomInTime);
@@ -244,10 +327,10 @@ public class ImageHotspot extends Hotspot {
             }
 
         }, zoomInTime + 500); // 500ms delay after zoom complete
-        this.mediaPlayer.release();
+        //this.mediaPlayer.release();
     }
 
-    public void playAudio(){
+ /*   public void playAudio(){
         try {
             // if audio playing stopit
             this.mediaPlayer.setDataSource(this.context, soundUri);
@@ -263,7 +346,7 @@ public class ImageHotspot extends Hotspot {
         this.mediaPlayer.stop();
 
     }
-
+*/
     public boolean isClosed() {
         return(state == States.CLOSED);
     }
@@ -279,7 +362,7 @@ public class ImageHotspot extends Hotspot {
                 state = States.OPEN;
                 break;
             case CLOSING:
-                this.mediaPlayer.release();
+                //this.mediaPlayer.release();
                 state = States.CLOSED;
                 break;
 
