@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.preference.PreferenceScreen
+<androidx.preference.PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <android.preference.PreferenceCategory
+    <androidx.preference.PreferenceCategory
         android:title="Sensor settings">
 
-        <android.preference.EditTextPreference
+        <androidx.preference.EditTextPreference
             android:defaultValue="256"
             android:numeric="integer"
             android:key="spin_sensor_clicks_per_rev"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/spin_sensor_clicks_per_rev" />
-        <android.preference.EditTextPreference
+        <androidx.preference.EditTextPreference
             android:defaultValue="8"
             android:numeric="integer"
             android:key="spin_sensor_revs_per_full_zoom"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/spin_sensor_revs_per_full_zoom" />
-        <android.preference.EditTextPreference
+        <androidx.preference.EditTextPreference
             android:defaultValue="100"
             android:numeric="integer"
             android:key="tilt_sensor_scale_factor"
@@ -27,22 +27,22 @@
             android:singleLine="true"
             android:summary="convert from tilt values to percent of screen"
             android:title="@string/tilt_sensor_scale_factor" />
-        <android.preference.EditTextPreference
+        <androidx.preference.EditTextPreference
             android:defaultValue="192.168.86.24"
             android:key="sensor_server"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/sensor_ip_address" />
-        <android.preference.EditTextPreference
+        <androidx.preference.EditTextPreference
             android:defaultValue="5678"
             android:key="sensor_server_port"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="@string/sensor_tcp_port" />
-    </android.preference.PreferenceCategory>
-    <android.preference.PreferenceCategory
+    </androidx.preference.PreferenceCategory>
+    <androidx.preference.PreferenceCategory
         android:title="UI settings">
-        <android.preference.CheckBoxPreference
+        <androidx.preference.CheckBoxPreference
             android:key="use_hybrid_map"
             android:title="@string/use_hybrid_map"
             android:summary="@string/use_hybrid_map_summ"
@@ -77,13 +77,13 @@
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="Target Size" />-->
-        <android.preference.EditTextPreference
+        <androidx.preference.EditTextPreference
             android:defaultValue="Spin tabletop to zoom"
             android:key="idle_text_bottom"
             android:selectAllOnFocus="true"
             android:singleLine="true"
             android:title="Idle Text Bottom" />
-        <android.preference.EditTextPreference
+        <androidx.preference.EditTextPreference
             android:defaultValue="Tilt tabletop to pan"
             android:key="idle_text_top"
             android:selectAllOnFocus="true"
@@ -96,28 +96,28 @@
              android:selectAllOnFocus="true"
              android:singleLine="true"
              android:title="Horizontal shift" />-->
-         <android.preference.EditTextPreference
+         <androidx.preference.EditTextPreference
              android:defaultValue="600"
              android:numeric="integer"
              android:key="idle_time"
              android:selectAllOnFocus="true"
              android:singleLine="true"
              android:title="IDLE timeout" />
-         <android.preference.EditTextPreference
+         <androidx.preference.EditTextPreference
              android:defaultValue="37.722075"
              android:numeric="decimal"
              android:key="idle_latitude"
              android:selectAllOnFocus="true"
              android:singleLine="true"
              android:title="IDLE latitude" />
-         <android.preference.EditTextPreference
+         <androidx.preference.EditTextPreference
              android:defaultValue="-122.479246"
              android:numeric="decimal"
              android:key="idle_longitude"
              android:selectAllOnFocus="true"
              android:singleLine="true"
              android:title="IDLE longitude" />
-         <android.preference.EditTextPreference
+         <androidx.preference.EditTextPreference
              android:defaultValue="13.5"
              android:numeric="decimal"
              android:key="idle_zoom"
@@ -146,5 +146,5 @@
              android:showText="true"
              android:key="view_stats_units"
              android:title="Location stats units" /> -->
-    </android.preference.PreferenceCategory>
-</android.preference.PreferenceScreen>
+    </androidx.preference.PreferenceCategory>
+</androidx.preference.PreferenceScreen>
