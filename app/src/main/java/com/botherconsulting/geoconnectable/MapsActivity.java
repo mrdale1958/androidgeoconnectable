@@ -647,7 +647,8 @@ public class MapsActivity
                 Double latitude = jArray.getJSONObject(i).getDouble("latitude"); // dial code of the country
                 Double longitude = jArray.getJSONObject(i).getDouble("longitude"); // code of the country
                 hotspots.add(i, new ImageHotspot(mMap, hotSpotImageView, this.getApplicationContext()));
-                hotspots.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                //hotspots.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                hotspots.get(i).setIcon(BitmapDescriptorFactory.fromAsset("www/GlobalMagic/globe32x32.png"));
                 hotspots.get(i).setPosition(new LatLng(latitude,longitude));
                 hotspots.get(i).setBaseName(urlPrefix, title);
             }
