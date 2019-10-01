@@ -584,11 +584,13 @@ public class MapsActivity
     }
 
     private void closeTheHotSpot() {
-        liveHotSpot.close();
-        hotSpotActive = false;
-        liveHotSpot = null;
+        if (liveHotSpot != null) {
+            liveHotSpot.close();
+            hotSpotActive = false;
+            liveHotSpot = null;
 
-        asyncTaskHandler.post(animateByTable);
+            asyncTaskHandler.post(animateByTable);
+        }
     }
 
     protected void doIdle() {
@@ -781,6 +783,7 @@ public class MapsActivity
             default:
                 return super.onKeyUp(keyCode, event);
         }
+        signalWebSocket(hotspotLanguage);
         if (hotSpotActive) {
             liveHotSpot.setImageByLanguage(hotspotLanguage);
         }
@@ -856,6 +859,13 @@ public class MapsActivity
         }
         Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
         bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
+
+    }
+
+    private void signalWebSocket(ImageHotspot.Languages language) {
+        if (mWebSocketClient != null && mWebSocketClient.isOpen()){
+            mWebSocketClient.send("{language: " + language.toString() +"}");
+        }
 
     }
 
