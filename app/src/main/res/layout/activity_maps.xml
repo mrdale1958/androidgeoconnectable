@@ -1,4 +1,4 @@
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/MaskedFrame"
@@ -83,7 +83,7 @@
 
     </FrameLayout>
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/settings_Editor_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -92,7 +92,7 @@
         app:fabSize="normal"
         app:backgroundTint="@color/settingsbutton"
         app:rippleColor="@android:color/black" />
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/hotSpotEditor_fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -104,7 +104,7 @@
     <!--app:srcCompat="@android:drawable/ic_menu_preferences" /> -->
     <!--app:srcCompat="@android:drawable/ic_menu_preferences" /> -->
 
-    <android.support.design.widget.CoordinatorLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
        android:id="@+id/LocationParams"
        android:layout_width="160dp"
        android:layout_height="90dp"
@@ -113,11 +113,11 @@
        android:layout_gravity="center_horizontal|top"
        android:background="#44ffffff">
 
-       <android.support.v7.widget.AppCompatTextView
+       <androidx.appcompat.widget.AppCompatTextView
            android:id="@+id/currentLongitude"
            android:layout_width="match_parent"
            android:layout_height="wrap_content"
-           android:layout_marginTop="4dp"
+           android:layout_marginTop="8dp"
            android:background="@android:color/transparent"
            android:gravity="top"
            android:textColor="@color/black"
@@ -131,11 +131,11 @@
            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
            android:visibility="visible" />
 
-        <android.support.v7.widget.AppCompatTextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/currentLatitude"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Latitude: 32.0"
+            android:text="Latitude: 40.0"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="24dp"
             android:textColor="@color/black"
@@ -153,7 +153,7 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:layout_marginLeft="36dp"
-          android:layout_marginTop="48dp"
+          android:layout_marginTop="56dp"
           app:scale_color="@color/black"
           android:shadowColor="#ccccff"
           android:shadowRadius="1.5"
@@ -178,7 +178,7 @@
              android:textAppearance="@style/TextAppearance.AppCompat.Medium"
              android:visibility="visible" /> -->
 
-   </android.support.design.widget.CoordinatorLayout>
+   </androidx.coordinatorlayout.widget.CoordinatorLayout>
     <FrameLayout
         android:id="@+id/HotSpotFrame"
         android:layout_width="1200px"
@@ -199,4 +199,4 @@
 
     </FrameLayout>
 
-</android.support.design.widget.CoordinatorLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
