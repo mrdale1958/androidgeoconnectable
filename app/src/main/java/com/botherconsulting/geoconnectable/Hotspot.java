@@ -55,7 +55,7 @@ public class Hotspot {
     public String set;
     public java.net.URL URL;
     public Marker marker;
-    public Double[] hotSpotZoomTriggerRange = {15.0, 19.0};
+    public Double[] hotSpotZoomTriggerRange = {13.0, 19.0};
     public Double[] currentTilt = {0.0, 0.0};
     public int minSpin = -100;
     public int maxSpin = 100000000;
