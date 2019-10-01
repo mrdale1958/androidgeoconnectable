@@ -2,23 +2,12 @@ package com.botherconsulting.geoconnectable;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
-import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.res.AssetManager;
-import android.content.res.Resources;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.drawable.Drawable;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
+import android.graphics.drawable.TransitionDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.IBinder;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -90,7 +79,7 @@ public class ImageHotspot extends Hotspot {
 
     }
 */  static int zoomOutTime = 2000; // milliseconds
-    static int zoomInTime = 1000; // milliseconds
+    static int zoomInTime = 2000; // milliseconds
     private States state;
     long lastTiltMessageTime = System.nanoTime();
     int eventTiltCount = 0;
@@ -112,11 +101,12 @@ public class ImageHotspot extends Hotspot {
 
     private ImageView displaySurface;
     private Context context;
-    private MediaPlayer mediaPlayer;
+    static MediaPlayer mediaPlayer = null;
     private boolean serviceBound = false;
     private Uri imageUri, soundUri;
     private int resumePosition;
     private ArrayList<String> audioList;
+    private Uri lastLanguage = null;
 
 
     public enum Languages {
@@ -132,6 +122,8 @@ public class ImageHotspot extends Hotspot {
         super(map);
         state = States.CLOSED;
         this.displaySurface = imageView;
+        this.displaySurface.setScaleX(0.0f);
+        this.displaySurface.setScaleY(0.0f);
         this.enabled = false;
         this.set = "default";
         this.marker=null;
@@ -162,73 +154,11 @@ public class ImageHotspot extends Hotspot {
 
 
 
-
-   /*     @Override
-       protected void onDestroy() {
-        super.onDestroy();
-        if (serviceBound) {
-            unbindService(serviceConnection);
-            //service is active
-            player.stopSelf();
-        }
-    }
-*/
- /*   private void stopMedia() {
-        if (mediaPlayer == null) return;
-        if (mediaPlayer.isPlaying()) {
-            mediaPlayer.stop();
-        }
-    }
-
-    private void pauseMedia() {
-        if (mediaPlayer.isPlaying()) {
-            mediaPlayer.pause();
-            resumePosition = mediaPlayer.getCurrentPosition();
-        }
-    }
-
-    private void resumeMedia() {
-        if (!mediaPlayer.isPlaying()) {
-            mediaPlayer.seekTo(resumePosition);
-            mediaPlayer.start();
-        }
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        //Invoked when playback of a media source has completed.
-        stopMedia();
-        //stop the service
-        stopSelf();
-    }
-
-    //Handle errors
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        //Invoked when there has been an error during an asynchronous operation
-        switch (what) {
-            case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
-                Log.d("MediaPlayer Error", "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + extra);
-                break;
-            case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
-                Log.d("MediaPlayer Error", "MEDIA ERROR SERVER DIED " + extra);
-                break;
-            case MediaPlayer.MEDIA_ERROR_UNKNOWN:
-                Log.d("MediaPlayer Error", "MEDIA ERROR UNKNOWN " + extra);
-                break;
-        }
-        return false;
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        //Invoked when the media source is ready for playback.
-        playMedia();
-    }
-*/
     public void setBaseName(String location, String name) {
         this.baseUri = Uri.parse(location+name+'/');
         this.setTitle(name);
+        this.soundUri = Uri.withAppendedPath(this.baseUri, this.getTitle()+'_'+"English.m4a");
+
     }
 
 
@@ -267,9 +197,27 @@ public class ImageHotspot extends Hotspot {
 
             // load image as Drawable
             Drawable d = Drawable.createFromStream(ims, null);
-
+            ims.close();
             // set image to ImageView
-            this.displaySurface.setImageDrawable(d);
+            Drawable backgrounds[] = new Drawable[2];
+            backgrounds[0] =  this.displaySurface.getDrawable();
+            if (backgrounds[0] != null) {
+                path = this.lastLanguage.getPath();
+                ims  = this.displaySurface.getContext().getAssets().open(path);
+                backgrounds[0] = Drawable.createFromStream(ims, null);
+                ims.close();
+                backgrounds[1] = d;
+
+                TransitionDrawable crossfader = new TransitionDrawable(backgrounds);
+
+                this.displaySurface.setImageDrawable(crossfader);
+                crossfader.setCrossFadeEnabled(true);
+
+                crossfader.startTransition(300);
+            } else {
+                this.displaySurface.setImageDrawable(d);
+
+            }
         }
         catch(IOException ex) {
 
@@ -278,7 +226,10 @@ public class ImageHotspot extends Hotspot {
        // Bitmap bmImg = BitmapFactory.decodeFile(imageUri.getEncodedPath());
        // this.displaySurface.setImageBitmap(bmImg);
         this.soundUri = soundUri;
-        // if open playAudio();
+        this.lastLanguage = imageUri;
+        if (state == States.OPEN) {
+            playAudio();
+        }
     }
 
     public void open() {
@@ -287,7 +238,9 @@ public class ImageHotspot extends Hotspot {
         ObjectAnimator scaleUpX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 1.0f);
         ObjectAnimator scaleUpY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 1.0f);
         scaleUpX.setDuration(zoomOutTime);
+        scaleUpX.setAutoCancel(true);
         scaleUpY.setDuration(zoomOutTime);
+        scaleUpY.setAutoCancel(true);
 
         AnimatorSet scaleUp = new AnimatorSet();
         scaleUp.play(scaleUpX).with(scaleUpY);
@@ -300,7 +253,8 @@ public class ImageHotspot extends Hotspot {
             @Override
             public void run() {
                 state = States.OPEN;
-                //playAudio();
+                //stopAudio();
+                playAudio();
             }
 
         }, zoomOutTime + 500); // 500ms delay after zoom complete
@@ -309,11 +263,13 @@ public class ImageHotspot extends Hotspot {
     public void close() {
         if (state != States.OPEN) return;
         state = States.CLOSING;
-        //stopAudio();
-        ObjectAnimator scaleDownX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 1.0f);
-        ObjectAnimator scaleDownY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 1.0f);
+        stopAudio();
+        ObjectAnimator scaleDownX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 0.1f);
+        ObjectAnimator scaleDownY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 0.1f);
         scaleDownX.setDuration(zoomInTime);
+        scaleDownX.setAutoCancel(true);
         scaleDownY.setDuration(zoomInTime);
+        scaleDownY.setAutoCancel(true);
 
         AnimatorSet scaleDown = new AnimatorSet();
         scaleDown.play(scaleDownX).with(scaleDownY);
@@ -324,29 +280,52 @@ public class ImageHotspot extends Hotspot {
             @Override
             public void run() {
                 state = States.CLOSED;
+                displaySurface.setScaleX(0.0f);
+                displaySurface.setScaleY(0.0f);
+                displaySurface.setImageDrawable(null);
             }
 
         }, zoomInTime + 500); // 500ms delay after zoom complete
         //this.mediaPlayer.release();
     }
 
- /*   public void playAudio(){
+    public void playAudio(){
+        //try {
+        if (ImageHotspot.mediaPlayer != null) // && ImageHotspot.mediaPlayer.isPlaying())
+            stopAudio();
+        if (ImageHotspot.mediaPlayer == null)
+            ImageHotspot.mediaPlayer = new MediaPlayer();
+
+        ImageHotspot.mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp1) {
+                ImageHotspot.mediaPlayer.start();
+                Log.d("audio start", "mediaplayer  started");
+            }
+        });
         try {
-            // if audio playing stopit
-            this.mediaPlayer.setDataSource(this.context, soundUri);
-            this.mediaPlayer.prepare();
-            this.mediaPlayer.start();
+            AssetFileDescriptor descriptor = context.getAssets().openFd(this.soundUri.toString());
+            ImageHotspot.mediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
+            descriptor.close();
+            ImageHotspot.mediaPlayer.prepare();
+            ImageHotspot.mediaPlayer.setVolume(1f, 1f);
+            ImageHotspot.mediaPlayer.setLooping(false);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (java.io.IOException e) {
-            Log.e("Hotspot audio", e.getMessage());
-        }
+        //mediaPlayer.start();
+        //}
+        //catch (java.io.IOException e) {
+        //    Log.e("Hotspot audio", e.getMessage());
+        //}
     }
 
     public void stopAudio() {
+        this.mediaPlayer.pause();
         this.mediaPlayer.stop();
-
+        this.mediaPlayer.release ();
+        this.mediaPlayer=null;
     }
-*/
     public boolean isClosed() {
         return(state == States.CLOSED);
     }
