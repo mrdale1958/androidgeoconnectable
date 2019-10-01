@@ -105,7 +105,7 @@ public class ZoomLens {
         } catch (org.json.JSONException e) {
             Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString() + " or ID " + message);
         }
-        currentSpinPosition += delta;
+        currentSpinPosition -= delta;
         currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
 
         double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
