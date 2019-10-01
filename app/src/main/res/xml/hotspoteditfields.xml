@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.preference.PreferenceScreen
+<android.preference.PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <android.support.v7.preference.PreferenceCategory
+    <android.preference.PreferenceCategory
         android:title="Hot Spots">
 
-        <android.support.v7.preference.ListPreference
+        <android.preference.ListPreference
             android:key="@string/hotspots_list_title"
             android:title="Hotspots"
             android:defaultValue="#00FFFF"
 
             android:summary="Select a hotspot to edit"
  />
-        <android.support.v7.preference.ButtonPreference
+        <android.preference.ButtonPreference
             android:defaultValue="8"
             android:key="addhotspot"
             android:singleLine="true"
             android:title="@string/add_hotspot_button_label" />
 
-    </android.support.v7.preference.PreferenceCategory>
-</android.support.v7.preference.PreferenceScreen>
+    </android.preference.PreferenceCategory>
+</android.preference.PreferenceScreen>
 
 
 <!-- android:entries="@array/foreground_color_names_array"
