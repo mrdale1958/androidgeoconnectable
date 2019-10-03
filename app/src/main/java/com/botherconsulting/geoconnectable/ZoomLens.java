@@ -103,7 +103,7 @@ public class ZoomLens {
             //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
             lastMessageID = messageID;
         } catch (org.json.JSONException e) {
-            Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString());
+            Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString() + " or ID " + message.toString());
         }
         currentSpinPosition += delta;
         currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
