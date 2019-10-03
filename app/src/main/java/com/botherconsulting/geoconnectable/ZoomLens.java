@@ -98,14 +98,14 @@ public class ZoomLens {
         }
         try {
             delta = vector.getInt("delta");
-            int messageID = message.getInt("id");
+            //int messageID = message.getInt("id");
             //if (messageID > lastMessageID + 1)
             //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
-            lastMessageID = messageID;
+            //lastMessageID = messageID;
         } catch (org.json.JSONException e) {
-            Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString() + " or ID " + message.toString());
+            Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString() + " or ID " + message);
         }
-        currentSpinPosition += delta;
+        currentSpinPosition -= delta;
         currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
 
         double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
