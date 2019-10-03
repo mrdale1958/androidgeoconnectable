@@ -406,10 +406,10 @@ public class ImageHotspot extends Hotspot {
             }
             try {
                 deltaZ = vector.getInt("delta");
-                int messageID = message.getInt("id");
+//                int messageID = message.getInt("id");
                 //if (messageID > lastMessageID + 1)
                 //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
-                lastZoomMessageID = messageID;
+ //               lastZoomMessageID = messageID;
             } catch (org.json.JSONException e) {
                 Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
                 return false;
