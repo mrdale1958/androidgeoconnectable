@@ -110,10 +110,16 @@ public class TablePanner {
         try {
             //double screenWidthDegrees = Math.abs(curScreen.southwest.longitude - curScreen.northeast.longitude);
             //double screenHeightDegrees = Math.abs(curScreen.southwest.latitude - curScreen.northeast.latitude);
-            double rawX = vector.getDouble("x");
+            /*
+            *
+            * * Danger will robinson!  x and y swapped for SFSU installation
+            *
+            */
+            double rawX = vector.getDouble("y");
+
             double percentChangeInX = 0;
             double percentChangeInY = 0;
-            double rawY = vector.getDouble("y");
+            double rawY = vector.getDouble("x");
 
             if (doLog) {
                 Log.i("GCT pan: incoming", " raw x: " + Double.toString(rawX) +

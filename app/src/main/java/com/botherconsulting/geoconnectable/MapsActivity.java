@@ -40,7 +40,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -448,12 +447,19 @@ public class MapsActivity
 
         public void run() {
             // TODO: label this 19. Does it set a maximum zoom level for the app
-
+            long blockStartTime, blockEndTime, startTime = uptimeMillis();
+            long elapsedTime = startTime - lastRuntime;
+            lastRuntime = startTime;
+            Log.i("Profile animation loop", "start");
             zoomer.setZoomBounds(minZoomLevel, Math.min(19.0,mMap.getMaxZoomLevel()));
             float newZoom = mMap.getCameraPosition().zoom;
             long lastZoomTime = 0;
             boolean doAnimate = false;
+            LatLng newPos = mMap.getCameraPosition().target;
+            long lastPanTime = 0;
             if (zoomer.newData) {
+                blockStartTime = uptimeMillis();
+                Log.i("Profile animation loop", "zoomNewData");
                 Object[] zoomData = zoomer.getCurrentZoom();
                 newZoom = (float) zoomData[ZOOM];
                 lastZoomTime = (long) zoomData[GESTURE_TIME];
@@ -466,28 +472,38 @@ public class MapsActivity
                 }
                 //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
                 doAnimate = true;
+                blockEndTime = uptimeMillis();
+                Log.i("Profile animation loop", "zoomNewData " + (blockEndTime-blockStartTime));
+
             }
-            LatLng newPos = mMap.getCameraPosition().target;
-            long lastPanTime = 0;
             if (panner.newData) {
+                blockStartTime = uptimeMillis();
+                Log.i("Profile animation loop", "panNewData");
                 Object[] pannerData = panner.getCurrentPosition();
                 newPos = (LatLng) pannerData[PAN];
                 lastPanTime = (long) pannerData[GESTURE_TIME];
                 //Log.i("new position", newPos.toString());
                 doAnimate = true;
-
+                blockEndTime = uptimeMillis();
+                Log.i("Profile animation loop", "panNewData " + (blockEndTime-blockStartTime));
 
             }
             if (hotSpotActive) {
                 // deal with animating hotSpot
                 // need a mechanism to get clear of target voxel  before redisplaying
+                blockStartTime = uptimeMillis();
+                Log.i("Profile animation loop", "animate HotSpot");
                 if (liveHotSpot.isClosed() ) {
                     hotSpotActive = false;
                     liveHotSpot = null;
                 }
                 asyncTaskHandler.post(animateByTable);
+                blockEndTime = uptimeMillis();
+                Log.i("Profile animation loop", "animate HotSpot " + (blockEndTime-blockStartTime));
 
             } else {
+                blockStartTime = uptimeMillis();
+                Log.i("Profile animation loop", "set up map move");
                 VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 double currLeft = visibleRegion.farLeft.longitude;
                 double currRight = visibleRegion.farRight.longitude;
@@ -503,6 +519,10 @@ public class MapsActivity
                         new LatLng(newPos.latitude+targetWidth*currScreenHeight,
                                 newPos.longitude-targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
+                blockEndTime = uptimeMillis();
+                Log.i("Profile animation loop", "set up map move " + (blockEndTime-blockStartTime));
+                blockStartTime = uptimeMillis();
+                Log.i("Profile animation loop", "test HotSpots");
                 for (int hs = 0; hs < hotspots.size(); hs++) {
                     if (hotBounds.contains(hotspots.get(hs).marker.getPosition())) {
                         if (newZoom >  hotspots.get(hs).hotSpotZoomTriggerRange[0] &&
@@ -514,11 +534,14 @@ public class MapsActivity
                             Log.w("hotspot loading ", hs + ":" + liveHotSpot.URL.toString());
                             liveHotSpot.setImageByLanguage(hotspotLanguage);
                             liveHotSpot.open();
+                            asyncTaskHandler.post(animateByTable);
                             break;
                         }
                     }
                 }
             }
+            blockEndTime = uptimeMillis();
+            Log.i("Profile animation loop", "test HotSpots " + (blockEndTime-blockStartTime));
             //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
             if (doAnimate) {
                 /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
@@ -540,9 +563,13 @@ public class MapsActivity
 
                 int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
                 //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
+                blockStartTime = uptimeMillis();
+                Log.i("Profile animation loop", "animate map");
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onFinish() {
+                        long blockStartTime = uptimeMillis();
+                        Log.i("Profile animation loop", "post animate map");
                         TextView latDisplay = findViewById(R.id.currentLatitude);
                         latDisplay.setText("Latitude: " + String.format("%.2f", mMap.getCameraPosition().target.latitude));
                         TextView lonDisplay = findViewById(R.id.currentLongitude);
@@ -552,6 +579,8 @@ public class MapsActivity
                             //Log.i("animateByTable", "now");
                             asyncTaskHandler.post(animateByTable);
                         }
+                        long blockEndTime = uptimeMillis();
+                        Log.i("Profile animation loop", "post animate  map " + (blockEndTime-blockStartTime));
                     }
 
                     @Override
@@ -561,6 +590,8 @@ public class MapsActivity
                 });
                 if (idling) emergeFromIdle();
                 lastInteractionTime = uptimeMillis();
+                blockEndTime = uptimeMillis();
+                Log.i("Profile animation loop", "animate map " + (blockEndTime-blockStartTime));
             } else {
                 //Log.i("animateByTable", "in the future");
                 asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
@@ -647,7 +678,8 @@ public class MapsActivity
                 Double latitude = jArray.getJSONObject(i).getDouble("latitude"); // dial code of the country
                 Double longitude = jArray.getJSONObject(i).getDouble("longitude"); // code of the country
                 hotspots.add(i, new ImageHotspot(mMap, hotSpotImageView, this.getApplicationContext()));
-                hotspots.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                //hotspots.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                hotspots.get(i).setIcon(BitmapDescriptorFactory.fromAsset("www/GlobalMagic/globe32x32.png"));
                 hotspots.get(i).setPosition(new LatLng(latitude,longitude));
                 hotspots.get(i).setBaseName(urlPrefix, title);
             }
@@ -1103,7 +1135,7 @@ public class MapsActivity
 
         Log.i("map ready",idleHome.toString());
         // Add a marker in Sydney and move the camera
-        mMap.addMarker(new MarkerOptions().position(idleHome).title(idleTitle).icon(BitmapDescriptorFactory.fromResource(R.drawable.clark_planetarium_logo_50)));
+       // mMap.addMarker(new MarkerOptions().position(idleHome).title(idleTitle).icon(BitmapDescriptorFactory.fromResource(R.drawable.clark_planetarium_logo_50)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(idleHome,(float) zoomer.idleZoom));
         LatLngBounds curScreen = mMap.getProjection()
                 .getVisibleRegion().latLngBounds;
