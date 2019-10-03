@@ -531,7 +531,7 @@ public class MapsActivity
                             liveHotSpot = hotspots.get(hs);
                             View mapView =  (View) findViewById(R.id.map);
                             //mapView.setVisibility(View.INVISIBLE);
-                            Log.w("hotspot loading ", hs + ":" + liveHotSpot.URL.toString());
+                            Log.w("hotspot loading ", "number "+ hs);
                             liveHotSpot.setImageByLanguage(hotspotLanguage);
                             liveHotSpot.open();
                             asyncTaskHandler.post(animateByTable);
@@ -979,7 +979,7 @@ public class MapsActivity
             }
 
         } else {
-            liveHotSpot.setImageByLanguage(hotspotLanguage);
+            //liveHotSpot.setImageByLanguage(hotspotLanguage);
             if (gestureType.equals("pan"))
             {
               liveHotSpot.handleJSON(message,mMap, logSensors || logTilt);
