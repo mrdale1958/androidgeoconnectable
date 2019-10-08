@@ -148,6 +148,23 @@
             android:background="@android:color/transparent"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:visibility="visible" />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/currentLayer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Layer: 40.0"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="40dp"
+            android:textColor="@color/black"
+            android:shadowColor="#ccccff"
+            android:shadowRadius="1.5"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:textSize="16dp"
+            android:textAlignment="center"
+            android:background="@android:color/transparent"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:visibility="visible" />
       <com.github.pengrad.mapscaleview.MapScaleView
           android:id="@+id/scaleView"
           android:layout_width="wrap_content"

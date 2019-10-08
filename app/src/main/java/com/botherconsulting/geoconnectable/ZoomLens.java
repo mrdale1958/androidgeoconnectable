@@ -26,7 +26,7 @@ public class ZoomLens {
     public boolean newData = false;
     private int eventCount = 0;
     long lastZoomMessageTime = System.nanoTime();
-    static final int eventWindowLength = 10000;
+    static final int eventWindowLength = 100000;
     long[] eventWindow = new long[eventWindowLength];
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
@@ -72,11 +72,11 @@ public class ZoomLens {
         );
     }
 
-    private void updateStats() {
+    private void updateStats(boolean doLog) {
         long elapsedTime = System.nanoTime() - lastZoomMessageTime;
 
         lastZoomMessageTime = System.nanoTime();
-        if (elapsedTime > bigDataArrivalGap) Log.i("GCT: zoom Big data gap", Long.toString(elapsedTime / 1000000)+"ms");
+        if (doLog && elapsedTime > bigDataArrivalGap) Log.i("GCT: zoom Big data gap", Long.toString(elapsedTime / 1000000)+"ms");
         eventCount++;
         sumElapsedTimes += elapsedTime;
         sumSquaredElapsedTimes += elapsedTime * elapsedTime;
@@ -122,7 +122,7 @@ public class ZoomLens {
         }
 
         //restartIdleTimer();
-        updateStats();
+        updateStats(doLog);
 
         if (proposedZoom != currentZoom) {
             zoom = currentZoom;
