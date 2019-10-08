@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -18,6 +19,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+
+import static android.os.SystemClock.uptimeMillis;
 
 /**
  * Created by dwm160130 on 3/22/18.
@@ -106,8 +109,8 @@ public class ImageHotspot extends Hotspot {
     private Uri imageUri, soundUri;
     private int resumePosition;
     private ArrayList<String> audioList;
-    private Uri lastLanguage = null;
-
+    private static Uri lastLanguage = null;
+    private Handler asyncTaskHandler;
 
     public enum Languages {
         ENGLISH,
@@ -131,6 +134,7 @@ public class ImageHotspot extends Hotspot {
         this.context = context;
         this.minSpin = -20;
         this.maxSpin = 2000;
+        this.asyncTaskHandler = new Handler();
 
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
@@ -202,7 +206,7 @@ public class ImageHotspot extends Hotspot {
             Drawable backgrounds[] = new Drawable[2];
             backgrounds[0] =  this.displaySurface.getDrawable();
             if (backgrounds[0] != null) {
-                path = this.lastLanguage.getPath();
+                path = ImageHotspot.lastLanguage.getPath();
                 ims  = this.displaySurface.getContext().getAssets().open(path);
                 backgrounds[0] = Drawable.createFromStream(ims, null);
                 ims.close();
@@ -226,7 +230,7 @@ public class ImageHotspot extends Hotspot {
        // Bitmap bmImg = BitmapFactory.decodeFile(imageUri.getEncodedPath());
        // this.displaySurface.setImageBitmap(bmImg);
         this.soundUri = soundUri;
-        this.lastLanguage = imageUri;
+        ImageHotspot.lastLanguage = imageUri;
         if (state == States.OPEN) {
             playAudio();
         }
@@ -248,10 +252,11 @@ public class ImageHotspot extends Hotspot {
         scaleUp.start();
         state = States.OPENING;
 
-        this.displaySurface.postDelayed(new Runnable() {
+        this.asyncTaskHandler.postDelayed(new Runnable() {
 
             @Override
             public void run() {
+                android.os.Debug.waitForDebugger();
                 state = States.OPEN;
                 //stopAudio();
                 playAudio();
@@ -263,7 +268,7 @@ public class ImageHotspot extends Hotspot {
     public void close() {
         if (state != States.OPEN) return;
         state = States.CLOSING;
-        stopAudio();
+        //stopAudio();
         ObjectAnimator scaleDownX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 0.1f);
         ObjectAnimator scaleDownY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 0.1f);
         scaleDownX.setDuration(zoomInTime);
@@ -275,17 +280,18 @@ public class ImageHotspot extends Hotspot {
         scaleDown.play(scaleDownX).with(scaleDownY);
 
         scaleDown.start();
-        this.displaySurface.postDelayed(new Runnable() {
+        this.asyncTaskHandler.postAtTime(new Runnable() {
 
             @Override
             public void run() {
+                android.os.Debug.waitForDebugger();
                 state = States.CLOSED;
                 displaySurface.setScaleX(0.0f);
                 displaySurface.setScaleY(0.0f);
                 displaySurface.setImageDrawable(null);
             }
 
-        }, zoomInTime + 500); // 500ms delay after zoom complete
+        }, uptimeMillis()  + 5000); // 500ms delay after zoom complete
         //this.mediaPlayer.release();
     }
 
@@ -294,15 +300,27 @@ public class ImageHotspot extends Hotspot {
         if (ImageHotspot.mediaPlayer != null) // && ImageHotspot.mediaPlayer.isPlaying())
             stopAudio();
         if (ImageHotspot.mediaPlayer == null)
+        {
             ImageHotspot.mediaPlayer = new MediaPlayer();
 
-        ImageHotspot.mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp1) {
-                ImageHotspot.mediaPlayer.start();
-                Log.d("audio start", "mediaplayer  started");
-            }
-        });
+            ImageHotspot.mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp1) {
+                    android.os.Debug.waitForDebugger();
+                    ImageHotspot.mediaPlayer.start();
+                    Log.d("audio start", "mediaplayer  started");
+                }
+            });
+
+            ImageHotspot.mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mediaPlayer) {
+                    Log.d("audio complete", "media play over");
+                }
+            });
+
+
+        }
         try {
             AssetFileDescriptor descriptor = context.getAssets().openFd(this.soundUri.toString());
             ImageHotspot.mediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
@@ -323,7 +341,8 @@ public class ImageHotspot extends Hotspot {
     public void stopAudio() {
         this.mediaPlayer.pause();
         this.mediaPlayer.stop();
-        this.mediaPlayer.release ();
+        this.mediaPlayer.reset();
+        this.mediaPlayer.release();
         this.mediaPlayer=null;
     }
     public boolean isClosed() {
@@ -405,7 +424,8 @@ public class ImageHotspot extends Hotspot {
                 return false;
             }
             try {
-                deltaZ = vector.getInt("delta");
+                // need to cope with different zoom logic so negate the value
+                deltaZ = -vector.getInt("delta");
 //                int messageID = message.getInt("id");
                 //if (messageID > lastMessageID + 1)
                 //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));

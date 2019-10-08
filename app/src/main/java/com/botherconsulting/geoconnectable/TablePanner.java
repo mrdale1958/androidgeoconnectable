@@ -26,7 +26,7 @@ public class TablePanner {
     public boolean newData = false;
     private int eventCount = 0;
     long lastTiltMessageTime = uptimeMillis();
-    static final int eventWindowLength = 100;
+    static final int eventWindowLength = 10000;
     long[] eventWindow = new long[eventWindowLength];
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
@@ -79,10 +79,10 @@ public class TablePanner {
         );
     }
 
-    private void updateStats() {
+    private void updateStats(boolean doLog) {
         long elapsedTime = uptimeMillis() - lastTiltMessageTime;
         lastTiltMessageTime = uptimeMillis();
-        if (elapsedTime > bigDataArrivalGap) Log.i("GCT: tilt Big data gap", Long.toString(elapsedTime / 1000000)+"ms");
+        if (doLog && elapsedTime > bigDataArrivalGap) Log.i("GCT: tilt Big data gap", Long.toString(elapsedTime / 1000000)+"ms");
         eventCount++;
         sumElapsedTimes += elapsedTime;
         sumSquaredElapsedTimes += elapsedTime * elapsedTime;
@@ -168,7 +168,7 @@ public class TablePanner {
             LatLng currentCameraPosition = mMap.getCameraPosition().target;
             LatLng  nextPosition = new LatLng(currentCameraPosition.latitude+deltaY, currentCameraPosition.longitude + deltaX);
             if (nextPosition != currentCameraPosition) {
-                updateStats();
+                updateStats(doLog);
                 position = currentPosition;
                 currentPosition = nextPosition;
                 newData = true;

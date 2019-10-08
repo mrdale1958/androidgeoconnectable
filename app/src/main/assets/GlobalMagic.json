@@ -10,7 +10,7 @@
     "longitude": 30.905729
   },
   {
-    "title": "03.ChiWaraMaleCrest Mask",
+    "title": "03.ChiWaraMaleCrestMask",
     "latitude": 17.570692,
     "longitude": -3.996166
   },
@@ -80,11 +80,6 @@
     "longitude": -56.921099
   },
   {
-    "title": "17.EpaHelmetMask",
-    "latitude": 9.081999,
-    "longitude": 8.675277
-  },
-  {
     "title": "18.HousePanel",
     "latitude": -7.7769444,
     "longitude": 144.2197222
@@ -95,7 +90,7 @@
     "longitude": 3.340838
   },
   {
-    "title": "20.IkoraadoMask.Maiden.Mask",
+    "title": "20.IkoraadoMaidenMask",
     "latitude": 6.84308,
     "longitude": 7.368306
   },
@@ -115,22 +110,22 @@
     "longitude": 142.81551
   },
   {
-    "title": "24.LimeContainer",
+    "title": "24.LimeContainer.Stopper",
     "latitude": -6.314993,
     "longitude": 143.955551
   },
   {
-    "title": "25.LimeSpatula",
+    "title": "25.LimeSpatulaWood",
     "latitude": -6.314993,
     "longitude": 143.955551
   },
   {
-    "title": "27.LinenEgyptian",
+    "title": "27.Linen",
     "latitude": 30.044139,
     "longitude": 31.258938
   },
   {
-    "title": "28.LomaHarpAfrica",
+    "title": "28.LomaHarp",
     "latitude": 6.428055,
     "longitude": -9.429499
   },
@@ -140,27 +135,27 @@
     "longitude": 143.95555
   },
   {
-    "title": "30.NecklaceBoarsTuskFiber",
+    "title": "30.NecklaceBoarsTusk",
     "latitude": -6.314993,
     "longitude": 143.955551
   },
   {
-    "title": "31.NloBieriAfricanReliquaryFigure",
+    "title": "31.NloBieriAfricanReliquary",
     "latitude": 7.369722,
     "longitude": 12.354722
   },
   {
-    "title": "32.OsheShangoStaff",
+    "title": "32.OsheShango",
     "latitude": 9.081999,
     "longitude": 8.675277
   },
   {
-    "title": "33.PrincessStatuetteEgyptian",
+    "title": "33.PrincessStatuette",
     "latitude": 28.0870967,
     "longitude": 30.7618397
   },
   {
-    "title": "34.Q'uranBoxAfrica",
+    "title": "34.QuranBox",
     "latitude": 9.081999,
     "longitude": 8.675277
   },
@@ -170,12 +165,7 @@
     "longitude": 8.570466
   },
   {
-    "title": "36.SpiritBoardGope",
-    "latitude": -7.7769444,
-    "longitude": 144.2197222
-  },
-  {
-    "title": "37.StoryboardPapua",
+    "title": "37.Storyboard",
     "latitude": -4.2847039,
     "longitude": 144.134094
   },
@@ -185,17 +175,17 @@
     "longitude": 144.623664
   },
   {
-    "title": "39.TerracottaPotAfrica",
+    "title": "39.TerracottaPot",
     "latitude": 9.479639,
     "longitude": 8.195927
   },
   {
-    "title": "40.ThumbPianoAfrica",
+    "title": "40.ThumbPiano",
     "latitude": 13.531665,
     "longitude": -2.460415
   },
   {
-    "title": "41.TrumpetAfrica",
+    "title": "41.Trumpet",
     "latitude": 9.558688,
     "longitude": 8.559081
   },
@@ -210,12 +200,12 @@
     "longitude": 143.95555
   },
   {
-    "title": "44.KarajaNecklaceBirdBeak",
+    "title": "44.KarajaBeakNecklace",
     "latitude": -11.988844,
     "longitude": -50.684647
   },
   {
-    "title": "45.KarajaNeclaceShellFiber",
+    "title": "45.KarajaShellNecklace",
     "latitude": -11.988844,
     "longitude": -50.684647
   },
@@ -225,28 +215,24 @@
     "longitude": -50.684647
   },
   {
-    "title": "47.BasketryBoxTapirape",
+    "title": "47.BasketryBox",
     "latitude": -5.66115,
     "longitude": -5.66115
   },
   {
-    "title": "48.CombRattleFigurineKaraja",
+    "title": "48.CombRattleFigurine",
     "latitude": -15.81204,
     "longitude": -51.917901
   },
   {
-    "title": "49.OcarinasPapuaNewGuinea",
+    "title": "49.Ocarinas",
     "latitude": -6.050984,
     "longitude": 144.258631
   },
   {
-    "title": "50.FluteWithWasela",
+    "title": "50.Flute",
     "latitude": -5.681607,
     "longitude": 144.248908
-  },
-  {
-    "title": "51.GlobalMuseum",
-    "latitude": 37.722125,
-    "longitude": 122.479268
   }
+
 ]
