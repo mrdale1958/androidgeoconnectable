@@ -120,6 +120,27 @@ public class ImageHotspot extends Hotspot {
         SPANISH
     }
 
+    static Languages language = Languages.ENGLISH;
+    static ImageHotspot activeHotSpot;
+
+    static final void setLanguage(Languages _language) {
+        ImageHotspot.language = _language;
+        if (ImageHotspot.activeHotSpot != null) {
+            ImageHotspot.activeHotSpot.setImageByLanguage(ImageHotspot.language);
+        }
+    }
+
+
+    static final void activate(ImageHotspot hs) {
+        ImageHotspot.activeHotSpot = hs;
+
+    }
+    static final void deactivate() {
+        //TODO: does this need to close() current hotspot?
+        ImageHotspot.activeHotSpot = null;
+
+    }
+
 
     public ImageHotspot(GoogleMap map, ImageView imageView, Context context) {
         super(map);
@@ -339,11 +360,12 @@ public class ImageHotspot extends Hotspot {
     }
 
     public void stopAudio() {
-        this.mediaPlayer.pause();
-        this.mediaPlayer.stop();
-        this.mediaPlayer.reset();
-        this.mediaPlayer.release();
-        this.mediaPlayer=null;
+        mediaPlayer.pause();
+        mediaPlayer.stop();
+        mediaPlayer.reset(); //TODO: Why can't we sit in this state instead of killing the player
+        mediaPlayer.release();
+        mediaPlayer=null;
+        Log.d("audio stop", "mediaplayer  killed");
     }
     public boolean isClosed() {
         return(state == States.CLOSED);
@@ -366,79 +388,101 @@ public class ImageHotspot extends Hotspot {
 
         }
     }
+    private JSONObject message;
+    private boolean doLog;
 
-@Override
-    public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
-        String gestureType;
-        try {
-            gestureType = message.getString("gesture");
-            //Log.i("incoming message",message.toString());
-        } catch (org.json.JSONException e) {
-            Log.i("GCT HS: no gesture msg", message.toString());
-            return false;
-        }
-        double deltaX = 0.0;
-
-        double deltaY = 0.0;
-        deltaZ = 0;
-        if (gestureType.equals("switch")) {
-            String keyCode;
-            JSONObject switchObj = new JSONObject();
-            try {
-                switchObj = message.getJSONObject("switch");
-            } catch (org.json.JSONException e) {
-                Log.e("GCT HS error: switch msg", "no switch " + message.toString());
-                return false;
-            }
-            try {
-                keyCode = switchObj.getString("switchCode");
-            } catch (org.json.JSONException e) {
-                Log.e("GCT HS error: switch msg", "invalid switch " + switchObj.toString());
-                return false;
-            }
-            switch (keyCode) {
-                case "e":
-                    this.setImageByLanguage(ImageHotspot.Languages.ENGLISH);
-                    return true;
-                case "s":
-                    this.setImageByLanguage(ImageHotspot.Languages.SPANISH);
-                    return true;
-                case "k":
-                    this.setImageByLanguage(ImageHotspot.Languages.KOREAN);
-                    return true;
-                case "j":
-                    this.setImageByLanguage(ImageHotspot.Languages.JAPANESE);
-                    return true;
-                case "c":
-                    this.setImageByLanguage(ImageHotspot.Languages.CHINESE);
-                    return true;
-            }
-        } else if (gestureType.equals("zoom")) {
-
-            deltaZ = 0;
-            JSONObject vector = new JSONObject();
-            try {
-                vector = message.getJSONObject("vector");
-            } catch (org.json.JSONException e) {
-                Log.e("GCT HS error: zoom msg", "no vector " + message.toString());
-                return false;
-            }
-            try {
-                // need to cope with different zoom logic so negate the value
-                deltaZ = -vector.getInt("delta");
-//                int messageID = message.getInt("id");
-                //if (messageID > lastMessageID + 1)
-                //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
- //               lastZoomMessageID = messageID;
-            } catch (org.json.JSONException e) {
-                Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
-                return false;
-            }
-            currentSpinPosition += deltaZ;
-            if (currentSpinPosition > maxSpin || currentSpinPosition < minSpin) {
-                this.close();
-            }
-        }
-        return true;
+    public void setMessage(JSONObject _message) {
+        this.message = _message;
     }
+
+    public void setMap(GoogleMap _mMap) {
+        this.mMap = _mMap;
+    }
+
+    public void setLogging(boolean _doLog) {
+        this.doLog = _doLog;
+    }
+
+    public final Runnable  handleJSON  = new Runnable() {
+
+
+        public void run() {
+
+
+        //public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
+            String gestureType;
+            try {
+                gestureType = message.getString("gesture");
+                //Log.i("incoming message",message.toString());
+            } catch (org.json.JSONException e) {
+                Log.i("GCT HS: no gesture msg", message.toString());
+                return ;
+            }
+            double deltaX = 0.0;
+
+            double deltaY = 0.0;
+            deltaZ = 0;
+            if (gestureType.equals("switchCode")) {
+                String keyCode;
+                JSONObject switchObj = new JSONObject();
+                try {
+                    switchObj = message.getJSONObject("vector");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: switch msg", "no switch " + message.toString());
+                    return ;
+                }
+                try {
+                    keyCode = switchObj.getString("code");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: switch msg", "invalid switch " + switchObj.toString());
+                    return ;
+                }
+
+                switch (keyCode) {
+                    case "e":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.ENGLISH);
+                        return ;
+                    case "s":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.SPANISH);
+                        return ;
+                    case "k":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.KOREAN);
+                        return ;
+                    case "j":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.JAPANESE);
+                        return ;
+                    case "c":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.CHINESE);
+                        return ;
+                }
+            } else if (gestureType.equals("zoom")) {
+
+                deltaZ = 0;
+                JSONObject vector = new JSONObject();
+                try {
+                    vector = message.getJSONObject("vector");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: zoom msg", "no vector " + message.toString());
+                    return ;
+                }
+                try {
+                    // need to cope with different zoom logic so negate the value
+                    deltaZ = -vector.getInt("delta");
+    //                int messageID = message.getInt("id");
+                    //if (messageID > lastMessageID + 1)
+                    //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
+     //               lastZoomMessageID = messageID;
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
+                    return ;
+                }
+                currentSpinPosition += deltaZ;
+                if (currentSpinPosition > maxSpin || currentSpinPosition < minSpin) {
+                    if (ImageHotspot.activeHotSpot != null)
+                        ImageHotspot.activeHotSpot.close();
+                }
+            }
+        }
+    };
+
 }
