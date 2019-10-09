@@ -41,15 +41,15 @@ public class Hotspot {
     static double zoom = 0d;
     static final int eventZoomWindowLength = 10000;
     int currentSpinPosition = 0;
-      int deltaZ = 0;
+    int deltaZ = 0;
     long lastZoomMessageTime = System.nanoTime();
-     int eventZoomCount = 0;
+    int eventZoomCount = 0;
     long[] eventZoomWindow = new long[eventZoomWindowLength];
     long sumZoomElapsedTimes = 0;
     long sumZoomSquaredElapsedTimes = 0;
     int lastZoomMessageID = 0;
 
-// public stuff
+    // public stuff
     public boolean newData = false;
     public boolean enabled;
     public String set;
@@ -60,6 +60,7 @@ public class Hotspot {
     public int minSpin = -100;
     public int maxSpin = 100000000;
     GoogleMap mMap;
+
     static enum States {
         CLOSED,
         OPENING,
@@ -70,6 +71,7 @@ public class Hotspot {
         SATURDAY;
 
     }
+
     States state;
 
 
@@ -77,7 +79,7 @@ public class Hotspot {
         state = States.CLOSED;
         this.enabled = false;
         this.set = "default";
-        this.marker=null;
+        this.marker = null;
         this.mMap = map;
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
@@ -90,32 +92,37 @@ public class Hotspot {
     public void setIcon(BitmapDescriptor icon) {
         if (this.marker == null) {
             this.marker = this.mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(0.0,0.0))
+                    .position(new LatLng(0.0, 0.0))
                     .title("some pithy name")
                     .snippet("Even pithier label"));
         }
         this.marker.setIcon(icon);
     }
+
     public void setURL(String url) {
         try {
             this.URL = new java.net.URL(url);
-        }
-        catch (java.net.MalformedURLException e) {
+        } catch (java.net.MalformedURLException e) {
             Log.e("GCT HotSpot error: bad url", e.getMessage());
         }
     }
+
     public void setTitle(String title) {
         this.marker.setTitle(title);
     }
+
     public String getTitle() {
-        return(this.marker.getTitle());
+        return (this.marker.getTitle());
     }
+
     public void setSnippet(String snippet) {
         this.marker.setSnippet(snippet);
     }
+
     public void setPosition(LatLng position) {
         this.marker.setPosition(position);
     }
+
     public void setZoomTriggerRange(Double minZoom, Double maxZoom) {
         this.hotSpotZoomTriggerRange[0] = minZoom;
         this.hotSpotZoomTriggerRange[1] = maxZoom;
@@ -140,20 +147,20 @@ public class Hotspot {
         long windowSumSquared = 0;
         long maxEt = 0;
         long minEt = Long.MAX_VALUE;
-        for (long i:eventZoomWindow) {
-            windowSum+=i;
-            windowSumSquared+= i*i;
+        for (long i : eventZoomWindow) {
+            windowSum += i;
+            windowSumSquared += i * i;
             maxEt = Math.max(maxEt, i);
             minEt = Math.min(minEt, i);
         }
-        double diff = (windowSumSquared - eventZoomWindow.length * (windowSum / eventZoomWindowLength)*(windowSum / eventZoomWindowLength));
+        double diff = (windowSumSquared - eventZoomWindow.length * (windowSum / eventZoomWindowLength) * (windowSum / eventZoomWindowLength));
 
         Log.i("GCT HS: Zoom data stats",
                 "\nTotal events: " + eventZoomCount +
-                        "\nTotal mean elapsed Time: " + (sumZoomElapsedTimes/eventZoomCount) +
+                        "\nTotal mean elapsed Time: " + (sumZoomElapsedTimes / eventZoomCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventZoomWindowLength) +
                         "\nWindow total ET: " + windowSum +
-                        "\nWindow sigma ET: " + Math.sqrt(diff/eventZoomWindowLength) +
+                        "\nWindow sigma ET: " + Math.sqrt(diff / eventZoomWindowLength) +
                         "\nWindow max ET: " + maxEt +
                         "\nWindow min ET: " + minEt +
                         "\nlast message ID: " + lastZoomMessageID +
@@ -180,15 +187,15 @@ public class Hotspot {
         long windowSumSquared = 0;
         long maxEt = 0;
         long minEt = Long.MAX_VALUE;
-        for (long i:eventTiltWindow) {
-            windowSum+=i;
-            windowSumSquared+= i*i;
+        for (long i : eventTiltWindow) {
+            windowSum += i;
+            windowSumSquared += i * i;
             maxEt = Math.max(maxEt, i);
             minEt = Math.min(minEt, i);
         }
         Log.i("GCT HS: Tilt data stats",
                 "\nTotal events: " + eventTiltCount +
-                        "\nTotal mean elapsed Time: " + (sumTiltElapsedTimes/eventTiltCount) +
+                        "\nTotal mean elapsed Time: " + (sumTiltElapsedTimes / eventTiltCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventTiltWindowLength) +
                         "\nWindow max ET: " + maxEt +
                         "\nWindow min ET: " + minEt
@@ -208,8 +215,25 @@ public class Hotspot {
     }
 
 
-    public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
-        {
-             return false;
+    public final Runnable handleJSON = new Runnable() {
+        JSONObject message;
+        GoogleMap mMap;
+        boolean doLog;
+
+        public void setMessage(JSONObject _message) {
+            this.message = _message;
         }
+
+        public void setMap(GoogleMap _mMap) {
+            this.mMap = _mMap;
+        }
+
+        public void setLogging(boolean _doLog) {
+            this.doLog = _doLog;
+        }
+
+        public void run() {
+
+        }
+    };
 }
