@@ -95,4 +95,8 @@
 
     <string name="hotspots_list_title">Hotspots List</string>
     <string name="add_hotspot_button_label">Add New Hotspot</string>
+    <string name="latitude_indicator">Latitude:  %.2f</string>
+    <string name="longitude_indicator">Longitude:  %.2f</string>
+    <string name="layer_indicator">Layer:  %.2f</string>
+
 </resources>

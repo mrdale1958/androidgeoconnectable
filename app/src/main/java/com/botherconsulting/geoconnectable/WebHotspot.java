@@ -154,8 +154,103 @@ public class WebHotspot extends Hotspot{
     }
 
 
+    public final Runnable  handleJSON  = new Runnable() {
+        JSONObject message;
+        GoogleMap mMap;
+        boolean doLog;
 
-    @Override
+        public void setMessage(JSONObject _message) {
+            this.message = _message;
+        }
+
+        public void setMap(GoogleMap _mMap) {
+            this.mMap = _mMap;
+        }
+
+        public void setLogging(boolean _doLog) {
+            this.doLog = _doLog;
+        }
+
+        public void run() {
+
+
+            //public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
+ /*           String gestureType;
+            try {
+                gestureType = message.getString("gesture");
+                //Log.i("incoming message",message.toString());
+            } catch (org.json.JSONException e) {
+                Log.i("GCT HS: no gesture msg", message.toString());
+                return ;
+            }
+            double deltaX = 0.0;
+
+            double deltaY = 0.0;
+            deltaZ = 0;
+            if (gestureType.equals("switch")) {
+                String keyCode;
+                JSONObject switchObj = new JSONObject();
+                try {
+                    switchObj = message.getJSONObject("switch");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: switch msg", "no switch " + message.toString());
+                    return ;
+                }
+                try {
+                    keyCode = switchObj.getString("switchCode");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: switch msg", "invalid switch " + switchObj.toString());
+                    return ;
+                }
+                switch (keyCode) {
+                    case "e":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.ENGLISH);
+                        return ;
+                    case "s":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.SPANISH);
+                        return ;
+                    case "k":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.KOREAN);
+                        return ;
+                    case "j":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.JAPANESE);
+                        return ;
+                    case "c":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.CHINESE);
+                        return ;
+                }
+            } else if (gestureType.equals("zoom")) {
+
+                deltaZ = 0;
+                JSONObject vector = new JSONObject();
+                try {
+                    vector = message.getJSONObject("vector");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: zoom msg", "no vector " + message.toString());
+                    return ;
+                }
+                try {
+                    // need to cope with different zoom logic so negate the value
+                    deltaZ = -vector.getInt("delta");
+                    //                int messageID = message.getInt("id");
+                    //if (messageID > lastMessageID + 1)
+                    //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
+                    //               lastZoomMessageID = messageID;
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
+                    return ;
+                }
+                currentSpinPosition += deltaZ;
+                if (currentSpinPosition > maxSpin || currentSpinPosition < minSpin) {
+                    if (ImageHotspot.activeHotSpot != null)
+                        ImageHotspot.activeHotSpot.close();
+                }
+            }
+            return ;
+      */  }
+    };
+
+/*    @Override
     public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog)
         {
             String gestureType;
@@ -201,11 +296,11 @@ public class WebHotspot extends Hotspot{
                         //        ((minZoom + 7) - (maxZoom-3 ))/(minZoom-maxZoom) *
                         //                (mMap.getCameraPosition().zoom-minZoom);
                         //Log.i("fudge", Double.toString(zoomFudge) + ":" +  Double.toString(mMap.getCameraPosition().zoom));
-                /*percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
+                *//*percentChangeInY = TiltScaleY * rawY *zoomFudge/maxZoom;
                 deltaY = screenHeightDegrees * percentChangeInY;
 
                 percentChangeInX = TiltScaleX * rawX *zoomFudge/maxZoom;
-                deltaX = screenWidthDegrees * percentChangeInX;*/
+                deltaX = screenWidthDegrees * percentChangeInX;*//*
                         deltaY = Math.min(Math.max(TiltScaleY * rawY, -panMax), panMax);
 
                         deltaX = Math.min(Math.max(TiltScaleX * rawX, -panMax), panMax);
@@ -278,7 +373,7 @@ public class WebHotspot extends Hotspot{
 
 
             }
- /*           if (newData)
+ *//*           if (newData)
             {
                 displaySurface.setVisibility(View.VISIBLE);
                 String updateURL = "javascript://table.update(" + currentTilt + " , " + currentZoom + ")";
@@ -288,7 +383,7 @@ public class WebHotspot extends Hotspot{
                 displaySurface.loadUrl(updateURL);
                 return true;
             }
-*/
+*//*
             return false;
-        }
+       }*/
 }

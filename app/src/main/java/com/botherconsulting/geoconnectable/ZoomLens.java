@@ -86,53 +86,73 @@ public class ZoomLens {
         }
     }
 
+    private JSONObject message;
+    private boolean doLog;
+    private GoogleMap mMap;
 
-    public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
-
-        delta = 0;
-        JSONObject vector = new JSONObject();
-        try {
-            vector = message.getJSONObject("vector");
-        } catch (org.json.JSONException e) {
-            Log.e("GCT error: reading zoom message", "no vector " + message.toString());
-        }
-        try {
-            delta = vector.getInt("delta");
-            //int messageID = message.getInt("id");
-            //if (messageID > lastMessageID + 1)
-            //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
-            //lastMessageID = messageID;
-        } catch (org.json.JSONException e) {
-            Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString() + " or ID " + message);
-        }
-        currentSpinPosition -= delta;
-        currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
-
-        double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
-        if (doLog) {
-            Log.i("GCT: zoom update", "delta:" + Integer.toString(delta) +
-                    " new zoom: " +
-                    //String.format ("%.2d", proposedZoom) +
-                     proposedZoom +
-                    " cSP: " +
-                    Integer.toString(currentSpinPosition) +
-                    " min:" + Integer.toString(minSpin) +
-                    " max:" + Integer.toString(maxSpin)
-            );
-        }
-
-        //restartIdleTimer();
-        updateStats(doLog);
-
-        if (proposedZoom != currentZoom) {
-            zoom = currentZoom;
-            currentZoom = proposedZoom;
-            newData = true;
-
-        }
-
-
+    public void setMessage(JSONObject _message) {
+        this.message = _message;
     }
+
+    public void setMap(GoogleMap _mMap) {
+        this.mMap = _mMap;
+    }
+
+    public void setLogging(boolean _doLog) {
+        this.doLog = _doLog;
+    }
+
+    public final Runnable  handleJSON  = new Runnable() {
+
+
+        public void run() {
+    //public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
+
+            delta = 0;
+            JSONObject vector = new JSONObject();
+            try {
+                vector = message.getJSONObject("vector");
+            } catch (org.json.JSONException e) {
+                Log.e("GCT error: reading zoom message", "no vector " + message.toString());
+            }
+            try {
+                delta = vector.getInt("delta");
+                //int messageID = message.getInt("id");
+                //if (messageID > lastMessageID + 1)
+                //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
+                //lastMessageID = messageID;
+            } catch (org.json.JSONException e) {
+                Log.e("GCT error: reading zoom message", "invalid vector " + vector.toString() + " or ID " + message);
+            }
+            currentSpinPosition -= delta;
+            currentSpinPosition = Math.max(minSpin,Math.min(currentSpinPosition,maxSpin));
+
+            double proposedZoom = idleZoom + (double)currentSpinPosition / (double)clicksPerZoomLevel;
+            if (doLog) {
+                Log.i("GCT: zoom update", "delta:" + Integer.toString(delta) +
+                        " new zoom: " +
+                        //String.format ("%.2d", proposedZoom) +
+                         proposedZoom +
+                        " cSP: " +
+                        Integer.toString(currentSpinPosition) +
+                        " min:" + Integer.toString(minSpin) +
+                        " max:" + Integer.toString(maxSpin)
+                );
+            }
+
+            //restartIdleTimer();
+            updateStats(doLog);
+
+            if (proposedZoom != currentZoom) {
+                zoom = currentZoom;
+                currentZoom = proposedZoom;
+                newData = true;
+
+            }
+
+
+        }
+    };
 
     public void setZoomBounds(double _minZoom, double _maxZoom) {
         minZoom = _minZoom;
