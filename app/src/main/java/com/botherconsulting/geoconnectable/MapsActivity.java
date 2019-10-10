@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -35,6 +36,7 @@ import com.github.pengrad.mapscaleview.MapScaleView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
@@ -75,6 +77,9 @@ public class MapsActivity
 
     static final int EAT_PREFERENCES = 12345;
     static final int EAT_HOTSPOTS = 12346;
+    HandlerThread animationHandlerThread;
+
+    Handler animationHandler;
     final Handler asyncTaskHandler = new Handler();
     final Runnable idleMonitor = new Runnable(){
         public void run() {
@@ -185,6 +190,10 @@ public class MapsActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        animationHandlerThread = new HandlerThread("AnimationHandlerThread", 1);
+        animationHandlerThread.start();
+        animationHandler = new Handler(animationHandlerThread.getLooper());
+
         FileInputStream fis = null;
         try {
             fis = openFileInput("maxZoomData");
@@ -468,6 +477,11 @@ public class MapsActivity
         Map<Sections, Long> minElapsedTimes = new EnumMap<Sections, Long>(Sections.class);
         boolean initializedProfile = false;
 
+        float maxZoom;
+        CameraPosition cameraPosition;
+        Projection mapProjection;
+
+
         public void profile(Sections section, Profilestates state) {
             if (!initializedProfile) {
                 for (Sections sec : Sections.values()) {
@@ -499,17 +513,29 @@ public class MapsActivity
             }
 
         }
+
+        private void getUIObjects() {
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    maxZoom  = mMap.getMaxZoomLevel();
+                    cameraPosition = mMap.getCameraPosition();
+                    mapProjection = mMap.getProjection();
+                }
+            });
+        }
         public void run() {
             // TODO: label this 19. Does it set a maximum zoom level for the app
             long blockStartTime, blockEndTime, startTime = System.nanoTime();
             long elapsedTime = startTime - lastRuntime;
             lastRuntime = startTime;
+            getUIObjects();
             profile(Sections.START, Profilestates.START);
-            zoomer.setZoomBounds(minZoomLevel, Math.min(19.0,mMap.getMaxZoomLevel()));
-            float newZoom = mMap.getCameraPosition().zoom;
+
+            zoomer.setZoomBounds(minZoomLevel, Math.min(19.0,maxZoom));
+            float newZoom = cameraPosition.zoom;
             long lastZoomTime = 0;
             boolean doAnimate = false;
-            LatLng newPos = mMap.getCameraPosition().target;
+            LatLng newPos = cameraPosition.target;
             long lastPanTime = 0;
             profile(Sections.START, Profilestates.FINISH);
             if (zoomer.newData) {
@@ -517,11 +543,11 @@ public class MapsActivity
                 Object[] zoomData = zoomer.getCurrentZoom();
                 newZoom = (float) zoomData[ZOOM];
                 lastZoomTime = (long) zoomData[GESTURE_TIME];
-                int latIndex = (int) Math.round(mMap.getCameraPosition().target.latitude) + 90;
-                int lonIndex = Math.min(360, Math.max(0,(int) Math.round(mMap.getCameraPosition().target.longitude) + 180)); // not quite right need to cope with
+                int latIndex = (int) Math.round(cameraPosition.target.latitude) + 90;
+                int lonIndex = Math.min(360, Math.max(0,(int) Math.round(cameraPosition.target.longitude) + 180)); // not quite right need to cope with
                 if (maxZoomCache[latIndex][lonIndex] > 0) {
                     zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
-                } else if(Math.floor(newZoom) > mMap.getCameraPosition().zoom)  {
+                } else if(Math.floor(newZoom) > cameraPosition.zoom)  {
                     checkMaxZoom( newZoom);
                 }
                 //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
@@ -547,12 +573,12 @@ public class MapsActivity
                     hotSpotActive = false;
                     liveHotSpot = null;
                 }
-                asyncTaskHandler.post(animateByTable);
+                animationHandler.post(animateByTable);
                 profile(Sections.ANIMATEHOTSPOT, Profilestates.FINISH);
 
             } else {
                 profile(Sections.SETUPMAPMOVE, Profilestates.START);
-                VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
                 double currLeft = visibleRegion.farLeft.longitude;
                 double currRight = visibleRegion.farRight.longitude;
                 double currTop = visibleRegion.farLeft.latitude;
@@ -580,7 +606,7 @@ public class MapsActivity
                             Log.w("hotspot loading ", "number "+ hs);
                             liveHotSpot.setImageByLanguage(hotspotLanguage);
                             liveHotSpot.open();
-                            asyncTaskHandler.post(animateByTable);
+                            animationHandler.post(animateByTable);
                             break;
                         }
                     }
@@ -616,15 +642,15 @@ public class MapsActivity
                         public void onFinish() {
                             profile(Sections.POSTANIMATEMAP, Profilestates.START);
                             TextView latDisplay = findViewById(R.id.currentLatitude);
-                            latDisplay.setText(getString(R.string.latitude_indicator, mMap.getCameraPosition().target.latitude));
+                            latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
                             TextView lonDisplay = findViewById(R.id.currentLongitude);
-                            lonDisplay.setText(getString(R.string.longitude_indicator, mMap.getCameraPosition().target.longitude));
+                            lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
                             TextView layerDisplay = findViewById(R.id.currentLayer);
-                            layerDisplay.setText(getString(R.string.layer_indicator, mMap.getCameraPosition().zoom));
+                            layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
                             readyToAnimate = true;
                             if (!idling){
                                 //Log.i("animateByTable", "now");
-                                asyncTaskHandler.post(animateByTable);
+                                animationHandler.post(animateByTable);
                             }
                             profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
                         }
@@ -642,7 +668,7 @@ public class MapsActivity
                 profile(Sections.ANIMATEMAP, Profilestates.FINISH);
             } else {
                 //Log.i("animateByTable", "in the future");
-                asyncTaskHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
+                animationHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
 
             }
 
@@ -668,7 +694,7 @@ public class MapsActivity
             hotSpotActive = false;
             liveHotSpot = null;
 
-            asyncTaskHandler.post(animateByTable);
+            animationHandler.post(animateByTable);
         }
     }
 
@@ -691,14 +717,17 @@ public class MapsActivity
     }
 
     protected void emergeFromIdle() {
-        Log.i("Idle", "emerging from idle");
-        idling = false;
-        if (hotSpotActive) {} // needs to switch to map mode
-        asyncTaskHandler.post(animateByTable);
-        idleMessageTopView.setText("");
-        idleMessageBottomView.setText("");
-        asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis()+idleCheckTime);
+        if (mMap != null) {
+            Log.i("Idle", "emerging from idle");
 
+            idling = false;
+            if (hotSpotActive) {
+            } // needs to switch to map mode
+            animationHandler.post(animateByTable);
+            idleMessageTopView.setText("");
+            idleMessageBottomView.setText("");
+            asyncTaskHandler.postAtTime(idleMonitor, uptimeMillis() + idleCheckTime);
+        }
     }
 
     private String readJSONFromAsset() {
@@ -886,7 +915,7 @@ public class MapsActivity
         */
     }
 
-   private void retrieveFileFromUrl() {
+    private void retrieveFileFromUrl() {
         new DownloadKmlFile(getString(R.string.kml_url)).execute();
     }
     private static class DownloadKmlFile extends AsyncTask<String, Void, byte[]> {
@@ -948,75 +977,10 @@ public class MapsActivity
 
     }
 
-    private  void complain(String... message) {
+    private  void bwsComplain(String... message) {
         Toast.makeText(MapsActivity.this, message[0] + ":" + message[1], Toast.LENGTH_LONG).show();
         if (message[0].equals("Connection closed")) asyncTaskHandler.postDelayed(sensorConnectionLauncher,15000);
     }
-
-   private  void onMessage(String messageString) {
-
-        if (mMap == null) return;
-
-
-        JSONObject message;
-        try {
-            message = new JSONObject(messageString);
-        } catch (org.json.JSONException e) {
-            Log.i("odd JSON",messageString);
-            return;
-        }
-        String messageType;
-        String gestureType;
-/*        try {
- messageType = message.getString("type");
-        } catch (org.json.JSONException e) {
-            e.printStackTrace();
-        }*/
-        try {
-            gestureType = message.getString("gesture");
-            //Log.i("incoming message",message.toString());
-        } catch (org.json.JSONException e) {
-            Log.i("no gesture message",message.toString());
-            return;
-        }
-
-        //LatLngBounds curScreen = mMap.getProjection()
-        //       .getVisibleRegion().latLngBounds;
-
-       if (!hotSpotActive) {
-            if (gestureType.equals("pan"))
-            {
-                 panner.setMessage(message);
-                 panner.setMap(mMap);
-                 panner.setLogging(logSensors || logTilt);
-                 panner.setScreenBounds(currScreenWidth, currScreenHeight);
-                 panner.handleJSON.run();
-
-                //paintTarget();
-            } else if (gestureType.equals("zoom")) {
-                zoomer.setMessage(message);
-                zoomer.setLogging(logSensors || logZoom);
-                zoomer.handleJSON.run();
-            }
-
-        } else {
-            //liveHotSpot.setImageByLanguage(hotspotLanguage);
-            if (gestureType.equals("pan"))
-            {
-                liveHotSpot.setMessage(message);
-                liveHotSpot.setLogging(logSensors || logTilt);
-                asyncTaskHandler.post(liveHotSpot.handleJSON);
-            } else if (gestureType.equals("zoom")) {
-                liveHotSpot.setMessage(message);
-                liveHotSpot.setLogging(logSensors || logZoom);
-                asyncTaskHandler.post(liveHotSpot.handleJSON);
-            } else if (gestureType.equals("switchCode")) {
-                liveHotSpot.setMessage(message);
-                liveHotSpot.setLogging(logSensors );
-                asyncTaskHandler.post(liveHotSpot.handleJSON);
-            }
-
-        }
 
 
        /*animateByTable();
@@ -1029,9 +993,8 @@ public class MapsActivity
        //TextView altDisplay  = (TextView)findViewById(R.id.currentAltitude);
        //latDisplay.setText("Altitude: "+ Double.toString(mMap.getCameraPosition().target.));
 
-   }
 
-      class BackgroundWebSocket extends AsyncTask<String, String, String> {
+    class BackgroundWebSocket extends AsyncTask<String, String, String> {
 
         //inputarg can contain array of values
         @Override
@@ -1060,6 +1023,7 @@ public class MapsActivity
                     } catch (org.json.JSONException e) {
                         e.printStackTrace();
                     }*/
+                    bwsHandleMessage(message);
                     publishProgress("message", message);
 
                 }
@@ -1086,12 +1050,12 @@ public class MapsActivity
         protected void onProgressUpdate(String... progress) {
 
             //update the progress
-            if (progress.length >=2 ) {
+            if (progress.length >= 2) {
                 if (progress[0].equals("message")) {
-                    onMessage(progress[1]);
+                    //bwsHandleMessage(progress[1]);
                 } else {
                     //onMessage(progress[0]);
-                    complain(progress);
+                    bwsComplain(progress);
                 }
             }
 
@@ -1103,6 +1067,74 @@ public class MapsActivity
             // Update the ui elements
             //show some notification
             //showDialog("Task done " + result);
+
+        }
+
+        private void bwsHandleMessage(String messageString) {
+
+            if (mMap == null) return;
+
+
+            JSONObject message;
+            try {
+                message = new JSONObject(messageString);
+            } catch (org.json.JSONException e) {
+                Log.i("odd JSON", messageString);
+                return;
+            }
+            String messageType;
+            String gestureType;
+/*        try {
+ messageType = message.getString("type");
+        } catch (org.json.JSONException e) {
+            e.printStackTrace();
+        }*/
+            try {
+                gestureType = message.getString("gesture");
+                //Log.i("incoming message",message.toString());
+            } catch (org.json.JSONException e) {
+                Log.i("no gesture message", message.toString());
+                return;
+            }
+
+            //LatLngBounds curScreen = mMap.getProjection()
+            //       .getVisibleRegion().latLngBounds;
+
+            if (!hotSpotActive) {
+                if (gestureType.equals("pan")) {
+                    panner.setMessage(message);
+                    panner.setMap(mMap);
+                    panner.setLogging(logSensors || logTilt);
+                    panner.setScreenBounds(currScreenWidth, currScreenHeight);
+                    panner.handleJSON.run();
+
+                    //paintTarget();
+                } else if (gestureType.equals("zoom")) {
+                    zoomer.setMessage(message);
+                    zoomer.setLogging(logSensors || logZoom);
+                    zoomer.handleJSON.run();
+                }
+
+            } else {
+                //liveHotSpot.setImageByLanguage(hotspotLanguage);
+                if (gestureType.equals("pan")) {
+                    liveHotSpot.setMessage(message);
+                    liveHotSpot.setLogging(logSensors || logTilt);
+                    //asyncTaskHandler.post(liveHotSpot.handleJSON);
+                } else if (gestureType.equals("zoom")) {
+                    liveHotSpot.setMessage(message);
+                    liveHotSpot.setLogging(logSensors || logZoom);
+                    //asyncTaskHandler.post(liveHotSpot.handleJSON);
+                } else if (gestureType.equals("switchCode")) {
+                    liveHotSpot.setMessage(message);
+                    liveHotSpot.setLogging(logSensors);
+                    //asyncTaskHandler.post(liveHotSpot.handleJSON);
+                } else {
+                    return;
+                }
+                liveHotSpot.handleJSON.run();
+
+            }
 
         }
     }
@@ -1173,7 +1205,7 @@ public class MapsActivity
 
         //WebView hotSpotWebView = (WebView) findViewById(R.id.hotSpotWebView);
         loadHotspots();
-
+        emergeFromIdle();
     }
 
 
