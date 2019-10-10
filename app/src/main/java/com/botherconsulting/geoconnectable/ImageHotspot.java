@@ -2,6 +2,7 @@ package com.botherconsulting.geoconnectable;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.drawable.Drawable;
@@ -260,61 +261,58 @@ public class ImageHotspot extends Hotspot {
     public void open() {
         if (state != States.CLOSED) return;
         currentSpinPosition = 0;
-        ObjectAnimator scaleUpX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 1.0f);
-        ObjectAnimator scaleUpY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 1.0f);
-        scaleUpX.setDuration(zoomOutTime);
-        scaleUpX.setAutoCancel(true);
-        scaleUpY.setDuration(zoomOutTime);
-        scaleUpY.setAutoCancel(true);
+        ValueAnimator scaleUp = ValueAnimator.ofFloat(0.0f,1.0f);
+        scaleUp.addUpdateListener(
+            new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    float newScale = (float) animation.getAnimatedValue();
+                    displaySurface.setScaleX(newScale);
+                    displaySurface.setScaleY(newScale);
+                    if (newScale >= 1.0f) {
+                        state = States.OPEN;
+                        //stopAudio();
+                        //playAudio();
+                    }
 
-        AnimatorSet scaleUp = new AnimatorSet();
-        scaleUp.play(scaleUpX).with(scaleUpY);
+                }
+        });
+
+
+        scaleUp.setDuration(zoomOutTime);
 
         scaleUp.start();
         state = States.OPENING;
 
-        this.asyncTaskHandler.postDelayed(new Runnable() {
-
-            @Override
-            public void run() {
-                android.os.Debug.waitForDebugger();
-                state = States.OPEN;
-                //stopAudio();
-                playAudio();
-            }
-
-        }, zoomOutTime + 500); // 500ms delay after zoom complete
-    }
+     }
 
     public void close() {
         if (state != States.OPEN) return;
         state = States.CLOSING;
         //stopAudio();
-        ObjectAnimator scaleDownX = ObjectAnimator.ofFloat(this.displaySurface, "scaleX", 0.1f);
-        ObjectAnimator scaleDownY = ObjectAnimator.ofFloat(this.displaySurface, "scaleY", 0.1f);
-        scaleDownX.setDuration(zoomInTime);
-        scaleDownX.setAutoCancel(true);
-        scaleDownY.setDuration(zoomInTime);
-        scaleDownY.setAutoCancel(true);
+        ValueAnimator scaleDown = ValueAnimator.ofFloat(1.0f,0.0f);
+        scaleDown.addUpdateListener(
+                new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        float newScale = (float) animation.getAnimatedValue();
+                        displaySurface.setScaleX(newScale);
+                        displaySurface.setScaleY(newScale);
+                        if (newScale <= 0.0f) {
+                            state = States.CLOSED;
+                            /*displaySurface.setScaleX(0.0f);
+                            displaySurface.setScaleY(0.0f);
+                            displaySurface.setImageDrawable(null);*/
+                        }
 
-        AnimatorSet scaleDown = new AnimatorSet();
-        scaleDown.play(scaleDownX).with(scaleDownY);
+                    }
+                });
+
+
+        scaleDown.setDuration(zoomInTime);
 
         scaleDown.start();
-        this.asyncTaskHandler.postAtTime(new Runnable() {
-
-            @Override
-            public void run() {
-                android.os.Debug.waitForDebugger();
-                state = States.CLOSED;
-                displaySurface.setScaleX(0.0f);
-                displaySurface.setScaleY(0.0f);
-                displaySurface.setImageDrawable(null);
-            }
-
-        }, uptimeMillis()  + 5000); // 500ms delay after zoom complete
-        //this.mediaPlayer.release();
-    }
+     }
 
     public void playAudio(){
         //try {
