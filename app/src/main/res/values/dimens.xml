@@ -1,4 +1,5 @@
 <resources>
     <dimen name="fab_margin">0dp</dimen>
     <dimen name="loc_margin">0dp</dimen>
+    <dimen name="design_fab_size_normal">190dp</dimen>
 </resources>
