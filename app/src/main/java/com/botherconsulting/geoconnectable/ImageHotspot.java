@@ -272,7 +272,7 @@ public class ImageHotspot extends Hotspot {
                     if (newScale >= 1.0f) {
                         state = States.OPEN;
                         //stopAudio();
-                        //playAudio();
+                        playAudio();
                     }
 
                 }
@@ -289,7 +289,7 @@ public class ImageHotspot extends Hotspot {
     public void close() {
         if (state != States.OPEN) return;
         state = States.CLOSING;
-        //stopAudio();
+        stopAudio();
         ValueAnimator scaleDown = ValueAnimator.ofFloat(1.0f,0.0f);
         scaleDown.addUpdateListener(
                 new ValueAnimator.AnimatorUpdateListener() {
@@ -326,6 +326,8 @@ public class ImageHotspot extends Hotspot {
                 @Override
                 public void onPrepared(MediaPlayer mp1) {
                     android.os.Debug.waitForDebugger();
+                    ImageHotspot.mediaPlayer.setVolume(1f, 1f);
+                    ImageHotspot.mediaPlayer.setLooping(false);
                     ImageHotspot.mediaPlayer.start();
                     Log.d("audio start", "mediaplayer  started");
                 }
@@ -344,10 +346,9 @@ public class ImageHotspot extends Hotspot {
             AssetFileDescriptor descriptor = context.getAssets().openFd(this.soundUri.toString());
             ImageHotspot.mediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
             descriptor.close();
-            ImageHotspot.mediaPlayer.prepare();
-            ImageHotspot.mediaPlayer.setVolume(1f, 1f);
-            ImageHotspot.mediaPlayer.setLooping(false);
-        } catch (Exception e) {
+            Log.d("audio start", "media being prepared");
+            ImageHotspot.mediaPlayer.prepareAsync();
+         } catch (Exception e) {
             e.printStackTrace();
         }
         //mediaPlayer.start();
