@@ -3,6 +3,7 @@ package com.botherconsulting.geoconnectable;
 import android.util.Log;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONObject;
@@ -23,6 +24,7 @@ public class TablePanner {
     public LatLng currentPosition = new LatLng(0,0);
     public LatLng position = new LatLng(0,0);
     private LatLng idleHome;
+    private CameraPosition cameraPosition;
     public boolean newData = false;
     private int eventCount = 0;
     long lastTiltMessageTime = uptimeMillis();
@@ -115,6 +117,9 @@ public class TablePanner {
         this.screenHeightDegrees = _screenHeightDegrees;
     }
 
+    public void setMapPosition(CameraPosition newPosition) {
+        cameraPosition = newPosition;
+    }
     public final Runnable  handleJSON  = new Runnable() {
 
 
@@ -185,14 +190,14 @@ public class TablePanner {
                             " deltax: " + Double.toString(deltaX) +
                             " deltay: " + Double.toString(deltaY) +
                             " current Lat:" +
-                            Double.toString(mMap.getCameraPosition().target.latitude) +
+                            Double.toString(cameraPosition.target.latitude) +
                             " current Lon:" +
-                            Double.toString(mMap.getCameraPosition().target.longitude)
+                            Double.toString(cameraPosition.target.longitude)
 
                     );
                 }
                 //mMap.animateCamera(CameraUpdateFactory.scrollBy((float) ( x), (float) ( y)));
-                LatLng currentCameraPosition = mMap.getCameraPosition().target;
+                LatLng currentCameraPosition = cameraPosition.target;
                 LatLng nextPosition = new LatLng(currentCameraPosition.latitude + deltaY, currentCameraPosition.longitude + deltaX);
                 if (nextPosition != currentCameraPosition) {
                     updateStats(doLog);
