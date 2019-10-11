@@ -2,237 +2,337 @@
   {
     "title": "01.Agiba",
     "latitude": 7.2691821,
-    "longitude": 145.1375834
+    "longitude": 145.1375834,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "02.Akhenaten",
     "latitude": 27.665763,
-    "longitude": 30.905729
+    "longitude": 30.905729,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "03.ChiWaraMaleCrestMask",
     "latitude": 17.570692,
-    "longitude": -3.996166
+    "longitude": -3.996166,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "04.DanceMaskRamuRiver",
     "latitude": -5.0292364,
-    "longitude": 145.3626731
+    "longitude": 145.3626731,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "05.Dibeki",
     "latitude": -1.623957,
-    "longitude": 11.600275
+    "longitude": 11.600275,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "06.DogonFigure",
     "latitude": 14.348528,
-    "longitude": -3.611873
+    "longitude": -3.611873,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "07.Earrings",
     "latitude": -14.235004,
-    "longitude": -51.92528
+    "longitude": -51.92528,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "08.EharoMask",
     "latitude": -7.269182,
-    "longitude": 145.137583
+    "longitude": 145.137583,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "09.EpaHelmetMask",
     "latitude": 9.081999,
-    "longitude": 8.675277
+    "longitude": 8.675277,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "10.FemaleChiwaraCrestMask",
     "latitude": 17.570692,
-    "longitude": -3.996166
+    "longitude": -3.996166,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "11.FemaleSuspensionHook",
     "latitude": -6.314993,
-    "longitude": 143.95555
+    "longitude": 143.95555,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "12.FluteMask",
     "latitude": -4.9849733,
-    "longitude": 145.1375834
+    "longitude": 145.1375834,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "13.FuneraryBoat",
     "latitude": 25.675303,
-    "longitude": 32.621475
+    "longitude": 32.621475,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "14.Gope",
     "latitude": -7.7769444,
-    "longitude": 144.2197222
+    "longitude": 144.2197222,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "15.HeadOfAPrincess",
     "latitude": 27.665763,
-    "longitude": 30.905729
+    "longitude": 30.905729,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "16.Headdress.Chief.Raoni",
     "latitude": -12.6818712,
-    "longitude": -56.921099
+    "longitude": -56.921099,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "18.HousePanel",
     "latitude": -7.7769444,
-    "longitude": 144.2197222
+    "longitude": 144.2197222,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "19.IbejiTwins",
     "latitude": 7.2467391,
-    "longitude": 3.340838
+    "longitude": 3.340838,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "20.IkoraadoMaidenMask",
     "latitude": 6.84308,
-    "longitude": 7.368306
+    "longitude": 7.368306,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "21.KamanaBowl",
     "latitude": -4.08525,
-    "longitude": 142.790054
+    "longitude": 142.790054,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "22.CanoeProw",
     "latitude": -4.08525,
-    "longitude": 142.790054
+    "longitude": 142.790054,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "23.KinaShellNecklaces",
     "latitude": -6.664994,
-    "longitude": 142.81551
+    "longitude": 142.81551,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "24.LimeContainer.Stopper",
     "latitude": -6.314993,
-    "longitude": 143.955551
+    "longitude": 143.955551,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "25.LimeSpatulaWood",
     "latitude": -6.314993,
-    "longitude": 143.955551
+    "longitude": 143.955551,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "27.Linen",
     "latitude": 30.044139,
-    "longitude": 31.258938
+    "longitude": 31.258938,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "28.LomaHarp",
     "latitude": 6.428055,
-    "longitude": -9.429499
+    "longitude": -9.429499,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "29.MaleSuspensionHook",
     "latitude": -6.314993,
-    "longitude": 143.95555
+    "longitude": 143.95555,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "30.NecklaceBoarsTusk",
     "latitude": -6.314993,
-    "longitude": 143.955551
+    "longitude": 143.955551,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "31.NloBieriAfricanReliquary",
     "latitude": 7.369722,
-    "longitude": 12.354722
+    "longitude": 12.354722,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "32.OsheShango",
     "latitude": 9.081999,
-    "longitude": 8.675277
+    "longitude": 8.675277,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "33.PrincessStatuette",
     "latitude": 28.0870967,
-    "longitude": 30.7618397
+    "longitude": 30.7618397,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "34.QuranBox",
     "latitude": 9.081999,
-    "longitude": 8.675277
+    "longitude": 8.675277,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "35.SkullCap",
     "latitude": 14.569972,
-    "longitude": 8.570466
+    "longitude": 8.570466,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "37.Storyboard",
     "latitude": -4.2847039,
-    "longitude": 144.134094
+    "longitude": 144.134094,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "38.TapaCloth",
     "latitude": -6.082094,
-    "longitude": 144.623664
+    "longitude": 144.623664,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "39.TerracottaPot",
     "latitude": 9.479639,
-    "longitude": 8.195927
+    "longitude": 8.195927,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "40.ThumbPiano",
     "latitude": 13.531665,
-    "longitude": -2.460415
+    "longitude": -2.460415,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "41.Trumpet",
     "latitude": 9.558688,
-    "longitude": 8.559081
+    "longitude": 8.559081,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "42.WuramonSpiritBoat",
     "latitude": -3.771697,
-    "longitude": 142.822225
+    "longitude": 142.822225,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "43.YamMask",
     "latitude": -6.314993,
-    "longitude": 143.95555
+    "longitude": 143.95555,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "44.KarajaBeakNecklace",
     "latitude": -11.988844,
-    "longitude": -50.684647
+    "longitude": -50.684647,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "45.KarajaShellNecklace",
     "latitude": -11.988844,
-    "longitude": -50.684647
+    "longitude": -50.684647,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "46.DanceSkirtKaraja",
     "latitude": -11.988844,
-    "longitude": -50.684647
+    "longitude": -50.684647,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "47.BasketryBox",
     "latitude": -5.66115,
-    "longitude": -5.66115
+    "longitude": -5.66115,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "48.CombRattleFigurine",
     "latitude": -15.81204,
-    "longitude": -51.917901
+    "longitude": -51.917901,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "49.Ocarinas",
     "latitude": -6.050984,
-    "longitude": 144.258631
+    "longitude": 144.258631,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
   },
   {
     "title": "50.Flute",
     "latitude": -5.681607,
-    "longitude": 144.248908
+    "longitude": 144.248908,
+    "minZoom": 13.0,
+    "maxZoom": 19.0
+  },
+  {
+    "title": "51.GlobalMuseum",
+    "latitude": 33.1135,
+    "longitude": -96.7129,
+    "minZoom": 17.0,
+    "maxZoom": 19.0
   }
-
 ]
