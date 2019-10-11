@@ -469,6 +469,23 @@ public class MapsActivity
         START,
         FINISH
     }
+    float maxZoom = -1f;
+    CameraPosition cameraPosition;
+    Projection mapProjection;
+
+
+    private void getUIObjects() {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                if (mMap != null) {
+                    maxZoom = mMap.getMaxZoomLevel();
+                    cameraPosition = mMap.getCameraPosition();
+                    mapProjection = mMap.getProjection();
+                }
+            }
+        });
+    }
+
 
     final Runnable  animateByTable  = new Runnable() {
         long lastRuntime;
@@ -481,10 +498,9 @@ public class MapsActivity
         Map<Sections, Long> maxElapsedTimes = new EnumMap<>(Sections.class);
         Map<Sections, Long> minElapsedTimes = new EnumMap<>(Sections.class);
         boolean initializedProfile = false;
+        float newZoom;
+        LatLng newPos;
 
-        float maxZoom = -1f;
-        CameraPosition cameraPosition;
-        Projection mapProjection;
 
 
         void profile(Sections section, Profilestates state) {
@@ -519,15 +535,6 @@ public class MapsActivity
 
         }
 
-        private void getUIObjects() {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    maxZoom  = mMap.getMaxZoomLevel();
-                    cameraPosition = mMap.getCameraPosition();
-                    mapProjection = mMap.getProjection();
-                }
-            });
-        }
         public void run() {
             // TODO: label this 19. Does it set a maximum zoom level for the app
             long blockStartTime, blockEndTime, startTime = System.nanoTime();
@@ -539,11 +546,11 @@ public class MapsActivity
             long lastZoomTime = 0;
             long lastPanTime = 0;
 
-            if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
+    /*        if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
                 zoomer.setZoomBounds(minZoomLevel, Math.min(19.0, maxZoom));
 
-                float newZoom = cameraPosition.zoom;
-                LatLng newPos = cameraPosition.target;
+                 newZoom = cameraPosition.zoom;
+                 newPos = cameraPosition.target;
                 profile(Sections.START, Profilestates.FINISH);
                 if (zoomer.newData) {
                     profile(Sections.ZOOMNEWDATA, Profilestates.START);
@@ -622,7 +629,7 @@ public class MapsActivity
                 profile(Sections.TESTHOTSPOTS, Profilestates.FINISH);
                 //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
                 if (doAnimate) {
-                /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                *//*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 double currLeft = visibleRegion.farLeft.longitude;
                 double currRight = visibleRegion.farRight.longitude;
                 double currTop = visibleRegion.farLeft.latitude;
@@ -637,35 +644,39 @@ public class MapsActivity
                         new LatLng(newPos.latitude+targetWidth*currScreenHeight,
                                 newPos.longitude-targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
-                */
+                *//*
 
                     profile(Sections.ANIMATEMAP, Profilestates.START);
                     int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
                     //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
                     if (readyToAnimate) {
                         readyToAnimate = false;
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
-                            @Override
-                            public void onFinish() {
-                                profile(Sections.POSTANIMATEMAP, Profilestates.START);
-                                TextView latDisplay = findViewById(R.id.currentLatitude);
-                                latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
-                                TextView lonDisplay = findViewById(R.id.currentLongitude);
-                                lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
-                                TextView layerDisplay = findViewById(R.id.currentLayer);
-                                layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
-                                readyToAnimate = true;
-                                if (!idling) {
-                                    //Log.i("animateByTable", "now");
-                                    animationHandler.post(animateByTable);
-                                }
-                                profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
-                            }
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
+                                    @Override
+                                    public void onFinish() {
+                                        profile(Sections.POSTANIMATEMAP, Profilestates.START);
+                                        TextView latDisplay = findViewById(R.id.currentLatitude);
+                                        latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
+                                        TextView lonDisplay = findViewById(R.id.currentLongitude);
+                                        lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
+                                        TextView layerDisplay = findViewById(R.id.currentLayer);
+                                        layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
+                                        readyToAnimate = true;
+                                        if (!idling) {
+                                            //Log.i("animateByTable", "now");
+                                            animationHandler.post(animateByTable);
+                                        }
+                                        profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
+                                    }
 
-                            @Override
-                            public void onCancel() {
-                                readyToAnimate = true;
-                                Log.w("animateByTable", "hmm animation got canceled");
+                                    @Override
+                                    public void onCancel() {
+                                        readyToAnimate = true;
+                                        Log.w("animateByTable", "hmm animation got canceled");
+                                    }
+                                });
                             }
                         });
                     }
@@ -679,7 +690,7 @@ public class MapsActivity
                 //Log.i("animateByTable", "in the future");
                 animationHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
 
-            }
+            }*/
 
         }
     };
@@ -764,11 +775,15 @@ public class MapsActivity
                 String title = jArray.getJSONObject(i).getString("title");// name of the country
                 Double latitude = jArray.getJSONObject(i).getDouble("latitude"); // dial code of the country
                 Double longitude = jArray.getJSONObject(i).getDouble("longitude"); // code of the country
+                Double maxZoom = jArray.getJSONObject(i).getDouble("maxZoom"); // code of the country
+                Double minZoom = jArray.getJSONObject(i).getDouble("minZoom"); // code of the country
                 hotspots.add(i, new ImageHotspot(mMap, hotSpotImageView, this.getApplicationContext()));
                 //hotspots.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
                 hotspots.get(i).setIcon(BitmapDescriptorFactory.fromAsset("www/GlobalMagic/globe32x32.png"));
                 hotspots.get(i).setPosition(new LatLng(latitude,longitude));
                 hotspots.get(i).setBaseName(urlPrefix, title);
+                hotspots.get(i).setZoomRange(minZoom, maxZoom);
+
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -974,8 +989,8 @@ public class MapsActivity
             deadBWS.cancel(true);
             bws = new BackgroundWebSocket();
         }
-        Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
-        bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
+       // Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
+       // bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
 
     }
 
@@ -1057,7 +1072,11 @@ public class MapsActivity
                     //bwsHandleMessage(progress[1]);
                 } else {
                     //onMessage(progress[0]);
-                    bwsComplain(progress);
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            bwsComplain(progress);
+                        }
+                    });
                 }
             }
 
@@ -1071,6 +1090,7 @@ public class MapsActivity
             //showDialog("Task done " + result);
 
         }
+
 
         private void bwsHandleMessage(String messageString) {
 
@@ -1103,18 +1123,20 @@ public class MapsActivity
             //       .getVisibleRegion().latLngBounds;
 
             if (!hotSpotActive) {
+                getUIObjects();
                 if (gestureType.equals("pan")) {
                     panner.setMessage(message);
                     panner.setMap(mMap);
                     panner.setLogging(logSensors || logTilt);
                     panner.setScreenBounds(currScreenWidth, currScreenHeight);
+                    panner.setMapPosition(cameraPosition);
                     panner.handleJSON.run();
 
                     //paintTarget();
                 } else if (gestureType.equals("zoom")) {
                     zoomer.setMessage(message);
                     zoomer.setLogging(logSensors || logZoom);
-                    zoomer.handleJSON.run();
+                //    zoomer.handleJSON.run();
                 }
 
             } else {
