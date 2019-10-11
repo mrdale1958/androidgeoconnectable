@@ -22,11 +22,11 @@ public class Hotspot {
 
     static double validTiltThreshold = 0.025; // needs to be in settings
     static final int eventTiltWindowLength = 10000;
-    long lastTiltMessageTime = System.nanoTime();
-    int eventTiltCount = 0;
-    long[] eventTiltWindow = new long[eventTiltWindowLength];
-    long sumTiltElapsedTimes = 0;
-    long sumTiltSquaredElapsedTimes = 0;
+    private long lastTiltMessageTime = System.nanoTime();
+    private int eventTiltCount = 0;
+    private long[] eventTiltWindow = new long[eventTiltWindowLength];
+    private long sumTiltElapsedTimes = 0;
+    private long sumTiltSquaredElapsedTimes = 0;
     int lastTiltMessageID = 0;
 
     //zoom stuff
@@ -40,42 +40,39 @@ public class Hotspot {
     static double idleZoom = 13.5; // in settings
     static double zoom = 0d;
     static final int eventZoomWindowLength = 10000;
-    int currentSpinPosition = 0;
-    int deltaZ = 0;
-    long lastZoomMessageTime = System.nanoTime();
-    int eventZoomCount = 0;
-    long[] eventZoomWindow = new long[eventZoomWindowLength];
-    long sumZoomElapsedTimes = 0;
-    long sumZoomSquaredElapsedTimes = 0;
-    int lastZoomMessageID = 0;
+    private int currentSpinPosition = 0;
+    private int deltaZ = 0;
+    private long lastZoomMessageTime = System.nanoTime();
+    private int eventZoomCount = 0;
+    private long[] eventZoomWindow = new long[eventZoomWindowLength];
+    private long sumZoomElapsedTimes = 0;
+    private long sumZoomSquaredElapsedTimes = 0;
+    private int lastZoomMessageID = 0;
 
     // public stuff
     public boolean newData = false;
-    public boolean enabled;
+     boolean enabled;
     public String set;
     public java.net.URL URL;
-    public Marker marker;
-    public Double[] hotSpotZoomTriggerRange = {13.0, 19.0};
+     Marker marker;
+     Double[] hotSpotZoomTriggerRange = {13.0, 19.0};
     public Double[] currentTilt = {0.0, 0.0};
-    public int minSpin = -100;
-    public int maxSpin = 100000000;
-    GoogleMap mMap;
+     int minSpin = -100;
+     int maxSpin = 100000000;
+    private GoogleMap mMap;
+    public LatLng position;
 
-    static enum States {
+     enum States {
         CLOSED,
         OPENING,
         CLOSING,
-        OPEN,
-        THURSDAY,
-        FRIDAY,
-        SATURDAY;
-
+        OPEN
     }
 
     States state;
 
 
-    public Hotspot(GoogleMap map) {
+     Hotspot(GoogleMap map) {
         state = States.CLOSED;
         this.enabled = false;
         this.set = "default";
@@ -97,6 +94,7 @@ public class Hotspot {
                     .snippet("Even pithier label"));
         }
         this.marker.setIcon(icon);
+        this.position = this.marker.getPosition();
     }
 
     public void setURL(String url) {
@@ -121,8 +119,12 @@ public class Hotspot {
 
     public void setPosition(LatLng position) {
         this.marker.setPosition(position);
+        this.position = position;
     }
 
+    public LatLng getPosition() {
+        return (this.position);
+    }
     public void setZoomTriggerRange(Double minZoom, Double maxZoom) {
         this.hotSpotZoomTriggerRange[0] = minZoom;
         this.hotSpotZoomTriggerRange[1] = maxZoom;
@@ -142,7 +144,7 @@ public class Hotspot {
         }
     }
 
-    protected void reportZoomStats() {
+    private void reportZoomStats() {
         long windowSum = 0;
         long windowSumSquared = 0;
         long maxEt = 0;
