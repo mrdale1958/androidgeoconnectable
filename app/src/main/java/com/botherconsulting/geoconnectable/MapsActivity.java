@@ -61,6 +61,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
@@ -224,9 +225,9 @@ public class MapsActivity
 
             }
         } catch (JSONException e) {
-            Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
+            Log.e("reading maxZoomCache", "oops broke json" + e.getMessage());
         } catch (java.io.IOException e) {
-            Log.e("reading maxZoomCache", "oops broke it" + e.getMessage());
+            Log.e("reading maxZoomCache", "oops broke io" + e.getMessage());
         }
          setContentView(R.layout.activity_maps);
         /*// Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -237,7 +238,12 @@ public class MapsActivity
         SupportMapFragment mapFragment;
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        try {
+            mapFragment.getMapAsync(this);
+        }
+        catch (NullPointerException e)  {
+            Log.e("mapFragment.getMapAsync", "null something" + e.getMessage());
+        }
         //mapFragment.mumble(GoogleMap.OnMapLoadedCallback)
         eatPreferences();
        // bws.execute("ws://192.168.1.73:5678");
@@ -417,7 +423,6 @@ public class MapsActivity
 
             }catch (org.json.JSONException e) {
                 Log.i("odd JSON",response);
-                return;
             }
         }
 
@@ -450,7 +455,7 @@ public class MapsActivity
         //Log.w("mzs", mzsURL);
         maxZoomWebView.loadUrl(mzsURL);
     }
-    static  enum Sections  {
+    enum Sections  {
         START,
         ZOOMNEWDATA,
         PANNEWDATA,
@@ -460,7 +465,7 @@ public class MapsActivity
         ANIMATEMAP,
         POSTANIMATEMAP
     };
-    static  enum Profilestates  {
+    enum Profilestates  {
         START,
         FINISH
     }
@@ -470,19 +475,19 @@ public class MapsActivity
         static final int ZOOM = 0;
         static final int PAN = 0;
         static final int GESTURE_TIME = 1;
-        Map<Sections, Integer> profileEntries = new EnumMap<Sections, Integer>(Sections.class);
-        Map<Sections, Long> lastStartTimes = new EnumMap<Sections, Long>(Sections.class);
-        Map<Sections, Long> sumElapsedTimes = new EnumMap<Sections, Long>(Sections.class);
-        Map<Sections, Long> maxElapsedTimes = new EnumMap<Sections, Long>(Sections.class);
-        Map<Sections, Long> minElapsedTimes = new EnumMap<Sections, Long>(Sections.class);
+        Map<Sections, Integer> profileEntries = new EnumMap<>(Sections.class);
+        Map<Sections, Long> lastStartTimes = new EnumMap<>(Sections.class);
+        Map<Sections, Long> sumElapsedTimes = new EnumMap<>(Sections.class);
+        Map<Sections, Long> maxElapsedTimes = new EnumMap<>(Sections.class);
+        Map<Sections, Long> minElapsedTimes = new EnumMap<>(Sections.class);
         boolean initializedProfile = false;
 
-        float maxZoom;
+        float maxZoom = -1f;
         CameraPosition cameraPosition;
         Projection mapProjection;
 
 
-        public void profile(Sections section, Profilestates state) {
+        void profile(Sections section, Profilestates state) {
             if (!initializedProfile) {
                 for (Sections sec : Sections.values()) {
 
@@ -530,91 +535,93 @@ public class MapsActivity
             lastRuntime = startTime;
             getUIObjects();
             profile(Sections.START, Profilestates.START);
-
-            zoomer.setZoomBounds(minZoomLevel, Math.min(19.0,maxZoom));
-            float newZoom = cameraPosition.zoom;
-            long lastZoomTime = 0;
             boolean doAnimate = false;
-            LatLng newPos = cameraPosition.target;
+            long lastZoomTime = 0;
             long lastPanTime = 0;
-            profile(Sections.START, Profilestates.FINISH);
-            if (zoomer.newData) {
-                profile(Sections.ZOOMNEWDATA, Profilestates.START);
-                Object[] zoomData = zoomer.getCurrentZoom();
-                newZoom = (float) zoomData[ZOOM];
-                lastZoomTime = (long) zoomData[GESTURE_TIME];
-                int latIndex = (int) Math.round(cameraPosition.target.latitude) + 90;
-                int lonIndex = Math.min(360, Math.max(0,(int) Math.round(cameraPosition.target.longitude) + 180)); // not quite right need to cope with
-                if (maxZoomCache[latIndex][lonIndex] > 0) {
-                    zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
-                } else if(Math.floor(newZoom) > cameraPosition.zoom)  {
-                    checkMaxZoom( newZoom);
+
+            if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
+                zoomer.setZoomBounds(minZoomLevel, Math.min(19.0, maxZoom));
+
+                float newZoom = cameraPosition.zoom;
+                LatLng newPos = cameraPosition.target;
+                profile(Sections.START, Profilestates.FINISH);
+                if (zoomer.newData) {
+                    profile(Sections.ZOOMNEWDATA, Profilestates.START);
+                    Object[] zoomData = zoomer.getCurrentZoom();
+                    newZoom = (float) zoomData[ZOOM];
+                    lastZoomTime = (long) zoomData[GESTURE_TIME];
+                    int latIndex = (int) Math.round(cameraPosition.target.latitude) + 90;
+                    int lonIndex = Math.min(360, Math.max(0, (int) Math.round(cameraPosition.target.longitude) + 180)); // not quite right need to cope with
+                    if (maxZoomCache[latIndex][lonIndex] > 0) {
+                        zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
+                    } else if (Math.floor(newZoom) > cameraPosition.zoom) {
+                        checkMaxZoom(newZoom);
+                    }
+                    //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
+                    doAnimate = true;
+                    profile(Sections.ZOOMNEWDATA, Profilestates.FINISH);
+
                 }
-                //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
-                doAnimate = true;
-                profile(Sections.ZOOMNEWDATA, Profilestates.FINISH);
+                if (panner.newData) {
+                    profile(Sections.PANNEWDATA, Profilestates.START);
+                    Object[] pannerData = panner.getCurrentPosition();
+                    newPos = (LatLng) pannerData[PAN];
+                    lastPanTime = (long) pannerData[GESTURE_TIME];
+                    //Log.i("new position", newPos.toString());
+                    doAnimate = true;
+                    profile(Sections.PANNEWDATA, Profilestates.FINISH);
 
-            }
-            if (panner.newData) {
-                profile(Sections.PANNEWDATA, Profilestates.START);
-                Object[] pannerData = panner.getCurrentPosition();
-                newPos = (LatLng) pannerData[PAN];
-                lastPanTime = (long) pannerData[GESTURE_TIME];
-                //Log.i("new position", newPos.toString());
-                doAnimate = true;
-                profile(Sections.PANNEWDATA, Profilestates.FINISH);
-
-            }
-            if (hotSpotActive) {
-                // deal with animating hotSpot
-                // need a mechanism to get clear of target voxel  before redisplaying
-                profile(Sections.ANIMATEHOTSPOT, Profilestates.START);
-                if (liveHotSpot.isClosed() ) {
-                    hotSpotActive = false;
-                    liveHotSpot = null;
                 }
-                animationHandler.post(animateByTable);
-                profile(Sections.ANIMATEHOTSPOT, Profilestates.FINISH);
+                if (hotSpotActive) {
+                    // deal with animating hotSpot
+                    // need a mechanism to get clear of target voxel  before redisplaying
+                    profile(Sections.ANIMATEHOTSPOT, Profilestates.START);
+                    if (liveHotSpot.isClosed()) {
+                        hotSpotActive = false;
+                        liveHotSpot = null;
+                    }
+                    animationHandler.post(animateByTable);
+                    profile(Sections.ANIMATEHOTSPOT, Profilestates.FINISH);
 
-            } else {
-                profile(Sections.SETUPMAPMOVE, Profilestates.START);
-                VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
-                double currLeft = visibleRegion.farLeft.longitude;
-                double currRight = visibleRegion.farRight.longitude;
-                double currTop = visibleRegion.farLeft.latitude;
-                double currBottom = visibleRegion.nearRight.latitude;
-                currScreenWidth = Math.abs(currLeft - currRight);
-                if (currScreenWidth > 180) currScreenWidth -= 180;
-                currScreenHeight = Math.abs(currTop - currBottom);
-                if (currScreenHeight > 180) currScreenHeight -= 180;
-                LatLngBounds hotBounds = new LatLngBounds(
-                        new LatLng(newPos.latitude-targetWidth*currScreenHeight,
-                                newPos.longitude+targetWidth*currScreenWidth),
-                        new LatLng(newPos.latitude+targetWidth*currScreenHeight,
-                                newPos.longitude-targetWidth*currScreenWidth));
-                Boolean hotspotFound = false;
-                profile(Sections.SETUPMAPMOVE, Profilestates.FINISH);
-                profile(Sections.TESTHOTSPOTS, Profilestates.START);
-                for (int hs = 0; hs < hotspots.size(); hs++) {
-                    if (hotBounds.contains(hotspots.get(hs).marker.getPosition())) {
-                        if (newZoom >  hotspots.get(hs).hotSpotZoomTriggerRange[0] &&
-                                newZoom <  hotspots.get(hs).hotSpotZoomTriggerRange[1]) {
-                            hotSpotActive = true;
-                            liveHotSpot = hotspots.get(hs);
-                            View mapView =  (View) findViewById(R.id.map);
-                            //mapView.setVisibility(View.INVISIBLE);
-                            Log.w("hotspot loading ", "number "+ hs);
-                            liveHotSpot.setImageByLanguage(hotspotLanguage);
-                            liveHotSpot.open();
-                            animationHandler.post(animateByTable);
-                            break;
+                } else {
+                    profile(Sections.SETUPMAPMOVE, Profilestates.START);
+                    VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
+                    double currLeft = visibleRegion.farLeft.longitude;
+                    double currRight = visibleRegion.farRight.longitude;
+                    double currTop = visibleRegion.farLeft.latitude;
+                    double currBottom = visibleRegion.nearRight.latitude;
+                    currScreenWidth = Math.abs(currLeft - currRight);
+                    if (currScreenWidth > 180) currScreenWidth -= 180;
+                    currScreenHeight = Math.abs(currTop - currBottom);
+                    if (currScreenHeight > 180) currScreenHeight -= 180;
+                    LatLngBounds hotBounds = new LatLngBounds(
+                            new LatLng(newPos.latitude - targetWidth * currScreenHeight,
+                                    newPos.longitude + targetWidth * currScreenWidth),
+                            new LatLng(newPos.latitude + targetWidth * currScreenHeight,
+                                    newPos.longitude - targetWidth * currScreenWidth));
+                    Boolean hotspotFound = false;
+                    profile(Sections.SETUPMAPMOVE, Profilestates.FINISH);
+                    profile(Sections.TESTHOTSPOTS, Profilestates.START);
+                    for (int hs = 0; hs < hotspots.size(); hs++) {
+                        if (hotBounds.contains(hotspots.get(hs).getPosition())) {
+                            if (newZoom > hotspots.get(hs).hotSpotZoomTriggerRange[0] &&
+                                    newZoom < hotspots.get(hs).hotSpotZoomTriggerRange[1]) {
+                                hotSpotActive = true;
+                                liveHotSpot = hotspots.get(hs);
+                                View mapView = (View) findViewById(R.id.map);
+                                //mapView.setVisibility(View.INVISIBLE);
+                                Log.w("hotspot loading ", "number " + hs);
+                                liveHotSpot.setImageByLanguage(hotspotLanguage);
+                                liveHotSpot.open();
+                                animationHandler.post(animateByTable);
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            profile(Sections.TESTHOTSPOTS, Profilestates.FINISH);
-            //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
-            if (doAnimate) {
+                profile(Sections.TESTHOTSPOTS, Profilestates.FINISH);
+                //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
+                if (doAnimate) {
                 /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 double currLeft = visibleRegion.farLeft.longitude;
                 double currRight = visibleRegion.farRight.longitude;
@@ -632,41 +639,43 @@ public class MapsActivity
                 Boolean hotspotFound = false;
                 */
 
-                profile(Sections.ANIMATEMAP, Profilestates.START);
-                int animateTime = (int) Math.max(1,(uptimeMillis() - Math.max(lastPanTime,lastZoomTime)));
-                //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
-                if (readyToAnimate) {
-                    readyToAnimate = false;
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
-                        @Override
-                        public void onFinish() {
-                            profile(Sections.POSTANIMATEMAP, Profilestates.START);
-                            TextView latDisplay = findViewById(R.id.currentLatitude);
-                            latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
-                            TextView lonDisplay = findViewById(R.id.currentLongitude);
-                            lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
-                            TextView layerDisplay = findViewById(R.id.currentLayer);
-                            layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
-                            readyToAnimate = true;
-                            if (!idling){
-                                //Log.i("animateByTable", "now");
-                                animationHandler.post(animateByTable);
+                    profile(Sections.ANIMATEMAP, Profilestates.START);
+                    int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
+                    //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
+                    if (readyToAnimate) {
+                        readyToAnimate = false;
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
+                            @Override
+                            public void onFinish() {
+                                profile(Sections.POSTANIMATEMAP, Profilestates.START);
+                                TextView latDisplay = findViewById(R.id.currentLatitude);
+                                latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
+                                TextView lonDisplay = findViewById(R.id.currentLongitude);
+                                lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
+                                TextView layerDisplay = findViewById(R.id.currentLayer);
+                                layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
+                                readyToAnimate = true;
+                                if (!idling) {
+                                    //Log.i("animateByTable", "now");
+                                    animationHandler.post(animateByTable);
+                                }
+                                profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
                             }
-                            profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
-                        }
 
-                        @Override
-                        public void onCancel() {
-                            readyToAnimate = true;
-                            Log.w("animateByTable", "hmm animation got canceled");
-                        }
-                    });
+                            @Override
+                            public void onCancel() {
+                                readyToAnimate = true;
+                                Log.w("animateByTable", "hmm animation got canceled");
+                            }
+                        });
+                    }
+                    if (idling) emergeFromIdle();
+                    lastInteractionTime = uptimeMillis();
+                    blockEndTime = System.nanoTime();
+                    profile(Sections.ANIMATEMAP, Profilestates.FINISH);
                 }
-                if (idling) emergeFromIdle();
-                lastInteractionTime = uptimeMillis();
-                blockEndTime = System.nanoTime();
-                profile(Sections.ANIMATEMAP, Profilestates.FINISH);
-            } else {
+            }
+            else {
                 //Log.i("animateByTable", "in the future");
                 animationHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
 
@@ -738,7 +747,7 @@ public class MapsActivity
             byte[] buffer = new byte[size];
             is.read(buffer);
             is.close();
-            json = new String(buffer, "UTF-8");
+            json = new String(buffer, StandardCharsets.UTF_8);
         } catch (IOException ex) {
             ex.printStackTrace();
             return null;
@@ -921,7 +930,7 @@ public class MapsActivity
     private static class DownloadKmlFile extends AsyncTask<String, Void, byte[]> {
         private final String mUrl;
 
-        public DownloadKmlFile(String url) {
+         DownloadKmlFile(String url) {
             mUrl = url;
         }
 
@@ -1014,15 +1023,8 @@ public class MapsActivity
                 }
 
                 @Override
-                public void onMessage(String s) {
-                    final String message = s;
-                    //Log.i("incoming message", message);
-                    /*JSONObject jsonData = new JSONObject();
-                    try {
-                        jsonData = new JSONObject(message);
-                    } catch (org.json.JSONException e) {
-                        e.printStackTrace();
-                    }*/
+                public void onMessage(String message) {
+
                     bwsHandleMessage(message);
                     publishProgress("message", message);
 
