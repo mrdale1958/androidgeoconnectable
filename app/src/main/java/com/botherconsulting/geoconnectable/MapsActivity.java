@@ -701,6 +701,7 @@ public class MapsActivity
         lastHotSpotShown = nextSpot;
         // ToDo: move the camera
         liveHotSpot = hotspots.get(nextSpot);
+        ImageHotspot.activate(liveHotSpot);
         //View mapView =  (View) findViewById(R.id.map);
         //mapView.setVisibility(View.INVISIBLE);
         Log.w("hotspot loading ", nextSpot + ":" + liveHotSpot.baseUri.toString());
