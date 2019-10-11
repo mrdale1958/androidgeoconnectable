@@ -122,6 +122,11 @@ public class Hotspot {
         this.position = position;
     }
 
+    public void setZoomRange(Double minZoom, Double maxZoom) {
+         this.hotSpotZoomTriggerRange[0] =  minZoom;
+            this.hotSpotZoomTriggerRange[1] =  maxZoom;
+    }
+
     public LatLng getPosition() {
         return (this.position);
     }
