@@ -546,7 +546,7 @@ public class MapsActivity
             long lastZoomTime = 0;
             long lastPanTime = 0;
 
-    /*        if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
+            if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
                 zoomer.setZoomBounds(minZoomLevel, Math.min(19.0, maxZoom));
 
                  newZoom = cameraPosition.zoom;
@@ -629,7 +629,7 @@ public class MapsActivity
                 profile(Sections.TESTHOTSPOTS, Profilestates.FINISH);
                 //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
                 if (doAnimate) {
-                *//*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 double currLeft = visibleRegion.farLeft.longitude;
                 double currRight = visibleRegion.farRight.longitude;
                 double currTop = visibleRegion.farLeft.latitude;
@@ -644,7 +644,7 @@ public class MapsActivity
                         new LatLng(newPos.latitude+targetWidth*currScreenHeight,
                                 newPos.longitude-targetWidth*currScreenWidth));
                 Boolean hotspotFound = false;
-                *//*
+                */
 
                     profile(Sections.ANIMATEMAP, Profilestates.START);
                     int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
@@ -690,7 +690,7 @@ public class MapsActivity
                 //Log.i("animateByTable", "in the future");
                 animationHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
 
-            }*/
+            }
 
         }
     };
@@ -990,8 +990,8 @@ public class MapsActivity
             deadBWS.cancel(true);
             bws = new BackgroundWebSocket();
         }
-       // Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
-       // bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
+       Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
+       bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
 
     }
 
@@ -1070,7 +1070,7 @@ public class MapsActivity
             //update the progress
             if (progress.length >= 2) {
                 if (progress[0].equals("message")) {
-                    //bwsHandleMessage(progress[1]);
+                    bwsHandleMessage(progress[1]);
                 } else {
                     //onMessage(progress[0]);
                     runOnUiThread(new Runnable() {
@@ -1137,7 +1137,7 @@ public class MapsActivity
                 } else if (gestureType.equals("zoom")) {
                     zoomer.setMessage(message);
                     zoomer.setLogging(logSensors || logZoom);
-                //    zoomer.handleJSON.run();
+                    zoomer.handleJSON.run();
                 }
 
             } else {
@@ -1145,15 +1145,15 @@ public class MapsActivity
                 if (gestureType.equals("pan")) {
                     liveHotSpot.setMessage(message);
                     liveHotSpot.setLogging(logSensors || logTilt);
-                    //asyncTaskHandler.post(liveHotSpot.handleJSON);
+                    asyncTaskHandler.post(liveHotSpot.handleJSON);
                 } else if (gestureType.equals("zoom")) {
                     liveHotSpot.setMessage(message);
                     liveHotSpot.setLogging(logSensors || logZoom);
-                    //asyncTaskHandler.post(liveHotSpot.handleJSON);
+                    asyncTaskHandler.post(liveHotSpot.handleJSON);
                 } else if (gestureType.equals("switchCode")) {
                     liveHotSpot.setMessage(message);
                     liveHotSpot.setLogging(logSensors);
-                    //asyncTaskHandler.post(liveHotSpot.handleJSON);
+                    asyncTaskHandler.post(liveHotSpot.handleJSON);
                 } else {
                     return;
                 }
