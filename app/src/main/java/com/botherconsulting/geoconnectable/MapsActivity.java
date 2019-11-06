@@ -35,6 +35,7 @@ import androidx.preference.PreferenceManager;
 import com.github.pengrad.mapscaleview.MapScaleView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -443,17 +444,21 @@ public class MapsActivity
         }
     }
 
-    public void checkMaxZoom(float newZoom) {
-        Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom) +
-                "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
-        WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
+    public void checkMaxZoom(float newZoom, CameraPosition newPos) {
+        //Log.w("zoom checking", Double.toString(Math.floor(newZoom)) +" > " + Float.toString(mMap.getCameraPosition().zoom) +
+        //        "\n reported minZoom: " + mMap.getMinZoomLevel() + " max: " + mMap.getMaxZoomLevel());
         //String mzsURL = "http://192.168.1.64/mzs.html?"+
         String mzsURL = "file:///android_asset/www/mzs.html?"+
-                mMap.getCameraPosition().target.latitude +
+                newPos.target.latitude +
                 "," +
-                mMap.getCameraPosition().target.longitude;
+                newPos.target.longitude;
         //Log.w("mzs", mzsURL);
-        maxZoomWebView.loadUrl(mzsURL);
+        runOnUiThread(new Runnable() {
+            public void run() {
+                WebView maxZoomWebView = (WebView) findViewById(R.id.maxZoomPortal);
+                maxZoomWebView.loadUrl(mzsURL);
+            }
+        });
     }
     enum Sections  {
         START,
@@ -545,7 +550,8 @@ public class MapsActivity
             boolean doAnimate = false;
             long lastZoomTime = 0;
             long lastPanTime = 0;
-
+            boolean retriggered = false;
+            //Log.d("animateBytable", "starting");
             if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
                 zoomer.setZoomBounds(minZoomLevel, Math.min(19.0, maxZoom));
 
@@ -562,7 +568,7 @@ public class MapsActivity
                     if (maxZoomCache[latIndex][lonIndex] > 0) {
                         zoomer.setZoomBounds(zoomer.minZoom, maxZoomCache[latIndex][lonIndex]);
                     } else if (Math.floor(newZoom) > cameraPosition.zoom) {
-                        checkMaxZoom(newZoom);
+                        checkMaxZoom(newZoom, cameraPosition);
                     }
                     //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
                     doAnimate = true;
@@ -587,6 +593,7 @@ public class MapsActivity
                         hotSpotActive = false;
                         liveHotSpot = null;
                     }
+                    retriggered=true;
                     animationHandler.post(animateByTable);
                     profile(Sections.ANIMATEHOTSPOT, Profilestates.FINISH);
 
@@ -610,26 +617,43 @@ public class MapsActivity
                     profile(Sections.SETUPMAPMOVE, Profilestates.FINISH);
                     profile(Sections.TESTHOTSPOTS, Profilestates.START);
                     for (int hs = 0; hs < hotspots.size(); hs++) {
+                        final int hotspotnum = hs;
                         if (hotBounds.contains(hotspots.get(hs).getPosition())) {
+                            if (newZoom > 7.0) {
+                                runOnUiThread(new Runnable() {
+                                    public void run() {
+                                        hotspots.get(hotspotnum).marker.showInfoWindow();
+                                    }
+                                });
+                            }
                             if (newZoom > hotspots.get(hs).hotSpotZoomTriggerRange[0] &&
                                     newZoom < hotspots.get(hs).hotSpotZoomTriggerRange[1]) {
                                 hotSpotActive = true;
                                 liveHotSpot = hotspots.get(hs);
+                                ImageHotspot.activate(liveHotSpot);
                                 View mapView = (View) findViewById(R.id.map);
                                 //mapView.setVisibility(View.INVISIBLE);
                                 Log.w("hotspot loading ", "number " + hs);
                                 liveHotSpot.setImageByLanguage(hotspotLanguage);
                                 liveHotSpot.open();
+                                retriggered=true;
                                 animationHandler.post(animateByTable);
                                 break;
                             }
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                public void run() {
+                                    hotspots.get(hotspotnum).marker.hideInfoWindow();
+                                }
+                            });
                         }
                     }
                 }
                 profile(Sections.TESTHOTSPOTS, Profilestates.FINISH);
                 //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
                 if (doAnimate) {
-                /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                    //Log.d("animatebytable ", "in doanimate");
+   /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 double currLeft = visibleRegion.farLeft.longitude;
                 double currRight = visibleRegion.farRight.longitude;
                 double currTop = visibleRegion.farLeft.latitude;
@@ -651,8 +675,13 @@ public class MapsActivity
                     //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
                     if (readyToAnimate) {
                         readyToAnimate = false;
+                        //Log.d("animatebytable on ui thread", "launching on ui thread camera move");
                         runOnUiThread(new Runnable() {
                             public void run() {
+                                //Log.d("animatebytable on ui thread", "firing camera move " + mMap.getMinZoomLevel());
+                                // TODO: track down why minzoomlevel gets set to 4 and the how to switch to lite mode
+
+
                                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                                     @Override
                                     public void onFinish() {
@@ -666,6 +695,7 @@ public class MapsActivity
                                         readyToAnimate = true;
                                         if (!idling) {
                                             //Log.i("animateByTable", "now");
+                                            //retriggered=true;
                                             animationHandler.post(animateByTable);
                                         }
                                         profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
@@ -679,16 +709,23 @@ public class MapsActivity
                                 });
                             }
                         });
+                    } else {
+                        Log.d("animatebytable", "wasnt ready to animate");
+
                     }
                     if (idling) emergeFromIdle();
                     lastInteractionTime = uptimeMillis();
                     blockEndTime = System.nanoTime();
                     profile(Sections.ANIMATEMAP, Profilestates.FINISH);
+                } else {
+                   // Log.d("animatebytable", "not ready for doanimate");
+                    animationHandler.postDelayed(animateByTable, nullAnimationClockTick);
+
                 }
             }
             else {
                 //Log.i("animateByTable", "in the future");
-                animationHandler.postAtTime(animateByTable, uptimeMillis() + nullAnimationClockTick);
+                animationHandler.postDelayed(animateByTable, nullAnimationClockTick);
 
             }
 
@@ -722,6 +759,9 @@ public class MapsActivity
     protected void doIdle() {
         Log.i("Idle", "going into idle");
         idling = true;
+        if (hotSpotActive) {
+            closeTheHotSpot();
+        }
         if (mMap != null) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(idleHome, (float) (zoomer.idleZoom)), animateToHomeMS, null);
             readyToAnimate = true;
@@ -778,7 +818,7 @@ public class MapsActivity
                 Double longitude = jArray.getJSONObject(i).getDouble("longitude"); // code of the country
                 Double maxZoom = jArray.getJSONObject(i).getDouble("maxZoom"); // code of the country
                 Double minZoom = jArray.getJSONObject(i).getDouble("minZoom"); // code of the country
-                hotspots.add(i, new ImageHotspot(mMap, hotSpotImageView, this.getApplicationContext()));
+                hotspots.add(i, new ImageHotspot(mMap, hotSpotImageView, this.getApplicationContext(), MapsActivity.this));
                 //hotspots.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
                 hotspots.get(i).setIcon(BitmapDescriptorFactory.fromAsset("www/GlobalMagic/globe32x32.png"));
                 hotspots.get(i).setPosition(new LatLng(latitude,longitude));
@@ -842,6 +882,8 @@ public class MapsActivity
         if (mMap != null) {
             if (useHybridMap) {
                 mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                mMap.setMinZoomPreference(0.0f);
+                mMap.setMaxZoomPreference(22.0f);
             } else {
                 mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
             }
