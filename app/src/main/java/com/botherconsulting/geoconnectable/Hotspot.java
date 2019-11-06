@@ -48,6 +48,8 @@ public class Hotspot {
     private long sumZoomElapsedTimes = 0;
     private long sumZoomSquaredElapsedTimes = 0;
     private int lastZoomMessageID = 0;
+    private String title;
+    private BitmapDescriptor icon;
 
     // public stuff
     public boolean newData = false;
@@ -77,6 +79,8 @@ public class Hotspot {
         this.enabled = false;
         this.set = "default";
         this.marker = null;
+        this.title="location0";
+
         this.mMap = map;
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
@@ -87,11 +91,12 @@ public class Hotspot {
     }
 
     public void setIcon(BitmapDescriptor icon) {
+         this.icon = icon;
         if (this.marker == null) {
             this.marker = this.mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(0.0, 0.0))
                     .title("some pithy name")
-                    .snippet("Even pithier label"));
+                    .snippet(""));
         }
         this.marker.setIcon(icon);
         this.position = this.marker.getPosition();
@@ -106,11 +111,12 @@ public class Hotspot {
     }
 
     public void setTitle(String title) {
-        this.marker.setTitle(title);
+       this.title = title;
+       this.marker.setTitle(title);
     }
 
     public String getTitle() {
-        return (this.marker.getTitle());
+        return (this.title);
     }
 
     public void setSnippet(String snippet) {
