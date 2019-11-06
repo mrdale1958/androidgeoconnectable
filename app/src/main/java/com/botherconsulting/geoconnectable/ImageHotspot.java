@@ -3,6 +3,7 @@ package com.botherconsulting.geoconnectable;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.drawable.Drawable;
@@ -112,6 +113,7 @@ public class ImageHotspot extends Hotspot {
     private ArrayList<String> audioList;
     private static Uri lastLanguage = null;
     private Handler asyncTaskHandler;
+    private MapsActivity mapsActivity;
 
     public enum Languages {
         ENGLISH,
@@ -143,7 +145,7 @@ public class ImageHotspot extends Hotspot {
     }
 
 
-    public ImageHotspot(GoogleMap map, ImageView imageView, Context context) {
+    public ImageHotspot(GoogleMap map, ImageView imageView, Context context, MapsActivity mapsActivity) {
         super(map);
         state = States.CLOSED;
         this.displaySurface = imageView;
@@ -157,6 +159,7 @@ public class ImageHotspot extends Hotspot {
         this.minSpin = -20;
         this.maxSpin = 2000;
         this.asyncTaskHandler = new Handler();
+        this.mapsActivity = mapsActivity;
 
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
@@ -236,12 +239,17 @@ public class ImageHotspot extends Hotspot {
 
                 TransitionDrawable crossfader = new TransitionDrawable(backgrounds);
 
-                this.displaySurface.setImageDrawable(crossfader);
-                crossfader.setCrossFadeEnabled(true);
+                mapsActivity.runOnUiThread(new Runnable() {
+                    public void run() {
+                        displaySurface.setImageDrawable(crossfader);
+                        crossfader.setCrossFadeEnabled(true);
 
-                crossfader.startTransition(300);
+                        crossfader.startTransition(300);
+                    }
+                });
             } else {
-                this.displaySurface.setImageDrawable(d);
+                mapsActivity.runOnUiThread(new Runnable() {
+                    public void run() {displaySurface.setImageDrawable(d);}});
 
             }
         }
@@ -300,6 +308,7 @@ public class ImageHotspot extends Hotspot {
                         displaySurface.setScaleY(newScale);
                         if (newScale <= 0.0f) {
                             state = States.CLOSED;
+                            ImageHotspot.deactivate();
                             /*displaySurface.setScaleX(0.0f);
                             displaySurface.setScaleY(0.0f);
                             displaySurface.setImageDrawable(null);*/
@@ -371,7 +380,7 @@ public class ImageHotspot extends Hotspot {
     }
 
     public void manageState() {
-        switch (state) {
+       /* switch (state) {
             case CLOSED:
                 break;
             case OPEN:
@@ -385,7 +394,7 @@ public class ImageHotspot extends Hotspot {
                 state = States.CLOSED;
                 break;
 
-        }
+        } */
     }
     private JSONObject message;
     private boolean doLog;

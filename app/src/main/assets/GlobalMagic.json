@@ -24,8 +24,8 @@
     "title": "04.DanceMaskRamuRiver",
     "latitude": -5.0292364,
     "longitude": 145.3626731,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "05.Dibeki",
@@ -52,8 +52,8 @@
     "title": "08.EharoMask",
     "latitude": -7.269182,
     "longitude": 145.137583,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "09.EpaHelmetMask",
@@ -73,15 +73,15 @@
     "title": "11.FemaleSuspensionHook",
     "latitude": -6.314993,
     "longitude": 143.95555,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "12.FluteMask",
     "latitude": -4.9849733,
     "longitude": 145.1375834,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "13.FuneraryBoat",
@@ -94,8 +94,8 @@
     "title": "14.Gope",
     "latitude": -7.7769444,
     "longitude": 144.2197222,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "15.HeadOfAPrincess",
@@ -115,8 +115,8 @@
     "title": "18.HousePanel",
     "latitude": -7.7769444,
     "longitude": 144.2197222,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "19.IbejiTwins",
@@ -136,22 +136,22 @@
     "title": "21.KamanaBowl",
     "latitude": -4.08525,
     "longitude": 142.790054,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "22.CanoeProw",
     "latitude": -4.08525,
     "longitude": 142.790054,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "23.KinaShellNecklaces",
     "latitude": -6.664994,
     "longitude": 142.81551,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "24.LimeContainer.Stopper",
@@ -331,7 +331,7 @@
   {
     "title": "51.GlobalMuseum",
     "latitude": 33.1135,
-    "longitude": -96.7129,
+    "longitude": 96.7129,
     "minZoom": 17.0,
     "maxZoom": 19.0
   }
