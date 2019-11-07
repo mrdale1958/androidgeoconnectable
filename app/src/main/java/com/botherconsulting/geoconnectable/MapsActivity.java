@@ -616,21 +616,24 @@ public class MapsActivity
                     currScreenHeight = Math.abs(currTop - currBottom);
                     if (currScreenHeight > 180) currScreenHeight -= 180;
                     LatLngBounds hotBounds = new LatLngBounds(
+                            // southwest
                             new LatLng(newPos.latitude - targetWidth * currScreenHeight,
-                                    newPos.longitude + targetWidth * currScreenWidth),
+                                    newPos.longitude - targetWidth * currScreenWidth),
+                            // northeast
                             new LatLng(newPos.latitude + targetWidth * currScreenHeight,
-                                    newPos.longitude - targetWidth * currScreenWidth));
+                                    newPos.longitude + targetWidth * currScreenWidth));
                     Boolean hotspotFound = false;
                     profile(Sections.SETUPMAPMOVE, Profilestates.FINISH);
                     profile(Sections.TESTHOTSPOTS, Profilestates.START);
                     for (int hs = 0; hs < hotspots.size(); hs++) {
                         final int hotspotnum = hs;
                         if (hotBounds.contains(hotspots.get(hs).getPosition())) {
-                            if (newZoom > hotspots.get(hs).hotSpotZoomTriggerRange[0] -2) {
-                                Log.d("targeting", "distance " + SphericalUtil.computeDistanceBetween(newPos, hotspots.get(hs).getPosition()));
+                             if (newZoom > hotspots.get(hs).hotSpotZoomTriggerRange[0] -2) {
+                                //Log.d("targeting", "distance " + SphericalUtil.computeDistanceBetween(newPos, hotspots.get(hs).getPosition()));
                                 runOnUiThread(new Runnable() {
                                     public void run() {
                                         hotspots.get(hotspotnum).marker.showInfoWindow();
+                                        hotspots.get(hotspotnum).select();
                                     }
                                 });
                             }
@@ -653,6 +656,7 @@ public class MapsActivity
                             runOnUiThread(new Runnable() {
                                 public void run() {
                                     hotspots.get(hotspotnum).marker.hideInfoWindow();
+                                    hotspots.get(hotspotnum).deselect();
                                 }
                             });
                         }
@@ -713,14 +717,16 @@ public class MapsActivity
 
                                         }
                                         List<LatLng> targetPoints = new ArrayList<LatLng>();
+                                        double targetScreenWidth = currScreenWidth;
+                                        if (targetScreenWidth > 180) targetScreenWidth -= 180;
                                         targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude - targetWidth * currScreenWidth));
+                                                        cameraPosition.target.longitude - targetWidth * targetScreenWidth));
                                         targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude - targetWidth * currScreenWidth));
+                                                        cameraPosition.target.longitude - targetWidth * targetScreenWidth));
                                         targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude + targetWidth * currScreenWidth));
+                                                        cameraPosition.target.longitude + targetWidth * targetScreenWidth));
                                         targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude + targetWidth * currScreenWidth));
+                                                        cameraPosition.target.longitude + targetWidth * targetScreenWidth));
                                         targetRectangle.setPoints(targetPoints);
                                         readyToAnimate = true;
                                         if (!idling) {

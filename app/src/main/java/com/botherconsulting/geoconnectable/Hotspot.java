@@ -106,11 +106,11 @@ public class Hotspot {
     }
 
     public void select() {
-        this.setIcon(this.selectedIcon);
+        this.marker.setIcon(this.selectedIcon);
     }
 
     public void deselect() {
-        this.setIcon(this.icon);
+        this.marker.setIcon(this.icon);
     }
 
     public void setURL(String url) {
