@@ -157,15 +157,15 @@
     "title": "24.LimeContainer.Stopper",
     "latitude": -6.314993,
     "longitude": 143.955551,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "25.LimeSpatulaWood",
     "latitude": -6.314993,
     "longitude": 143.955551,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "27.Linen",
@@ -185,15 +185,15 @@
     "title": "29.MaleSuspensionHook",
     "latitude": -6.314993,
     "longitude": 143.95555,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "30.NecklaceBoarsTusk",
     "latitude": -6.314993,
     "longitude": 143.955551,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "31.NloBieriAfricanReliquary",
@@ -234,15 +234,15 @@
     "title": "37.Storyboard",
     "latitude": -4.2847039,
     "longitude": 144.134094,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "38.TapaCloth",
     "latitude": -6.082094,
     "longitude": 144.623664,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "39.TerracottaPot",
@@ -269,15 +269,15 @@
     "title": "42.WuramonSpiritBoat",
     "latitude": -3.771697,
     "longitude": 142.822225,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "43.YamMask",
     "latitude": -6.314993,
     "longitude": 143.95555,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "44.KarajaBeakNecklace",
@@ -318,15 +318,15 @@
     "title": "49.Ocarinas",
     "latitude": -6.050984,
     "longitude": 144.258631,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "50.Flute",
     "latitude": -5.681607,
     "longitude": 144.248908,
-    "minZoom": 13.0,
-    "maxZoom": 19.0
+    "minZoom": 9.0,
+    "maxZoom": 12.0
   },
   {
     "title": "51.GlobalMuseum",

@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -50,6 +51,7 @@ public class Hotspot {
     private int lastZoomMessageID = 0;
     private String title;
     private BitmapDescriptor icon;
+    private BitmapDescriptor selectedIcon;
 
     // public stuff
     public boolean newData = false;
@@ -80,7 +82,7 @@ public class Hotspot {
         this.set = "default";
         this.marker = null;
         this.title="location0";
-
+        this.selectedIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
         this.mMap = map;
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))
@@ -91,15 +93,24 @@ public class Hotspot {
     }
 
     public void setIcon(BitmapDescriptor icon) {
-         this.icon = icon;
+        this.icon = icon;
         if (this.marker == null) {
             this.marker = this.mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(0.0, 0.0))
                     .title("some pithy name")
-                    .snippet(""));
+                    .snippet("")
+            .anchor(0.5f,0.5f));
         }
         this.marker.setIcon(icon);
         this.position = this.marker.getPosition();
+    }
+
+    public void select() {
+        this.setIcon(this.selectedIcon);
+    }
+
+    public void deselect() {
+        this.setIcon(this.icon);
     }
 
     public void setURL(String url) {
