@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
@@ -41,10 +42,14 @@ import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.maps.android.SphericalUtil;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -65,6 +70,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import static android.os.SystemClock.uptimeMillis;
@@ -102,7 +108,7 @@ public class MapsActivity
         }
     };
 
-    private ZoomLens zoomer = new ZoomLens(0,0,19,0,0);
+    private ZoomLens zoomer = new ZoomLens(0,0,19,4,0);
 
     private TablePanner panner = new TablePanner(zoomer.maxZoom, zoomer.minZoom);
 
@@ -114,7 +120,7 @@ public class MapsActivity
     private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
     private String targetColor = "#ff0000"; // in settings
-    private double targetWidth = 0.03; // portion of visible map  // in settings
+    private double targetWidth = 0.1; // portion of visible map  // in settings
     private boolean targetVisible = false; // in settings
     private int horizontalBump = 0; // in settings
     //var targetRectangle;
@@ -130,7 +136,7 @@ public class MapsActivity
     private int idleTimeScaler = 1000; // 1000 lets idleTime be in seconds
     private boolean idling = false;
     private int nullAnimationClockTick = 100;
-    private int minZoomLevel = 1; // needs to be in settings
+    private int minZoomLevel = 4; // needs to be in settings
     private int animateToHomeMS = 10000; // needs to be in settings
     private double maxPanPercent = 0.01; // needs to be in settings
     private int settings_button_offset_x =  0;
@@ -140,6 +146,7 @@ public class MapsActivity
     private double currScreenWidth;
     private double currScreenHeight;
     private boolean readyToAnimate = true;
+    private Polygon targetRectangle;
 
     String idleTitle = "SFSU"; // needs to be in settings
 
@@ -403,12 +410,12 @@ public class MapsActivity
         /** Show a toast from the web page */
         @JavascriptInterface
         public void adjustMaxZoom(String response) {
-            Log.w("adjustMaxZoom", response);
+            Log.i("adjustMaxZoom", response);
             JSONObject message;
             try {
                 message = new JSONObject(response);
             } catch (org.json.JSONException e) {
-                Log.i("odd JSON",response);
+                Log.w("odd JSON",response);
                 return;
             }
 
@@ -423,7 +430,7 @@ public class MapsActivity
                 maxZoomCache[latIndex][lonIndex] = Math.min(19,zoom-1);
 
             }catch (org.json.JSONException e) {
-                Log.i("odd JSON",response);
+                Log.w("odd JSON",response);
             }
         }
 
@@ -605,7 +612,7 @@ public class MapsActivity
                     double currTop = visibleRegion.farLeft.latitude;
                     double currBottom = visibleRegion.nearRight.latitude;
                     currScreenWidth = Math.abs(currLeft - currRight);
-                    if (currScreenWidth > 180) currScreenWidth -= 180;
+                    //if (currScreenWidth > 180) currScreenWidth -= 180;
                     currScreenHeight = Math.abs(currTop - currBottom);
                     if (currScreenHeight > 180) currScreenHeight -= 180;
                     LatLngBounds hotBounds = new LatLngBounds(
@@ -619,7 +626,8 @@ public class MapsActivity
                     for (int hs = 0; hs < hotspots.size(); hs++) {
                         final int hotspotnum = hs;
                         if (hotBounds.contains(hotspots.get(hs).getPosition())) {
-                            if (newZoom > 7.0) {
+                            if (newZoom > hotspots.get(hs).hotSpotZoomTriggerRange[0] -2) {
+                                Log.d("targeting", "distance " + SphericalUtil.computeDistanceBetween(newPos, hotspots.get(hs).getPosition()));
                                 runOnUiThread(new Runnable() {
                                     public void run() {
                                         hotspots.get(hotspotnum).marker.showInfoWindow();
@@ -630,13 +638,14 @@ public class MapsActivity
                                     newZoom < hotspots.get(hs).hotSpotZoomTriggerRange[1]) {
                                 hotSpotActive = true;
                                 liveHotSpot = hotspots.get(hs);
-                                ImageHotspot.activate(liveHotSpot);
-                                View mapView = (View) findViewById(R.id.map);
-                                //mapView.setVisibility(View.INVISIBLE);
-                                Log.w("hotspot loading ", "number " + hs);
-                                liveHotSpot.setImageByLanguage(hotspotLanguage);
-                                liveHotSpot.open();
-                                retriggered=true;
+                                if (ImageHotspot.activate(liveHotSpot)) {
+                                    View mapView = (View) findViewById(R.id.map);
+                                    //mapView.setVisibility(View.INVISIBLE);
+                                    Log.i("hotspot loading ", "number " + hs);
+                                    liveHotSpot.setImageByLanguage(hotspotLanguage);
+                                    liveHotSpot.open();
+                                    retriggered = true;
+                                }
                                 animationHandler.post(animateByTable);
                                 break;
                             }
@@ -692,6 +701,27 @@ public class MapsActivity
                                         lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
                                         TextView layerDisplay = findViewById(R.id.currentLayer);
                                         layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
+                                        if ( targetRectangle == null) {
+                                            PolygonOptions currentTarget = new PolygonOptions()
+                                                    .add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
+                                                            cameraPosition.target.longitude - targetWidth * currScreenWidth))
+                                                    .strokeWidth(2f)
+                                                    .strokeColor(Color.LTGRAY)
+                                                    .strokeJointType(JointType.ROUND);
+
+                                            targetRectangle = mMap.addPolygon(currentTarget);
+
+                                        }
+                                        List<LatLng> targetPoints = new ArrayList<LatLng>();
+                                        targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
+                                                        cameraPosition.target.longitude - targetWidth * currScreenWidth));
+                                        targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
+                                                        cameraPosition.target.longitude - targetWidth * currScreenWidth));
+                                        targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
+                                                        cameraPosition.target.longitude + targetWidth * currScreenWidth));
+                                        targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
+                                                        cameraPosition.target.longitude + targetWidth * currScreenWidth));
+                                        targetRectangle.setPoints(targetPoints);
                                         readyToAnimate = true;
                                         if (!idling) {
                                             //Log.i("animateByTable", "now");
@@ -1098,7 +1128,7 @@ public class MapsActivity
                 @Override
                 public void onError(Exception e) {
 
-                    Log.i("Websocket", "Error " + e.getMessage());
+                    Log.e("Websocket", "Error " + e.getMessage());
                     publishProgress("Connection Error", e.getMessage());
 
                 }
@@ -1199,7 +1229,7 @@ public class MapsActivity
                 } else {
                     return;
                 }
-                liveHotSpot.handleJSON.run();
+                // liveHotSpot.handleJSON.run();
 
             }
 

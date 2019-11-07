@@ -125,6 +125,7 @@ public class ImageHotspot extends Hotspot {
 
     static Languages language = Languages.ENGLISH;
     static ImageHotspot activeHotSpot;
+    static ImageHotspot lastHotSpot;
 
     static final void setLanguage(Languages _language) {
         ImageHotspot.language = _language;
@@ -134,12 +135,16 @@ public class ImageHotspot extends Hotspot {
     }
 
 
-    static final void activate(ImageHotspot hs) {
-        ImageHotspot.activeHotSpot = hs;
-
+    static final boolean activate(ImageHotspot hs) {
+        if (ImageHotspot.lastHotSpot != hs) {
+            ImageHotspot.activeHotSpot = hs;
+            return true;
+        }
+        return false;
     }
     static final void deactivate() {
         //TODO: does this need to close() current hotspot?
+        ImageHotspot.lastHotSpot = ImageHotspot.activeHotSpot;
         ImageHotspot.activeHotSpot = null;
 
     }
@@ -481,7 +486,7 @@ public class ImageHotspot extends Hotspot {
                     //    Log.w("reading zoom data","got" + Integer.toString(messageID) + " after" + Integer.toString(lastMessageID));
      //               lastZoomMessageID = messageID;
                 } catch (org.json.JSONException e) {
-                    Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString());
+                    Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString() + " for type " + gestureType);
                     return ;
                 }
                 currentSpinPosition += deltaZ;
