@@ -403,9 +403,10 @@ public class ImageHotspot extends Hotspot {
     }
     private JSONObject message;
     private boolean doLog;
+    private boolean running = false;
 
     public void setMessage(JSONObject _message) {
-        this.message = _message;
+        if (! running) this.message = _message;
     }
 
     public void setMap(GoogleMap _mMap) {
@@ -420,7 +421,10 @@ public class ImageHotspot extends Hotspot {
 
 
         public void run() {
-
+            if (! running)
+                running = true;
+            else
+                return;
 
         //public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
             String gestureType;
@@ -429,6 +433,7 @@ public class ImageHotspot extends Hotspot {
                 //Log.i("incoming message",message.toString());
             } catch (org.json.JSONException e) {
                 Log.i("GCT HS: no gesture msg", message.toString());
+                running = false;
                 return ;
             }
             double deltaX = 0.0;
@@ -442,32 +447,36 @@ public class ImageHotspot extends Hotspot {
                     switchObj = message.getJSONObject("vector");
                 } catch (org.json.JSONException e) {
                     Log.e("GCT HS error: switch msg", "no switch " + message.toString());
+                    running = false;
                     return ;
                 }
                 try {
                     keyCode = switchObj.getString("code");
                 } catch (org.json.JSONException e) {
                     Log.e("GCT HS error: switch msg", "invalid switch " + switchObj.toString());
+                    running = false;
                     return ;
                 }
 
                 switch (keyCode) {
                     case "e":
                         ImageHotspot.setLanguage(ImageHotspot.Languages.ENGLISH);
-                        return ;
+                        break;
                     case "s":
                         ImageHotspot.setLanguage(ImageHotspot.Languages.SPANISH);
-                        return ;
+                        break ;
                     case "k":
                         ImageHotspot.setLanguage(ImageHotspot.Languages.KOREAN);
-                        return ;
+                        break ;
                     case "j":
                         ImageHotspot.setLanguage(ImageHotspot.Languages.JAPANESE);
-                        return ;
+                        break ;
                     case "c":
                         ImageHotspot.setLanguage(ImageHotspot.Languages.CHINESE);
-                        return ;
+                        break ;
                 }
+                running = false;
+                return ;
             } else if (gestureType.equals("zoom")) {
 
                 deltaZ = 0;
@@ -476,6 +485,7 @@ public class ImageHotspot extends Hotspot {
                     vector = message.getJSONObject("vector");
                 } catch (org.json.JSONException e) {
                     Log.e("GCT HS error: zoom msg", "no vector " + message.toString());
+                    running = false;
                     return ;
                 }
                 try {
@@ -487,6 +497,7 @@ public class ImageHotspot extends Hotspot {
      //               lastZoomMessageID = messageID;
                 } catch (org.json.JSONException e) {
                     Log.e("GCT HS error: zoom msg", "invalid vector " + vector.toString() + " for type " + gestureType);
+                    running = false;
                     return ;
                 }
                 currentSpinPosition += deltaZ;
@@ -495,6 +506,7 @@ public class ImageHotspot extends Hotspot {
                         ImageHotspot.activeHotSpot.close();
                 }
             }
+            running = false;
         }
     };
 
