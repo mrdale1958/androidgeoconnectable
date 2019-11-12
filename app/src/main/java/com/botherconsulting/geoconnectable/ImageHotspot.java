@@ -330,6 +330,7 @@ public class ImageHotspot extends Hotspot {
 
     public void playAudio(){
         //try {
+        if (state != States.OPEN) return;
         if (ImageHotspot.mediaPlayer != null) // && ImageHotspot.mediaPlayer.isPlaying())
             stopAudio();
         if (ImageHotspot.mediaPlayer == null)
@@ -421,11 +422,11 @@ public class ImageHotspot extends Hotspot {
 
 
         public void run() {
+            if (state != States.OPEN) return;
             if (! running)
                 running = true;
             else
                 return;
-
         //public Boolean handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
             String gestureType;
             try {
