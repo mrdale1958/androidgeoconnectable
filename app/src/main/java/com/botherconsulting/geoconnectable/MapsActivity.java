@@ -653,6 +653,7 @@ public class MapsActivity
                     if (liveHotSpot.isClosed()) {
                         hotSpotActive = false;
                         liveHotSpot = null;
+                        doAnimate = true;
                     }
                     // retriggered=true;
                     // animationHandler.post(animateByTable);
