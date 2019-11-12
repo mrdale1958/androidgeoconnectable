@@ -148,6 +148,10 @@ public class MapsActivity
     private boolean readyToAnimate = true;
     private Polygon targetRectangle;
 
+    long lastZoomTime = 0;
+    long lastPanTime = 0;
+
+
     String idleTitle = "SFSU"; // needs to be in settings
 
     String sensorServerAddress = "10.240.100.239";  // in settings
@@ -547,16 +551,66 @@ public class MapsActivity
 
         }
 
+        public void animateMap() {
+            int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
+                @Override
+                public void onFinish() {
+                    //profile(Sections.POSTANIMATEMAP, Profilestates.START);
+                    TextView latDisplay = findViewById(R.id.currentLatitude);
+                    latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
+                    TextView lonDisplay = findViewById(R.id.currentLongitude);
+                    lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
+                    TextView layerDisplay = findViewById(R.id.currentLayer);
+                    layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
+                    if ( targetRectangle == null) {
+                        PolygonOptions currentTarget = new PolygonOptions()
+                                .add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
+                                        cameraPosition.target.longitude - targetWidth * currScreenWidth))
+                                .strokeWidth(2f)
+                                .strokeColor(Color.LTGRAY)
+                                .strokeJointType(JointType.ROUND);
+
+                        targetRectangle = mMap.addPolygon(currentTarget);
+
+                    }
+                    List<LatLng> targetPoints = new ArrayList<LatLng>();
+                    double targetScreenWidth = currScreenWidth;
+                    if (targetScreenWidth > 180) targetScreenWidth -= 180;
+                    targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
+                            cameraPosition.target.longitude - targetWidth * targetScreenWidth));
+                    targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
+                            cameraPosition.target.longitude - targetWidth * targetScreenWidth));
+                    targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
+                            cameraPosition.target.longitude + targetWidth * targetScreenWidth));
+                    targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
+                            cameraPosition.target.longitude + targetWidth * targetScreenWidth));
+                    targetRectangle.setPoints(targetPoints);
+                    readyToAnimate = true;
+                    if (!idling) {
+                        //Log.i("animateByTable", "now");
+                        //retriggered=true;
+                        animationHandler.post(animateByTable);
+                    }
+                    //profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
+                }
+
+                @Override
+                public void onCancel() {
+                    readyToAnimate = true;
+                    Log.w("animateByTable", "hmm animation got canceled");
+                }
+            });
+        }
+
         public void run() {
             // TODO: label this 19. Does it set a maximum zoom level for the app
             long blockStartTime, blockEndTime, startTime = System.nanoTime();
             long elapsedTime = startTime - lastRuntime;
             lastRuntime = startTime;
             getUIObjects();
-            profile(Sections.START, Profilestates.START);
+            //profile(Sections.START, Profilestates.START);
             boolean doAnimate = false;
-            long lastZoomTime = 0;
-            long lastPanTime = 0;
             boolean retriggered = false;
             //Log.d("animateBytable", "starting");
             if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
@@ -564,9 +618,9 @@ public class MapsActivity
 
                  newZoom = cameraPosition.zoom;
                  newPos = cameraPosition.target;
-                profile(Sections.START, Profilestates.FINISH);
+                //profile(Sections.START, Profilestates.FINISH);
                 if (zoomer.newData) {
-                    profile(Sections.ZOOMNEWDATA, Profilestates.START);
+                    //profile(Sections.ZOOMNEWDATA, Profilestates.START);
                     Object[] zoomData = zoomer.getCurrentZoom();
                     newZoom = (float) zoomData[ZOOM];
                     lastZoomTime = (long) zoomData[GESTURE_TIME];
@@ -579,17 +633,17 @@ public class MapsActivity
                     }
                     //if (Math.floor(newZoom) != Math.floor(mMap.getCameraPosition().zoom)) Log.i("new zoom layer", Float.toString(newZoom));
                     doAnimate = true;
-                    profile(Sections.ZOOMNEWDATA, Profilestates.FINISH);
+                    //profile(Sections.ZOOMNEWDATA, Profilestates.FINISH);
 
                 }
                 if (panner.newData) {
-                    profile(Sections.PANNEWDATA, Profilestates.START);
+                    //profile(Sections.PANNEWDATA, Profilestates.START);
                     Object[] pannerData = panner.getCurrentPosition();
                     newPos = (LatLng) pannerData[PAN];
                     lastPanTime = (long) pannerData[GESTURE_TIME];
                     //Log.i("new position", newPos.toString());
                     doAnimate = true;
-                    profile(Sections.PANNEWDATA, Profilestates.FINISH);
+                    //profile(Sections.PANNEWDATA, Profilestates.FINISH);
 
                 }
                 if (hotSpotActive) {
@@ -600,12 +654,12 @@ public class MapsActivity
                         hotSpotActive = false;
                         liveHotSpot = null;
                     }
-                    retriggered=true;
-                    animationHandler.post(animateByTable);
-                    profile(Sections.ANIMATEHOTSPOT, Profilestates.FINISH);
+                    // retriggered=true;
+                    // animationHandler.post(animateByTable);
+                    //profile(Sections.ANIMATEHOTSPOT, Profilestates.FINISH);
 
                 } else {
-                    profile(Sections.SETUPMAPMOVE, Profilestates.START);
+                    //profile(Sections.SETUPMAPMOVE, Profilestates.START);
                     VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
                     double currLeft = visibleRegion.farLeft.longitude;
                     double currRight = visibleRegion.farRight.longitude;
@@ -623,8 +677,8 @@ public class MapsActivity
                             new LatLng(newPos.latitude + targetWidth * currScreenHeight,
                                     newPos.longitude + targetWidth * currScreenWidth));
                     Boolean hotspotFound = false;
-                    profile(Sections.SETUPMAPMOVE, Profilestates.FINISH);
-                    profile(Sections.TESTHOTSPOTS, Profilestates.START);
+                   // profile(Sections.SETUPMAPMOVE, Profilestates.FINISH);
+                    //profile(Sections.TESTHOTSPOTS, Profilestates.START);
                     for (int hs = 0; hs < hotspots.size(); hs++) {
                         final int hotspotnum = hs;
                         if (hotBounds.contains(hotspots.get(hs).getPosition())) {
@@ -662,29 +716,10 @@ public class MapsActivity
                         }
                     }
                 }
-                profile(Sections.TESTHOTSPOTS, Profilestates.FINISH);
+                //profile(Sections.TESTHOTSPOTS, Profilestates.FINISH);
                 //mMap.moveCamera(CameraUpdateFactory.zoomTo((float) (zoomer.currentZoom)));
                 if (doAnimate) {
-                    //Log.d("animatebytable ", "in doanimate");
-   /*VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
-                double currLeft = visibleRegion.farLeft.longitude;
-                double currRight = visibleRegion.farRight.longitude;
-                double currTop = visibleRegion.farLeft.latitude;
-                double currBottom = visibleRegion.nearRight.latitude;
-                currScreenWidth = Math.abs(currLeft - currRight);
-                if (currScreenWidth > 180) currScreenWidth -= 180;
-                currScreenHeight = Math.abs(currTop - currBottom);
-                if (currScreenHeight > 180) currScreenHeight -= 180;
-                LatLngBounds hotBounds = new LatLngBounds(
-                        new LatLng(newPos.latitude-targetWidth*currScreenHeight,
-                                newPos.longitude+targetWidth*currScreenWidth),
-                        new LatLng(newPos.latitude+targetWidth*currScreenHeight,
-                                newPos.longitude-targetWidth*currScreenWidth));
-                Boolean hotspotFound = false;
-                */
-
-                    profile(Sections.ANIMATEMAP, Profilestates.START);
-                    int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
+                      //profile(Sections.ANIMATEMAP, Profilestates.START);
                     //Log.i("animating camera", newPos.toString() + ',' + Float.toString(newZoom)  + " in " + Integer.toString(animateTime) + "ms");
                     if (readyToAnimate) {
                         readyToAnimate = false;
@@ -693,56 +728,8 @@ public class MapsActivity
                             public void run() {
                                 //Log.d("animatebytable on ui thread", "firing camera move " + mMap.getMinZoomLevel());
                                 // TODO: track down why minzoomlevel gets set to 4 and the how to switch to lite mode
+                                animateMap();
 
-
-                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
-                                    @Override
-                                    public void onFinish() {
-                                        profile(Sections.POSTANIMATEMAP, Profilestates.START);
-                                        TextView latDisplay = findViewById(R.id.currentLatitude);
-                                        latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
-                                        TextView lonDisplay = findViewById(R.id.currentLongitude);
-                                        lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
-                                        TextView layerDisplay = findViewById(R.id.currentLayer);
-                                        layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
-                                        if ( targetRectangle == null) {
-                                            PolygonOptions currentTarget = new PolygonOptions()
-                                                    .add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
-                                                            cameraPosition.target.longitude - targetWidth * currScreenWidth))
-                                                    .strokeWidth(2f)
-                                                    .strokeColor(Color.LTGRAY)
-                                                    .strokeJointType(JointType.ROUND);
-
-                                            targetRectangle = mMap.addPolygon(currentTarget);
-
-                                        }
-                                        List<LatLng> targetPoints = new ArrayList<LatLng>();
-                                        double targetScreenWidth = currScreenWidth;
-                                        if (targetScreenWidth > 180) targetScreenWidth -= 180;
-                                        targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude - targetWidth * targetScreenWidth));
-                                        targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude - targetWidth * targetScreenWidth));
-                                        targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude + targetWidth * targetScreenWidth));
-                                        targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
-                                                        cameraPosition.target.longitude + targetWidth * targetScreenWidth));
-                                        targetRectangle.setPoints(targetPoints);
-                                        readyToAnimate = true;
-                                        if (!idling) {
-                                            //Log.i("animateByTable", "now");
-                                            //retriggered=true;
-                                            animationHandler.post(animateByTable);
-                                        }
-                                        profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
-                                    }
-
-                                    @Override
-                                    public void onCancel() {
-                                        readyToAnimate = true;
-                                        Log.w("animateByTable", "hmm animation got canceled");
-                                    }
-                                });
                             }
                         });
                     } else {
@@ -752,7 +739,7 @@ public class MapsActivity
                     if (idling) emergeFromIdle();
                     lastInteractionTime = uptimeMillis();
                     blockEndTime = System.nanoTime();
-                    profile(Sections.ANIMATEMAP, Profilestates.FINISH);
+                    //profile(Sections.ANIMATEMAP, Profilestates.FINISH);
                 } else {
                    // Log.d("animatebytable", "not ready for doanimate");
                     animationHandler.postDelayed(animateByTable, nullAnimationClockTick);
