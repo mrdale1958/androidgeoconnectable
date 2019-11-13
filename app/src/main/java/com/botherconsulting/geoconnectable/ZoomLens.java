@@ -94,7 +94,7 @@ public class ZoomLens {
     public void setMessage(JSONObject _message) {
 
         if (messageinQueue) {
-            Log.e("zoomer message handler", "tossing message "+ _message);
+           // Log.e("zoomer message handler", "tossing message "+ _message);
             return;
         }
         this.message = _message;

@@ -138,11 +138,11 @@ public class TablePanner {
             //LatLngBounds curScreen = mMap.getProjection()
             //        .getVisibleRegion().latLngBounds;
             if (mMap == null || cameraPosition == null) {
-                Log.e("panner message handler", "mMap not ready " + message);
+                //Log.e("panner message handler", "mMap not ready " + message);
                 return;
             }
             if  (messageinQueue) {
-                        Log.e("panner message handler", "tossing message "+ message);
+                       // Log.e("panner message handler", "tossing message "+ message);
                 return;
             }
             messageinQueue = true;
@@ -191,6 +191,8 @@ public class TablePanner {
 
                 percentChangeInX = TiltScaleX * rawX *zoomFudge/maxZoom;
                 deltaX = screenWidthDegrees * percentChangeInX;*/
+
+                // TODO: scale by zoom level
                     percentChangeInY = Math.min(Math.max(TiltScaleY * rawY, -panMax), panMax);
                     deltaY = screenHeightDegrees * percentChangeInY;
 

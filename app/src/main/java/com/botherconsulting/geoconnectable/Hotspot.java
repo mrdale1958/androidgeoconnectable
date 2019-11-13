@@ -82,7 +82,8 @@ public class Hotspot {
         this.set = "default";
         this.marker = null;
         this.title="location0";
-        this.selectedIcon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
+        this.selectedIcon = BitmapDescriptorFactory.fromAsset("www/GlobalMagic/hilightglobe32x32.png");
+                //BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE);
         this.mMap = map;
 /*        this.marker = map.addMarker(new MarkerOptions()
                 .position(new LatLng(0.0,0.0))

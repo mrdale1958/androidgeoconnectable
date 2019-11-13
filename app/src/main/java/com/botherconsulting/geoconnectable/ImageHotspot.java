@@ -128,6 +128,7 @@ public class ImageHotspot extends Hotspot {
     static ImageHotspot lastHotSpot;
 
     static final void setLanguage(Languages _language) {
+        // TODO: start a timer to return to English how to get an idle signal unknown
         ImageHotspot.language = _language;
         if (ImageHotspot.activeHotSpot != null) {
             ImageHotspot.activeHotSpot.setImageByLanguage(ImageHotspot.language);
@@ -340,7 +341,7 @@ public class ImageHotspot extends Hotspot {
             ImageHotspot.mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp1) {
-                    android.os.Debug.waitForDebugger();
+                    //android.os.Debug.waitForDebugger();
                     ImageHotspot.mediaPlayer.setVolume(1f, 1f);
                     ImageHotspot.mediaPlayer.setLooping(false);
                     ImageHotspot.mediaPlayer.start();
@@ -352,6 +353,21 @@ public class ImageHotspot extends Hotspot {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
                     Log.d("audio complete", "media play over");
+                }
+            });
+            ImageHotspot.mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
+                    String errorMsg = "";
+                    if (what == MediaPlayer.MEDIA_ERROR_UNKNOWN) errorMsg.concat("Unknown");
+                    if (what == MediaPlayer.MEDIA_ERROR_SERVER_DIED) errorMsg.concat("Server died");
+                    if (extra == MediaPlayer.MEDIA_ERROR_IO) errorMsg.concat(" IO");
+                    if (extra == MediaPlayer.MEDIA_ERROR_UNSUPPORTED) errorMsg.concat(" unsupported format");
+                    if (extra == MediaPlayer.MEDIA_ERROR_MALFORMED) errorMsg.concat(" Malformed");
+                    if (extra == MediaPlayer.MEDIA_ERROR_TIMED_OUT) errorMsg.concat(" time out");
+
+                    Log.d("audio Error", "what " + what + " extra " + extra + " " + errorMsg);
+                    return true;
                 }
             });
 

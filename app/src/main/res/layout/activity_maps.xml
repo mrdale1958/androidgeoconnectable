@@ -90,6 +90,7 @@
         android:layout_gravity="top|left"
         android:layout_marginLeft="@dimen/fab_margin"
         app:fabSize="normal"
+        app:backgroundTint="@color/settingsbutton"
         app:rippleColor="@android:color/black" />
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/hotSpotEditor_fab"
@@ -98,6 +99,7 @@
         android:layout_gravity="top|right"
         android:layout_marginRight="@dimen/fab_margin"
         app:fabSize="normal"
+        app:backgroundTint="@color/settingsbutton"
         app:rippleColor="@android:color/black" />
     <!--app:srcCompat="@android:drawable/ic_menu_preferences" /> -->
     <!--app:srcCompat="@android:drawable/ic_menu_preferences" /> -->

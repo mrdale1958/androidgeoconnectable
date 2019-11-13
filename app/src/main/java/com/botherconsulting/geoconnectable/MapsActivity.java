@@ -338,7 +338,7 @@ public class MapsActivity
         });
         settings_floatingActionButton.setBackgroundColor(0x0);
         settings_floatingActionButton.setRippleColor(0x0);
-        settings_floatingActionButton.setBackground(null);
+        //settings_floatingActionButton.setBackground(null);
         settings_floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
 
         final Intent hotspotsIntent = new Intent(this, SettingsActivity.class);
@@ -352,7 +352,7 @@ public class MapsActivity
         });
         hotspots_floatingActionButton.setBackgroundColor(0x0);
         hotspots_floatingActionButton.setRippleColor(0x0);
-        hotspots_floatingActionButton.setBackground(null);
+        //hotspots_floatingActionButton.setBackground(null);
         hotspots_floatingActionButton.setBackgroundTintMode(PorterDuff.Mode.CLEAR);
 
         final Intent htmlOverlayIntent = new Intent(this, ContentActivity.class);
