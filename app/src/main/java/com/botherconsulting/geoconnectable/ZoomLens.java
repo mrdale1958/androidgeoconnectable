@@ -89,8 +89,14 @@ public class ZoomLens {
     private JSONObject message;
     private boolean doLog;
     private GoogleMap mMap;
+    boolean messageinQueue = false;
 
     public void setMessage(JSONObject _message) {
+
+        if (messageinQueue) {
+            Log.e("zoomer message handler", "tossing message "+ _message);
+            return;
+        }
         this.message = _message;
     }
 
@@ -104,10 +110,14 @@ public class ZoomLens {
 
     public final Runnable  handleJSON  = new Runnable() {
 
-
         public void run() {
     //public void handleJSON(JSONObject message, GoogleMap mMap, boolean doLog) {
 
+            if (messageinQueue) {
+                //Log.e("zoomer message handler", "tossing message "+ message);
+                return;
+            }
+            messageinQueue = true;
             delta = 0;
             JSONObject vector = new JSONObject();
             try {
@@ -149,7 +159,7 @@ public class ZoomLens {
                 newData = true;
 
             }
-
+            messageinQueue = false;
 
         }
     };

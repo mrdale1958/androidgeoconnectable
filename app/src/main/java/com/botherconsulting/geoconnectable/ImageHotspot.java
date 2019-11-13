@@ -361,7 +361,7 @@ public class ImageHotspot extends Hotspot {
             AssetFileDescriptor descriptor = context.getAssets().openFd(this.soundUri.toString());
             ImageHotspot.mediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
             descriptor.close();
-            Log.d("audio start", "media being prepared");
+            Log.d("audio start", "media being prepared " + this.soundUri.toString());
             ImageHotspot.mediaPlayer.prepareAsync();
          } catch (Exception e) {
             e.printStackTrace();

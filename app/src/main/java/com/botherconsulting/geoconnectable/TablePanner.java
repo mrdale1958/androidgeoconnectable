@@ -17,7 +17,7 @@ import static android.os.SystemClock.uptimeMillis;
 public class TablePanner {
     public double TiltScaleX = 0.04; // in settings
     public double TiltScaleY = 0.04; // in settings
-    private double validTiltThreshold = 0.025; // needs to be in settings
+    private double validTiltThreshold = 0.0000011; // needs to be in settings
     private double maxZoom = 19; // needs to be in settings
     private double minZoom = 3; // needs to be in settings
     private double panMax = 0.01;
@@ -96,9 +96,15 @@ public class TablePanner {
     private JSONObject message;
     private boolean doLog;
     private GoogleMap mMap;
+    boolean messageinQueue = false;
     private double screenWidthDegrees, screenHeightDegrees;
 
     public void setMessage(JSONObject _message) {
+
+        if (messageinQueue) {
+            //Log.e("panner message handler", "tossing message "+ _message);
+            return;
+        }
         this.message = _message;
     }
 
@@ -131,6 +137,15 @@ public class TablePanner {
             //                       double screenHeightDegrees){
             //LatLngBounds curScreen = mMap.getProjection()
             //        .getVisibleRegion().latLngBounds;
+            if (mMap == null || cameraPosition == null) {
+                Log.e("panner message handler", "mMap not ready " + message);
+                return;
+            }
+            if  (messageinQueue) {
+                        Log.e("panner message handler", "tossing message "+ message);
+                return;
+            }
+            messageinQueue = true;
             double deltaX = 0.0;
             double deltaY = 0.0;
             JSONObject vector = new JSONObject();
@@ -163,6 +178,7 @@ public class TablePanner {
                         Log.d("GCT pan: rejected", " raw x: " + Double.toString(rawX) +
                                 " raw y: " + Double.toString(rawY) + " validTiltThreshold: " + Double.toString(validTiltThreshold));
                     }
+                    messageinQueue = false;
                     return;
                 } else {
 
@@ -210,6 +226,7 @@ public class TablePanner {
             } catch (org.json.JSONException e) {
                 Log.e("GCT pan: reading", "invalid vector " + vector.toString());
             }
+            messageinQueue = false;
         }
     };
 }

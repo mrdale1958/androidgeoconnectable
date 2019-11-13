@@ -104,6 +104,7 @@ public class MapsActivity
 
     final Runnable sensorConnectionLauncher = new Runnable(){
         public void run() {
+
             launchServerConnection();
         }
     };
@@ -120,7 +121,7 @@ public class MapsActivity
     private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
     private String targetColor = "#ff0000"; // in settings
-    private double targetWidth = 0.1; // portion of visible map  // in settings
+    private double targetWidth = 0.06; // portion of visible map  // in settings
     private boolean targetVisible = false; // in settings
     private int horizontalBump = 0; // in settings
     //var targetRectangle;
@@ -516,6 +517,7 @@ public class MapsActivity
         boolean initializedProfile = false;
         float newZoom;
         LatLng newPos;
+        boolean retriggered = false;
 
 
 
@@ -576,7 +578,7 @@ public class MapsActivity
                     }
                     List<LatLng> targetPoints = new ArrayList<LatLng>();
                     double targetScreenWidth = currScreenWidth;
-                    if (targetScreenWidth > 180) targetScreenWidth -= 180;
+                    if (targetScreenWidth > 180) targetScreenWidth = 360 - targetScreenWidth;
                     targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
                             cameraPosition.target.longitude - targetWidth * targetScreenWidth));
                     targetPoints.add(new LatLng(cameraPosition.target.latitude + targetWidth * currScreenHeight,
@@ -589,7 +591,7 @@ public class MapsActivity
                     readyToAnimate = true;
                     if (!idling) {
                         //Log.i("animateByTable", "now");
-                        //retriggered=true;
+                        retriggered=false;
                         animationHandler.post(animateByTable);
                     }
                     //profile(Sections.POSTANIMATEMAP, Profilestates.FINISH);
@@ -598,6 +600,8 @@ public class MapsActivity
                 @Override
                 public void onCancel() {
                     readyToAnimate = true;
+                    retriggered=false;
+                    animationHandler.post(animateByTable);
                     Log.w("animateByTable", "hmm animation got canceled");
                 }
             });
@@ -605,13 +609,19 @@ public class MapsActivity
 
         public void run() {
             // TODO: label this 19. Does it set a maximum zoom level for the app
+            if (retriggered) {
+                Log.i("animatebytable", "tried to smash an existing anuimation");
+                //animationHandler.postDelayed(animateByTable, nullAnimationClockTick);
+                return;
+
+                }
+            retriggered = true;
             long blockStartTime, blockEndTime, startTime = System.nanoTime();
             long elapsedTime = startTime - lastRuntime;
             lastRuntime = startTime;
             getUIObjects();
             //profile(Sections.START, Profilestates.START);
             boolean doAnimate = false;
-            boolean retriggered = false;
             //Log.d("animateBytable", "starting");
             if ((mapProjection != null) && (cameraPosition != null) && (maxZoom > -1)) {
                 zoomer.setZoomBounds(minZoomLevel, Math.min(19.0, maxZoom));
@@ -649,11 +659,13 @@ public class MapsActivity
                 if (hotSpotActive) {
                     // deal with animating hotSpot
                     // need a mechanism to get clear of target voxel  before redisplaying
-                    profile(Sections.ANIMATEHOTSPOT, Profilestates.START);
+                    //profile(Sections.ANIMATEHOTSPOT, Profilestates.START);
                     if (liveHotSpot.isClosed()) {
                         hotSpotActive = false;
                         liveHotSpot = null;
                         doAnimate = true;
+                        readyToAnimate = true;
+                        retriggered = false;
                     }
                     // retriggered=true;
                     // animationHandler.post(animateByTable);
@@ -702,7 +714,10 @@ public class MapsActivity
                                     Log.i("hotspot loading ", "number " + hs);
                                     liveHotSpot.setImageByLanguage(hotspotLanguage);
                                     liveHotSpot.open();
-                                    retriggered = true;
+                                    //retriggered = true;
+                                }  else {
+                                    hotSpotActive = false;
+                                    liveHotSpot = null;
                                 }
                                 animationHandler.post(animateByTable);
                                 break;
@@ -743,12 +758,16 @@ public class MapsActivity
                     //profile(Sections.ANIMATEMAP, Profilestates.FINISH);
                 } else {
                    // Log.d("animatebytable", "not ready for doanimate");
+                    retriggered=false;
+
                     animationHandler.postDelayed(animateByTable, nullAnimationClockTick);
 
                 }
             }
             else {
                 //Log.i("animateByTable", "in the future");
+                retriggered=false;
+
                 animationHandler.postDelayed(animateByTable, nullAnimationClockTick);
 
             }
@@ -1070,7 +1089,10 @@ public class MapsActivity
 
     private  void bwsComplain(String... message) {
         Toast.makeText(MapsActivity.this, message[0] + ":" + message[1], Toast.LENGTH_LONG).show();
-        if (message[0].equals("Connection closed")) asyncTaskHandler.postDelayed(sensorConnectionLauncher,15000);
+        if (message[0].equals("Connection closed")) {
+            Log.i("websocket closed", "restarting");
+            asyncTaskHandler.postDelayed(sensorConnectionLauncher,15000);
+        }
     }
 
 
@@ -1087,6 +1109,7 @@ public class MapsActivity
 
     class BackgroundWebSocket extends AsyncTask<String, String, String> {
 
+        boolean messageinQueue = false;
         //inputarg can contain array of values
         @Override
         protected String doInBackground(String... URIString) {
@@ -1162,13 +1185,17 @@ public class MapsActivity
         private void bwsHandleMessage(String messageString) {
 
             if (mMap == null) return;
-
-
+            if (messageinQueue) {
+                //Log.e("websocket message handler", "tossing message "+ messageString);
+                return;
+            }
+            messageinQueue = true;
             JSONObject message;
             try {
                 message = new JSONObject(messageString);
             } catch (org.json.JSONException e) {
                 Log.i("odd JSON", messageString);
+                messageinQueue = false;
                 return;
             }
             String messageType;
@@ -1183,49 +1210,55 @@ public class MapsActivity
                 //Log.i("incoming message",message.toString());
             } catch (org.json.JSONException e) {
                 Log.i("no gesture message", message.toString());
+                messageinQueue = false;
                 return;
             }
 
             //LatLngBounds curScreen = mMap.getProjection()
             //       .getVisibleRegion().latLngBounds;
-
-            if (!hotSpotActive) {
+            boolean _hotSpotActive = hotSpotActive;
+            ImageHotspot _liveHotSpot = liveHotSpot;
+            if (!_hotSpotActive && (_liveHotSpot == null)) {
                 getUIObjects();
                 if (gestureType.equals("pan")) {
                     panner.setMessage(message);
-                    panner.setMap(mMap);
-                    panner.setLogging(logSensors || logTilt);
                     panner.setScreenBounds(currScreenWidth, currScreenHeight);
                     panner.setMapPosition(cameraPosition);
-                    panner.handleJSON.run();
+                    asyncTaskHandler.post(panner.handleJSON);
 
                     //paintTarget();
                 } else if (gestureType.equals("zoom")) {
                     zoomer.setMessage(message);
                     zoomer.setLogging(logSensors || logZoom);
-                    zoomer.handleJSON.run();
+                    asyncTaskHandler.post(zoomer.handleJSON);
                 }
 
-            } else {
+            } else if (_hotSpotActive && (_liveHotSpot != null)) {
                 //liveHotSpot.setImageByLanguage(hotspotLanguage);
                 if (gestureType.equals("pan")) {
-                    liveHotSpot.setMessage(message);
-                    liveHotSpot.setLogging(logSensors || logTilt);
-                    asyncTaskHandler.post(liveHotSpot.handleJSON);
+                    _liveHotSpot.setMessage(message);
+                    _liveHotSpot.setLogging(logSensors || logTilt);
+                    asyncTaskHandler.post(_liveHotSpot.handleJSON);
                 } else if (gestureType.equals("zoom")) {
-                    liveHotSpot.setMessage(message);
-                    liveHotSpot.setLogging(logSensors || logZoom);
-                    asyncTaskHandler.post(liveHotSpot.handleJSON);
+                    _liveHotSpot.setMessage(message);
+                    _liveHotSpot.setLogging(logSensors || logZoom);
+                    asyncTaskHandler.post(_liveHotSpot.handleJSON);
                 } else if (gestureType.equals("switchCode")) {
-                    liveHotSpot.setMessage(message);
-                    liveHotSpot.setLogging(logSensors);
-                    asyncTaskHandler.post(liveHotSpot.handleJSON);
+                    _liveHotSpot.setMessage(message);
+                    _liveHotSpot.setLogging(logSensors);
+                    asyncTaskHandler.post(_liveHotSpot.handleJSON);
                 } else {
+                    Log.e("unknown gesture message", message.toString());
+
+                    messageinQueue = false;
                     return;
                 }
                 // liveHotSpot.handleJSON.run();
 
+            } else {
+                Log.e("handle message", "somehow hotSpaotActive " + hotSpotActive + " and liveHotSpot " + liveHotSpot + " are inconsistent");
             }
+            messageinQueue = false;
 
         }
     }
@@ -1266,6 +1299,9 @@ public class MapsActivity
         }
         mMap.setOnCameraMoveListener(this);
         mMap.setOnCameraIdleListener(this);
+        panner.setMap(mMap);
+        panner.setLogging(logSensors || logTilt);
+
         //mMap.setOnCameraChangeListener(this);
        /* mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
