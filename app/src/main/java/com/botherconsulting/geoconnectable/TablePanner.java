@@ -161,14 +161,13 @@ public class TablePanner {
                 //double screenHeightDegrees = Math.abs(curScreen.southwest.latitude - curScreen.northeast.latitude);
                 /*
                  *
-                 * * Danger will robinson!  x and y swapped for SFSU installation
                  *
                  */
-                rawX = vector.getDouble("y");
+                rawX = vector.getDouble("x");
 
                 double percentChangeInX = 0;
                 double percentChangeInY = 0;
-                rawY = vector.getDouble("x");
+                rawY = vector.getDouble("y");
 
                 if (doLog) {
                     Log.i("GCT pan: incoming", " raw x: " + Double.toString(rawX) +

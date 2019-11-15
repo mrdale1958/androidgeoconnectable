@@ -986,6 +986,7 @@ public class MapsActivity
         TextView xtiltDisplay = findViewById(R.id.xtilt);
         TextView ytiltDisplay = findViewById(R.id.ytilt);
         TextView spinDisplay = findViewById(R.id.spin);
+        Log.d("togglePiDashboard", "now " + xtiltDisplay.getVisibility());
         if (xtiltDisplay.getVisibility() == View.VISIBLE) {
             xtiltDisplay.setVisibility(View.INVISIBLE);
             ytiltDisplay.setVisibility(View.INVISIBLE);
