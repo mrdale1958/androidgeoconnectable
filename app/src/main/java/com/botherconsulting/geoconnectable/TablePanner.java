@@ -33,6 +33,8 @@ public class TablePanner {
     long sumElapsedTimes = 0;
     long sumSquaredElapsedTimes = 0;
     private  long bigDataArrivalGap = 150000000; // 150ms
+    public double rawX;
+    public double rawY;
 
     public TablePanner(double _maxZoom, double _minZoom) {
         maxZoom = _maxZoom;
@@ -162,11 +164,11 @@ public class TablePanner {
                  * * Danger will robinson!  x and y swapped for SFSU installation
                  *
                  */
-                double rawX = vector.getDouble("y");
+                rawX = vector.getDouble("y");
 
                 double percentChangeInX = 0;
                 double percentChangeInY = 0;
-                double rawY = vector.getDouble("x");
+                rawY = vector.getDouble("x");
 
                 if (doLog) {
                     Log.i("GCT pan: incoming", " raw x: " + Double.toString(rawX) +

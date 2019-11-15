@@ -36,7 +36,6 @@ import androidx.preference.PreferenceManager;
 import com.github.pengrad.mapscaleview.MapScaleView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -49,7 +48,6 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-//import com.google.maps.android.SphericalUtil;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -74,6 +72,8 @@ import java.util.List;
 import java.util.Map;
 
 import static android.os.SystemClock.uptimeMillis;
+
+//import com.google.maps.android.SphericalUtil;
 
 //import com.google.maps.android.data.kml.KmlLayer;
 
@@ -565,6 +565,12 @@ public class MapsActivity
                     lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
                     TextView layerDisplay = findViewById(R.id.currentLayer);
                     layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
+                    TextView xtiltDisplay = findViewById(R.id.xtilt);
+                    xtiltDisplay.setText(getString(R.string.xtilt_indicator, panner.rawX));
+                    TextView ytiltDisplay = findViewById(R.id.ytilt);
+                    ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
+                    TextView spinDisplay = findViewById(R.id.spin);
+                    spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
                     if ( targetRectangle == null) {
                         PolygonOptions currentTarget = new PolygonOptions()
                                 .add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
@@ -976,6 +982,25 @@ public class MapsActivity
         return super.onOptionsItemSelected(item);
     }
 
+    public void togglePiDashboard() {
+        TextView xtiltDisplay = findViewById(R.id.xtilt);
+        TextView ytiltDisplay = findViewById(R.id.ytilt);
+        TextView spinDisplay = findViewById(R.id.spin);
+        if (xtiltDisplay.getVisibility() == View.VISIBLE) {
+            xtiltDisplay.setVisibility(View.INVISIBLE);
+            ytiltDisplay.setVisibility(View.INVISIBLE);
+            spinDisplay.setVisibility(View.INVISIBLE);
+
+        } else {
+            xtiltDisplay.setVisibility(View.VISIBLE);
+            ytiltDisplay.setVisibility(View.VISIBLE);
+            spinDisplay.setVisibility(View.VISIBLE);
+        }
+
+
+
+    }
+
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         switch (keyCode) {
@@ -999,6 +1024,9 @@ public class MapsActivity
                 break;
             case KeyEvent.KEYCODE_L:
                 closeTheHotSpot();
+                break;
+            case KeyEvent.KEYCODE_D:
+                togglePiDashboard();
                 break;
             default:
                 return super.onKeyUp(keyCode, event);
@@ -1094,17 +1122,6 @@ public class MapsActivity
             asyncTaskHandler.postDelayed(sensorConnectionLauncher,15000);
         }
     }
-
-
-       /*animateByTable();
-
-       TextView latDisplay  = findViewById(R.id.currentLatitude);
-       latDisplay.setText("Latitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.latitude));
-       TextView lonDisplay  = findViewById(R.id.currentLongitude);
-       lonDisplay.setText("Longitude: "+ String.format ("%.2f", mMap.getCameraPosition().target.longitude));
-       */
-       //TextView altDisplay  = (TextView)findViewById(R.id.currentAltitude);
-       //latDisplay.setText("Altitude: "+ Double.toString(mMap.getCameraPosition().target.));
 
 
     class BackgroundWebSocket extends AsyncTask<String, String, String> {

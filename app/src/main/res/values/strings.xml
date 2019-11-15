@@ -98,5 +98,8 @@
     <string name="latitude_indicator">Latitude:  %.2f</string>
     <string name="longitude_indicator">Longitude:  %.2f</string>
     <string name="layer_indicator">Layer:  %.2f</string>
+    <string name="xtilt_indicator">Xtilt:  %.5f</string>
+    <string name="ytilt_indicator">Ytilt:  %.5f</string>
+    <string name="spin_indicator">spin:  %d</string>
 
 </resources>

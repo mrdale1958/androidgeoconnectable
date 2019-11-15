@@ -41,7 +41,9 @@
             android:layout_gravity="center"
             android:background="@color/black"
             tools:context="com.botherconsulting.geoconnectable.MapsActivity" />
-     </FrameLayout>
+
+
+    </FrameLayout>
 
     <FrameLayout
         android:id="@+id/MaskingFrame"
@@ -179,7 +181,59 @@
           app:scale_outline="true"
           app:scale_strokeWidth="3dp"
           app:scale_textSize="16sp"/>
-       <!-- can't seem to calculate camera height and there's no topological info in the Google Maps API
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/xtilt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="X tilt: 0.0"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="120dp"
+            android:textColor="@color/black"
+            android:shadowColor="#ccccff"
+            android:shadowRadius="1.5"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:textSize="16dp"
+            android:textAlignment="center"
+            android:background="#44ffffff"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:visibility="visible"
+            />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/ytilt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Y tilt: 0.0"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="140dp"
+            android:textColor="@color/black"
+            android:shadowColor="#ccccff"
+            android:shadowRadius="1.5"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:textSize="16dp"
+            android:textAlignment="center"
+            android:background="#44ffffff"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:visibility="invisible" />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/spin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Clicks: -1"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="140dp"
+            android:textColor="@color/black"
+            android:shadowColor="#ccccff"
+            android:shadowRadius="1.5"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:textSize="16dp"
+            android:textAlignment="center"
+            android:background="#44ffffff"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:visibility="invisible" />
+        <!-- can't seem to calculate camera height and there's no topological info in the Google Maps API
         <android.support.v7.widget.AppCompatTextView
              android:id="@+id/currentAltitude"
              android:layout_width="wrap_content"
