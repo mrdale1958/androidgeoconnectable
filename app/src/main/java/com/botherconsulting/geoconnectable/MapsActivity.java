@@ -48,6 +48,7 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+//import com.google.maps.android.SphericalUtil;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -72,8 +73,6 @@ import java.util.List;
 import java.util.Map;
 
 import static android.os.SystemClock.uptimeMillis;
-
-//import com.google.maps.android.SphericalUtil;
 
 //import com.google.maps.android.data.kml.KmlLayer;
 
@@ -104,7 +103,6 @@ public class MapsActivity
 
     final Runnable sensorConnectionLauncher = new Runnable(){
         public void run() {
-
             launchServerConnection();
         }
     };
@@ -121,7 +119,7 @@ public class MapsActivity
     private boolean useHybridMap = true; // in settings
     private WebSocketClient mWebSocketClient;
     private String targetColor = "#ff0000"; // in settings
-    private double targetWidth = 0.06; // portion of visible map  // in settings
+    private double targetWidth = 0.1; // portion of visible map  // in settings
     private boolean targetVisible = false; // in settings
     private int horizontalBump = 0; // in settings
     //var targetRectangle;
@@ -571,6 +569,8 @@ public class MapsActivity
                     ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
                     TextView spinDisplay = findViewById(R.id.spin);
                     spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
+                    /*  replaced with fixed rectagle
+                    * if ( targetRectangle == null) {
                     if ( targetRectangle == null) {
                         PolygonOptions currentTarget = new PolygonOptions()
                                 .add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
@@ -594,6 +594,9 @@ public class MapsActivity
                     targetPoints.add(new LatLng(cameraPosition.target.latitude - targetWidth * currScreenHeight,
                             cameraPosition.target.longitude + targetWidth * targetScreenWidth));
                     targetRectangle.setPoints(targetPoints);
+                    *
+                    */
+
                     readyToAnimate = true;
                     if (!idling) {
                         //Log.i("animateByTable", "now");
@@ -1240,6 +1243,8 @@ public class MapsActivity
                 getUIObjects();
                 if (gestureType.equals("pan")) {
                     panner.setMessage(message);
+                    panner.setMap(mMap);
+                    panner.setLogging(logSensors || logTilt);
                     panner.setScreenBounds(currScreenWidth, currScreenHeight);
                     panner.setMapPosition(cameraPosition);
                     asyncTaskHandler.post(panner.handleJSON);
@@ -1249,6 +1254,9 @@ public class MapsActivity
                     zoomer.setMessage(message);
                     zoomer.setLogging(logSensors || logZoom);
                     asyncTaskHandler.post(zoomer.handleJSON);
+                } else if (gestureType.equals("switchCode")) {
+                    ImageHotspot.__setMessage__(message);
+                    asyncTaskHandler.post(ImageHotspot.__handleJSON__);
                 }
 
             } else if (_hotSpotActive && (_liveHotSpot != null)) {

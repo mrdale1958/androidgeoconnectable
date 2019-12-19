@@ -19,7 +19,7 @@ public class ZoomLens {
     public int revsPerFullZoom = 19;  // in settings
     private int clicksPerZoomLevel;
     private int idleSpin = 0;
-    public double idleZoom = 13.5; // in settings
+    public double idleZoom = 6.0; // in settings
     public double zoom;
     private int minSpin;
     private int maxSpin;

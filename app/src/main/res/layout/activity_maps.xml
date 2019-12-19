@@ -267,19 +267,31 @@
         android:layout_width="1200px"
         android:layout_height="fill_parent"
         android:layout_gravity="center" >
+
         <ImageView
             android:id="@+id/hotSpotImageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"/>
+
         <WebView
             android:id="@+id/hotSpotWebView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:background="@android:color/transparent"
-            android:visibility="invisible" />
+            android:visibility="invisible" >
+
+        </WebView>
 
     </FrameLayout>
+
+    <View
+        android:id="@+id/targetingView"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:background="@drawable/target"
+        app:layout_anchor="@+id/MapFrame"
+        app:layout_anchorGravity="center" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

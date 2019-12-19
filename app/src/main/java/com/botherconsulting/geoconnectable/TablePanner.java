@@ -5,7 +5,7 @@ import android.util.Log;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-
+import com.google.maps.android.SphericalUtil;
 import org.json.JSONObject;
 
 import static android.os.SystemClock.uptimeMillis;
@@ -35,6 +35,8 @@ public class TablePanner {
     private  long bigDataArrivalGap = 150000000; // 150ms
     public double rawX;
     public double rawY;
+    public double bearing;
+    public double velocity;
 
     public TablePanner(double _maxZoom, double _minZoom) {
         maxZoom = _maxZoom;
@@ -74,7 +76,7 @@ public class TablePanner {
             maxEt = Math.max(maxEt, i);
             minEt = Math.min(minEt, i);
         }
-        Log.i("GCT: Tilt data flow stats",
+        Log.i("GCT: Tilt dataflow",
                 "\nTotal events: " + eventCount +
                         "\nTotal mean elapsed Time: " + (sumElapsedTimes/eventCount) +
                         "\nwindow mean elapsedTime: " + (windowSum / eventWindowLength) +
@@ -128,6 +130,14 @@ public class TablePanner {
     public void setMapPosition(CameraPosition newPosition) {
         cameraPosition = newPosition;
     }
+
+
+
+    public double calculateVelocity(LatLng pos1, LatLng pos2, long deltaTime) {
+        double distance = SphericalUtil.computeDistanceBetween(pos1, pos2);
+        return (distance/deltaTime);
+    }
+
     public final Runnable  handleJSON  = new Runnable() {
 
 
@@ -219,7 +229,10 @@ public class TablePanner {
                 LatLng currentCameraPosition = cameraPosition.target;
                 LatLng nextPosition = new LatLng(currentCameraPosition.latitude + deltaY, currentCameraPosition.longitude + deltaX);
                 if (nextPosition != currentCameraPosition) {
+                    long deltaTime = uptimeMillis() - lastTiltMessageTime;
                     updateStats(doLog);
+                    bearing = SphericalUtil.computeHeading(currentCameraPosition, nextPosition);
+                    velocity = calculateVelocity(currentCameraPosition, nextPosition, deltaTime);
                     position = currentPosition;
                     currentPosition = nextPosition;
                     newData = true;

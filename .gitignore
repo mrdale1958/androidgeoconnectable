@@ -3,3 +3,4 @@
 */.DS_Store
 local.properties
 app/src/*/res/values/google_maps_api.xml
+.gradle/*

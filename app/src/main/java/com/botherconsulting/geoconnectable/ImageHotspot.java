@@ -126,6 +126,7 @@ public class ImageHotspot extends Hotspot {
     static Languages language = Languages.ENGLISH;
     static ImageHotspot activeHotSpot;
     static ImageHotspot lastHotSpot;
+    static JSONObject __message__;
 
     static final void setLanguage(Languages _language) {
         // TODO: start a timer to return to English how to get an idle signal unknown
@@ -149,6 +150,61 @@ public class ImageHotspot extends Hotspot {
         ImageHotspot.activeHotSpot = null;
 
     }
+
+    static void __setMessage__(JSONObject _message) {
+        ImageHotspot.__message__ = _message;
+    }
+
+    static final Runnable  __handleJSON__  = new Runnable() {
+
+
+        public void run() {
+            String gestureType;
+            try {
+                gestureType = ImageHotspot.__message__.getString("gesture");
+                //Log.i("incoming message",message.toString());
+            } catch (org.json.JSONException e) {
+                Log.i("GCT HS: no gesture msg", ImageHotspot.__message__.toString());
+                return;
+            }
+            if (gestureType.equals("switchCode")) {
+                String keyCode;
+                JSONObject switchObj = new JSONObject();
+                try {
+                    switchObj = ImageHotspot.__message__.getJSONObject("vector");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: switch msg", "no switch " + ImageHotspot.__message__.toString());
+                    return;
+                }
+                try {
+                    keyCode = switchObj.getString("code");
+                } catch (org.json.JSONException e) {
+                    Log.e("GCT HS error: switch msg", "invalid switch " + switchObj.toString());
+                    return;
+                }
+
+                switch (keyCode) {
+                    case "e":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.ENGLISH);
+                        break;
+                    case "s":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.SPANISH);
+                        break;
+                    case "k":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.KOREAN);
+                        break;
+                    case "j":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.JAPANESE);
+                        break;
+                    case "c":
+                        ImageHotspot.setLanguage(ImageHotspot.Languages.CHINESE);
+                        break;
+                }
+
+            }
+        }
+    };
+
 
 
     public ImageHotspot(GoogleMap map, ImageView imageView, Context context, MapsActivity mapsActivity) {
