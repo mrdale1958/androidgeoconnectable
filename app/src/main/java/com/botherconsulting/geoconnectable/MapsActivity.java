@@ -559,7 +559,7 @@ public class MapsActivity
         float newZoom;
          LatLng newPos;
 
-        public void animateMap() {
+        public void autoanimateMap() {
             mMap.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
                             new LatLng(autodeltaY + cameraPosition.target.latitude,
@@ -583,14 +583,14 @@ public class MapsActivity
                     spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
 
                     readyToAnimate = true;
-                    animationHandler.post(animateByTable);
+                    animationHandler.post(startAutoPan);
                 }
 
                 @Override
                 public void onCancel() {
                     readyToAnimate = true;
-                    animationHandler.post(animateByTable);
-                    Log.w("animateByTable", "hmm animation got canceled");
+                    animationHandler.post(startAutoPan);
+                    Log.w("startAutoPan", "hmm animation got canceled");
                 }
             });
         }
@@ -608,8 +608,14 @@ public class MapsActivity
             autodeltaY = currScreenHeight * latIncrement;
 
             autodeltaX = currScreenWidth * lonIncrement;
-            animationHandler.post(animateByTable);
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    //Log.d("animatebytable on ui thread", "firing camera move " + mMap.getMinZoomLevel());
+                    // TODO: track down why minzoomlevel gets set to 4 and the how to switch to lite mode
+                    autoanimateMap();
 
+                }
+            });
         }
     };
 
