@@ -500,7 +500,118 @@ public class MapsActivity
             }
         });
     }
+    double latIncrement = 0.01;
+    double lonIncrement = 0.0;
+    int animateTime = 1000;
+    double panDelta = 0.01;
+    double timeDelta = 0.05;
 
+    public void setAnimationTime(int newTime) {
+        animateTime = newTime;
+    }
+
+    public void setLatIncrement(double  newYPan) {
+        latIncrement  = newYPan;
+    }
+
+    public void setLonIncrement(double  newXPan) {
+        lonIncrement  = newXPan;
+    }
+
+    public void increaseAnimationTime() {
+        animateTime += timeDelta;
+    }
+
+    public void increaseLatIncrement() {
+        latIncrement  += panDelta;
+    }
+
+    public void increaseLonIncrement() {
+        latIncrement  += panDelta;
+    }
+
+    public void decreaseAnimationTime() {
+        animateTime -= timeDelta;
+    }
+
+    public void decreaseLatIncrement() {
+        latIncrement  -= panDelta;
+    }
+
+    public void decreaseLonIncrement() {
+        latIncrement  -= panDelta;
+    }
+
+    double autodeltaY = 0;
+    double autodeltaX = 0;
+
+    final Runnable startAutoPan = new Runnable() {
+        long lastRuntime;
+        static final int ZOOM = 0;
+        static final int PAN = 0;
+        static final int GESTURE_TIME = 1;
+        Map<Sections, Integer> profileEntries = new EnumMap<>(Sections.class);
+        Map<Sections, Long> lastStartTimes = new EnumMap<>(Sections.class);
+        Map<Sections, Long> sumElapsedTimes = new EnumMap<>(Sections.class);
+        Map<Sections, Long> maxElapsedTimes = new EnumMap<>(Sections.class);
+        Map<Sections, Long> minElapsedTimes = new EnumMap<>(Sections.class);
+        boolean initializedProfile = false;
+        float newZoom;
+         LatLng newPos;
+
+        public void animateMap() {
+            mMap.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                            new LatLng(autodeltaY + cameraPosition.target.latitude,
+                                    autodeltaX + cameraPosition.target.longitude),
+                            13),
+                    animateTime,
+                    new GoogleMap.CancelableCallback() {
+                @Override
+                public void onFinish() {
+                    TextView latDisplay = findViewById(R.id.currentLatitude);
+                    latDisplay.setText(getString(R.string.latitude_indicator, cameraPosition.target.latitude));
+                    TextView lonDisplay = findViewById(R.id.currentLongitude);
+                    lonDisplay.setText(getString(R.string.longitude_indicator, cameraPosition.target.longitude));
+                    TextView layerDisplay = findViewById(R.id.currentLayer);
+                    layerDisplay.setText(getString(R.string.layer_indicator, cameraPosition.zoom));
+                    TextView xtiltDisplay = findViewById(R.id.xtilt);
+                    xtiltDisplay.setText(getString(R.string.xtilt_indicator, panner.rawX));
+                    TextView ytiltDisplay = findViewById(R.id.ytilt);
+                    ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
+                    TextView spinDisplay = findViewById(R.id.spin);
+                    spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
+
+                    readyToAnimate = true;
+                    animationHandler.post(animateByTable);
+                }
+
+                @Override
+                public void onCancel() {
+                    readyToAnimate = true;
+                    animationHandler.post(animateByTable);
+                    Log.w("animateByTable", "hmm animation got canceled");
+                }
+            });
+        }
+
+        public void run() {
+            VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
+            double currLeft = visibleRegion.farLeft.longitude;
+            double currRight = visibleRegion.farRight.longitude;
+            double currTop = visibleRegion.farLeft.latitude;
+            double currBottom = visibleRegion.nearRight.latitude;
+            currScreenWidth = Math.abs(currLeft - currRight);
+            //if (currScreenWidth > 180) currScreenWidth -= 180;
+            currScreenHeight = Math.abs(currTop - currBottom);
+            if (currScreenHeight > 180) currScreenHeight -= 180;
+            autodeltaY = currScreenHeight * latIncrement;
+
+            autodeltaX = currScreenWidth * lonIncrement;
+            animationHandler.post(animateByTable);
+
+        }
+    };
 
     final Runnable  animateByTable  = new Runnable() {
         long lastRuntime;
@@ -1031,6 +1142,21 @@ public class MapsActivity
                 break;
             case KeyEvent.KEYCODE_D:
                 togglePiDashboard();
+                break;
+            case KeyEvent.KEYCODE_M:
+                startAutoPan.run();
+                break;
+            case KeyEvent.KEYCODE_1:
+                increaseAnimationTime();
+                break;
+            case KeyEvent.KEYCODE_2:
+                decreaseAnimationTime();
+                break;
+            case KeyEvent.KEYCODE_3:
+                increaseLatIncrement();
+                break;
+            case KeyEvent.KEYCODE_4:
+                decreaseLatIncrement();
                 break;
             default:
                 return super.onKeyUp(keyCode, event);
