@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.GradientDrawable;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -504,7 +505,7 @@ public class MapsActivity
     double lonIncrement = 0.0;
     int animateTime = 1000;
     double panDelta = 0.01;
-    double timeDelta = 0.05;
+    double timeDelta = 50;
 
     public void setAnimationTime(int newTime) {
         animateTime = newTime;
@@ -520,26 +521,35 @@ public class MapsActivity
 
     public void increaseAnimationTime() {
         animateTime += timeDelta;
+        Log.d("new animation time", animateTime + " ms");
     }
 
     public void increaseLatIncrement() {
         latIncrement  += panDelta;
+        Log.d("new latIncrement", latIncrement + " degrees");
     }
 
     public void increaseLonIncrement() {
-        latIncrement  += panDelta;
+        lonIncrement  += panDelta;
+        Log.d("new lonIncrement", lonIncrement + " degrees");
+
     }
 
     public void decreaseAnimationTime() {
         animateTime -= timeDelta;
+        Log.d("new animation time", animateTime + " ms");
     }
 
     public void decreaseLatIncrement() {
         latIncrement  -= panDelta;
+        Log.d("new latIncrement", latIncrement + " degrees");
+
     }
 
     public void decreaseLonIncrement() {
-        latIncrement  -= panDelta;
+        lonIncrement  -= panDelta;
+        Log.d("new lonIncrement", lonIncrement + " degrees");
+
     }
 
     double autodeltaY = 0;
@@ -570,8 +580,10 @@ public class MapsActivity
         boolean initializedProfile = false;
         float newZoom;
          LatLng newPos;
-
+        View target;
+        GradientDrawable targetBG;
         public void autoanimateMap() {
+            targetBG.setColor(0xff000000);
             mMap.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
                             new LatLng(autodeltaY + cameraPosition.target.latitude,
@@ -593,6 +605,7 @@ public class MapsActivity
                     ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
                     TextView spinDisplay = findViewById(R.id.spin);
                     spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
+                    targetBG.setColor(0x00000000);
 
                     readyToAnimate = true;
                     animationHandler.post(startAutoPan);
@@ -609,6 +622,8 @@ public class MapsActivity
 
         public void run() {
             if (! autopanning ) return;
+            target = findViewById(R.id.targetingView);
+             targetBG = (GradientDrawable)target.getBackground();
             VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
             double currLeft = visibleRegion.farLeft.longitude;
             double currRight = visibleRegion.farRight.longitude;
@@ -623,7 +638,7 @@ public class MapsActivity
             autodeltaX = currScreenWidth * lonIncrement;
             runOnUiThread(new Runnable() {
                 public void run() {
-                    //Log.d("animatebytable on ui thread", "firing camera move " + mMap.getMinZoomLevel());
+                    Log.d("autoanimateMap on ui thread", "firing camera move " + mMap.getMinZoomLevel());
                     // TODO: track down why minzoomlevel gets set to 4 and the how to switch to lite mode
                     autoanimateMap();
 
