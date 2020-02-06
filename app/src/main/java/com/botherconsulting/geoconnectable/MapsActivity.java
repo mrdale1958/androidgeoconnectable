@@ -544,6 +544,18 @@ public class MapsActivity
 
     double autodeltaY = 0;
     double autodeltaX = 0;
+    boolean autopanning = false;
+
+    public void toggleAutopan() {
+        autopanning = !autopanning;
+        if (autopanning) {
+            animationHandler.post(startAutoPan);
+
+        } else {
+            animationHandler.post(animateByTable);
+
+        }
+    }
 
     final Runnable startAutoPan = new Runnable() {
         long lastRuntime;
@@ -596,6 +608,7 @@ public class MapsActivity
         }
 
         public void run() {
+            if (! autopanning ) return;
             VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
             double currLeft = visibleRegion.farLeft.longitude;
             double currRight = visibleRegion.farRight.longitude;
@@ -734,6 +747,7 @@ public class MapsActivity
         }
 
         public void run() {
+            if (autopanning ) return;
             // TODO: label this 19. Does it set a maximum zoom level for the app
             if (retriggered) {
                 Log.i("animatebytable", "tried to smash an existing anuimation");
@@ -1150,7 +1164,7 @@ public class MapsActivity
                 togglePiDashboard();
                 break;
             case KeyEvent.KEYCODE_M:
-                startAutoPan.run();
+                toggleAutopan();
                 break;
             case KeyEvent.KEYCODE_1:
                 increaseAnimationTime();
