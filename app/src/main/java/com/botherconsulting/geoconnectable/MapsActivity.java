@@ -501,21 +501,21 @@ public class MapsActivity
             }
         });
     }
-    double latIncrement = 0.01;
-    double lonIncrement = 0.0;
+    float latIncrement = 0;
+    float lonIncrement = 0;
     int animateTime = 1000;
-    double panDelta = 0.01;
+    float panDelta = 1;
     double timeDelta = 50;
 
     public void setAnimationTime(int newTime) {
         animateTime = newTime;
     }
 
-    public void setLatIncrement(double  newYPan) {
+    public void setLatIncrement(float  newYPan) {
         latIncrement  = newYPan;
     }
 
-    public void setLonIncrement(double  newXPan) {
+    public void setLonIncrement(float  newXPan) {
         lonIncrement  = newXPan;
     }
 
@@ -552,8 +552,8 @@ public class MapsActivity
 
     }
 
-    double autodeltaY = 0;
-    double autodeltaX = 0;
+    float autodeltaY = 0;
+    float autodeltaX = 0;
     boolean autopanning = false;
 
     public void toggleAutopan() {
@@ -585,6 +585,8 @@ public class MapsActivity
         public void autoanimateMap() {
             targetBG.setColor(0xff000000);
             mMap.animateCamera(
+                    CameraUpdateFactory.scrollBy(autodeltaY, autodeltaX));
+           /* mMap.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
                             new LatLng(autodeltaY + cameraPosition.target.latitude,
                                     autodeltaX + cameraPosition.target.longitude),
@@ -617,7 +619,7 @@ public class MapsActivity
                     animationHandler.post(startAutoPan);
                     Log.w("startAutoPan", "hmm animation got canceled");
                 }
-            });
+            });*/
         }
 
         public void run() {
@@ -625,7 +627,7 @@ public class MapsActivity
             target = findViewById(R.id.targetingView);
              targetBG = (GradientDrawable)target.getBackground();
             VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
-            double currLeft = visibleRegion.farLeft.longitude;
+            /*double currLeft = visibleRegion.farLeft.longitude;
             double currRight = visibleRegion.farRight.longitude;
             double currTop = visibleRegion.farLeft.latitude;
             double currBottom = visibleRegion.nearRight.latitude;
@@ -635,7 +637,10 @@ public class MapsActivity
             if (currScreenHeight > 180) currScreenHeight -= 180;
             autodeltaY = currScreenHeight * latIncrement;
 
-            autodeltaX = currScreenWidth * lonIncrement;
+            autodeltaX = currScreenWidth * lonIncrement;*/
+            autodeltaY = latIncrement;
+            autodeltaX = lonIncrement;
+
             runOnUiThread(new Runnable() {
                 public void run() {
                     Log.d("autoanimateMap on ui thread", "firing camera move " + mMap.getMinZoomLevel());
