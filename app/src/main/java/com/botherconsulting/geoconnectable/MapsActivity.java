@@ -586,7 +586,7 @@ public class MapsActivity
             targetBG.setColor(0xff000000);
             mMap.animateCamera(
                     CameraUpdateFactory.scrollBy(autodeltaY, autodeltaX));
-           /* mMap.animateCamera(
+            /* mMap.animateCamera(
                     CameraUpdateFactory.newLatLngZoom(
                             new LatLng(autodeltaY + cameraPosition.target.latitude,
                                     autodeltaX + cameraPosition.target.longitude),
@@ -619,7 +619,7 @@ public class MapsActivity
                     animationHandler.post(startAutoPan);
                     Log.w("startAutoPan", "hmm animation got canceled");
                 }
-            });*/
+            }); */
         }
 
         public void run() {
