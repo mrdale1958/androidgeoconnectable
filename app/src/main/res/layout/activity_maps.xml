@@ -32,7 +32,9 @@
         android:id="@+id/MapFrame"
         android:layout_width="1200px"
         android:layout_height="fill_parent"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:background="@color/black"
+        >
         <fragment
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.SupportMapFragment"

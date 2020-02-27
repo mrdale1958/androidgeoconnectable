@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
@@ -42,14 +41,11 @@ import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-//import com.google.maps.android.SphericalUtil;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -70,10 +66,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 
 import static android.os.SystemClock.uptimeMillis;
+
+//import com.google.maps.android.SphericalUtil;
 
 //import com.google.maps.android.data.kml.KmlLayer;
 
@@ -501,7 +498,7 @@ public class MapsActivity
             }
         });
     }
-    float latIncrement = 0;
+    float latIncrement = 1;
     float lonIncrement = 0;
     int animateTime = 1000;
     float panDelta = 1;
@@ -584,14 +581,15 @@ public class MapsActivity
         GradientDrawable targetBG;
         public void autoanimateMap() {
             targetBG.setColor(0xff000000);
-            mMap.animateCamera(
-                    CameraUpdateFactory.scrollBy(autodeltaY, autodeltaX));
-            /* mMap.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                            new LatLng(autodeltaY + cameraPosition.target.latitude,
-                                    autodeltaX + cameraPosition.target.longitude),
-                            13),
-                    animateTime,
+            LatLng curpos = mMap.getCameraPosition().target;
+
+            mMap.moveCamera(
+            //mMap.animateCamera(
+                    //CameraUpdateFactory.newLatLng(new LatLng(cameraPosition.target.latitude + autodeltaY, cameraPosition.target.longitude + autodeltaX)),
+                    CameraUpdateFactory.newLatLngZoom(new LatLng(curpos.latitude + autodeltaY, curpos.longitude + autodeltaX),13.0f)//,
+                    //CameraUpdateFactory.newLatLngZoom(new LatLng(autodeltaY, autodeltaX), newZoom),
+                    //CameraUpdateFactory.scrollBy(autodeltaY, autodeltaX),
+                    /*animateTime,
                     new GoogleMap.CancelableCallback() {
                 @Override
                 public void onFinish() {
@@ -607,19 +605,19 @@ public class MapsActivity
                     ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
                     TextView spinDisplay = findViewById(R.id.spin);
                     spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
-                    targetBG.setColor(0x00000000);
+                    targetBG.setColor(0xffffffff);
 
-                    readyToAnimate = true;
-                    animationHandler.post(startAutoPan);
                 }
 
                 @Override
                 public void onCancel() {
-                    readyToAnimate = true;
-                    animationHandler.post(startAutoPan);
-                    Log.w("startAutoPan", "hmm animation got canceled");
+                    Log.w("startAutoPan", "hmm animation got canceled at " +
+                            cameraPosition.target.latitude + "," + cameraPosition.target.longitude);
+                    targetBG.setColor(0xfffffff);
                 }
-            }); */
+            } */);
+            //animationHandler.postDelayed(startAutoPan,5*animateTime/10);
+            animationHandler.post(startAutoPan);
         }
 
         public void run() {
@@ -627,7 +625,7 @@ public class MapsActivity
             target = findViewById(R.id.targetingView);
              targetBG = (GradientDrawable)target.getBackground();
             VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
-            /*double currLeft = visibleRegion.farLeft.longitude;
+            double currLeft = visibleRegion.farLeft.longitude;
             double currRight = visibleRegion.farRight.longitude;
             double currTop = visibleRegion.farLeft.latitude;
             double currBottom = visibleRegion.nearRight.latitude;
@@ -635,15 +633,19 @@ public class MapsActivity
             //if (currScreenWidth > 180) currScreenWidth -= 180;
             currScreenHeight = Math.abs(currTop - currBottom);
             if (currScreenHeight > 180) currScreenHeight -= 180;
-            autodeltaY = currScreenHeight * latIncrement;
+            autodeltaY = (float)currScreenHeight * latIncrement *0.001f;
 
-            autodeltaX = currScreenWidth * lonIncrement;*/
-            autodeltaY = latIncrement;
-            autodeltaX = lonIncrement;
+            autodeltaX = (float)currScreenWidth * lonIncrement*0.001f;
+            //autodeltaY = latIncrement;
+            //autodeltaX = lonIncrement;
 
             runOnUiThread(new Runnable() {
                 public void run() {
-                    Log.d("autoanimateMap on ui thread", "firing camera move " + mMap.getMinZoomLevel());
+                    LatLng curpos = mMap.getCameraPosition().target;
+                    /*Log.d("autoanimateMap on ui thread", "firing camera move from " +
+                            curpos.latitude + "," + curpos.longitude +
+                            " to " + (curpos.latitude + autodeltaY) + "," + (curpos.longitude +autodeltaX));
+                    */
                     // TODO: track down why minzoomlevel gets set to 4 and the how to switch to lite mode
                     autoanimateMap();
 
@@ -703,7 +705,8 @@ public class MapsActivity
 
         public void animateMap() {
             int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom)); //, animateTime, new GoogleMap.CancelableCallback() {
+            /*mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                 @Override
                 public void onFinish() {
                     //profile(Sections.POSTANIMATEMAP, Profilestates.START);
@@ -718,7 +721,7 @@ public class MapsActivity
                     TextView ytiltDisplay = findViewById(R.id.ytilt);
                     ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
                     TextView spinDisplay = findViewById(R.id.spin);
-                    spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
+                    spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));*/
                     /*  replaced with fixed rectagle
                     * if ( targetRectangle == null) {
                     if ( targetRectangle == null) {
@@ -746,7 +749,7 @@ public class MapsActivity
                     targetRectangle.setPoints(targetPoints);
                     *
                     */
-
+/*
                     readyToAnimate = true;
                     if (!idling) {
                         //Log.i("animateByTable", "now");
@@ -763,7 +766,7 @@ public class MapsActivity
                     animationHandler.post(animateByTable);
                     Log.w("animateByTable", "hmm animation got canceled");
                 }
-            });
+            });*/
         }
 
         public void run() {
@@ -1197,6 +1200,12 @@ public class MapsActivity
                 break;
             case KeyEvent.KEYCODE_4:
                 decreaseLatIncrement();
+                break;
+            case KeyEvent.KEYCODE_5:
+                increaseLonIncrement();
+                break;
+            case KeyEvent.KEYCODE_6:
+                decreaseLonIncrement();
                 break;
             default:
                 return super.onKeyUp(keyCode, event);
