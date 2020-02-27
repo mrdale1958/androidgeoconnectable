@@ -706,7 +706,10 @@ public class MapsActivity
         public void animateMap() {
             int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom)); //, animateTime, new GoogleMap.CancelableCallback() {
-            /*mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
+            readyToAnimate = true;
+            retriggered=false;
+            animationHandler.post(animateByTable);
+                               /*mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                 @Override
                 public void onFinish() {
                     //profile(Sections.POSTANIMATEMAP, Profilestates.START);
