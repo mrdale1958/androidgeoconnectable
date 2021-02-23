@@ -4,8 +4,8 @@ import android.content.Context;
 //import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.libraries.maps.model.LatLng;
+import com.google.android.libraries.maps.model.PolygonOptions;
 
 import java.util.ArrayList;
 import java.util.List;

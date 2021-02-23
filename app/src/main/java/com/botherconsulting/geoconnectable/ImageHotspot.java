@@ -14,7 +14,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.google.android.gms.maps.GoogleMap;
+import com.google.android.libraries.maps.GoogleMap;
 
 import org.json.JSONObject;
 

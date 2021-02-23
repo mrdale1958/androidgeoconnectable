@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/androidgeoconnectable.iml" filepath="$PROJECT_DIR$/androidgeoconnectable.iml" group="androidgeoconnectable" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="androidgeoconnectable/app" />
+      <module fileurl="file://$PROJECT_DIR$/androidgeoconnectable.iml" filepath="$PROJECT_DIR$/androidgeoconnectable.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/androidgeoconnectable.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/androidgeoconnectable.app.iml" />
     </modules>
   </component>
 </project>

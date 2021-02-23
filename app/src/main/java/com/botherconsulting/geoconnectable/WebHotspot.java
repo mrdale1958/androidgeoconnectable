@@ -3,10 +3,10 @@ package com.botherconsulting.geoconnectable;
 import android.util.Log;
 import android.webkit.WebView;
 
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.BitmapDescriptor;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.libraries.maps.GoogleMap;
+import com.google.android.libraries.maps.model.BitmapDescriptor;
+import com.google.android.libraries.maps.model.LatLng;
+import com.google.android.libraries.maps.model.MarkerOptions;
 
 import org.json.JSONObject;
 

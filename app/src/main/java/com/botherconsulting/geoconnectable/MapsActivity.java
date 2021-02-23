@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
@@ -34,18 +35,21 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 
 import com.github.pengrad.mapscaleview.MapScaleView;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.Projection;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.VisibleRegion;
+import com.google.android.libraries.maps.CameraUpdateFactory;
+import com.google.android.libraries.maps.GoogleMap;
+import com.google.android.libraries.maps.OnMapReadyCallback;
+import com.google.android.libraries.maps.Projection;
+import com.google.android.libraries.maps.SupportMapFragment;
+import com.google.android.libraries.maps.model.BitmapDescriptorFactory;
+import com.google.android.libraries.maps.model.CameraPosition;
+import com.google.android.libraries.maps.model.JointType;
+import com.google.android.libraries.maps.model.LatLng;
+import com.google.android.libraries.maps.model.LatLngBounds;
+import com.google.android.libraries.maps.model.Polygon;
+import com.google.android.libraries.maps.model.PolygonOptions;
+import com.google.android.libraries.maps.model.VisibleRegion;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+//import com.google.maps.android.SphericalUtil;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -60,17 +64,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.DatagramSocket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import static android.os.SystemClock.uptimeMillis;
-
-//import com.google.maps.android.SphericalUtil;
 
 //import com.google.maps.android.data.kml.KmlLayer;
 
@@ -115,7 +119,9 @@ public class MapsActivity
     private boolean logSensors = false;
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
+    private boolean useWebSocket = true;
     private WebSocketClient mWebSocketClient;
+    private DatagramSocket mUDPSocket;
     private String targetColor = "#ff0000"; // in settings
     private double targetWidth = 0.1; // portion of visible map  // in settings
     private boolean targetVisible = false; // in settings
@@ -498,7 +504,7 @@ public class MapsActivity
             }
         });
     }
-    float latIncrement = 1;
+    float latIncrement = 0;
     float lonIncrement = 0;
     int animateTime = 1000;
     float panDelta = 1;
@@ -581,15 +587,14 @@ public class MapsActivity
         GradientDrawable targetBG;
         public void autoanimateMap() {
             targetBG.setColor(0xff000000);
-            LatLng curpos = mMap.getCameraPosition().target;
-
-            mMap.moveCamera(
-            //mMap.animateCamera(
-                    //CameraUpdateFactory.newLatLng(new LatLng(cameraPosition.target.latitude + autodeltaY, cameraPosition.target.longitude + autodeltaX)),
-                    CameraUpdateFactory.newLatLngZoom(new LatLng(curpos.latitude + autodeltaY, curpos.longitude + autodeltaX),13.0f)//,
-                    //CameraUpdateFactory.newLatLngZoom(new LatLng(autodeltaY, autodeltaX), newZoom),
-                    //CameraUpdateFactory.scrollBy(autodeltaY, autodeltaX),
-                    /*animateTime,
+            mMap.animateCamera(
+                    CameraUpdateFactory.scrollBy(autodeltaY, autodeltaX));
+            /* mMap.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                            new LatLng(autodeltaY + cameraPosition.target.latitude,
+                                    autodeltaX + cameraPosition.target.longitude),
+                            13),
+                    animateTime,
                     new GoogleMap.CancelableCallback() {
                 @Override
                 public void onFinish() {
@@ -605,19 +610,19 @@ public class MapsActivity
                     ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
                     TextView spinDisplay = findViewById(R.id.spin);
                     spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
-                    targetBG.setColor(0xffffffff);
+                    targetBG.setColor(0x00000000);
 
+                    readyToAnimate = true;
+                    animationHandler.post(startAutoPan);
                 }
 
                 @Override
                 public void onCancel() {
-                    Log.w("startAutoPan", "hmm animation got canceled at " +
-                            cameraPosition.target.latitude + "," + cameraPosition.target.longitude);
-                    targetBG.setColor(0xfffffff);
+                    readyToAnimate = true;
+                    animationHandler.post(startAutoPan);
+                    Log.w("startAutoPan", "hmm animation got canceled");
                 }
-            } */);
-            //animationHandler.postDelayed(startAutoPan,5*animateTime/10);
-            animationHandler.post(startAutoPan);
+            }); */
         }
 
         public void run() {
@@ -625,7 +630,7 @@ public class MapsActivity
             target = findViewById(R.id.targetingView);
              targetBG = (GradientDrawable)target.getBackground();
             VisibleRegion visibleRegion = mapProjection.getVisibleRegion();
-            double currLeft = visibleRegion.farLeft.longitude;
+            /*double currLeft = visibleRegion.farLeft.longitude;
             double currRight = visibleRegion.farRight.longitude;
             double currTop = visibleRegion.farLeft.latitude;
             double currBottom = visibleRegion.nearRight.latitude;
@@ -633,19 +638,15 @@ public class MapsActivity
             //if (currScreenWidth > 180) currScreenWidth -= 180;
             currScreenHeight = Math.abs(currTop - currBottom);
             if (currScreenHeight > 180) currScreenHeight -= 180;
-            autodeltaY = (float)currScreenHeight * latIncrement *0.001f;
+            autodeltaY = currScreenHeight * latIncrement;
 
-            autodeltaX = (float)currScreenWidth * lonIncrement*0.001f;
-            //autodeltaY = latIncrement;
-            //autodeltaX = lonIncrement;
+            autodeltaX = currScreenWidth * lonIncrement;*/
+            autodeltaY = latIncrement;
+            autodeltaX = lonIncrement;
 
             runOnUiThread(new Runnable() {
                 public void run() {
-                    LatLng curpos = mMap.getCameraPosition().target;
-                    /*Log.d("autoanimateMap on ui thread", "firing camera move from " +
-                            curpos.latitude + "," + curpos.longitude +
-                            " to " + (curpos.latitude + autodeltaY) + "," + (curpos.longitude +autodeltaX));
-                    */
+                    Log.d("autoanimateMap on ui thread", "firing camera move " + mMap.getMinZoomLevel());
                     // TODO: track down why minzoomlevel gets set to 4 and the how to switch to lite mode
                     autoanimateMap();
 
@@ -705,11 +706,7 @@ public class MapsActivity
 
         public void animateMap() {
             int animateTime = (int) Math.max(1, (uptimeMillis() - Math.max(lastPanTime, lastZoomTime)));
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom)); //, animateTime, new GoogleMap.CancelableCallback() {
-            readyToAnimate = true;
-            retriggered=false;
-            animationHandler.post(animateByTable);
-                               /*mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(newPos, newZoom), animateTime, new GoogleMap.CancelableCallback() {
                 @Override
                 public void onFinish() {
                     //profile(Sections.POSTANIMATEMAP, Profilestates.START);
@@ -724,7 +721,7 @@ public class MapsActivity
                     TextView ytiltDisplay = findViewById(R.id.ytilt);
                     ytiltDisplay.setText(getString(R.string.ytilt_indicator, panner.rawY));
                     TextView spinDisplay = findViewById(R.id.spin);
-                    spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));*/
+                    spinDisplay.setText(getString(R.string.spin_indicator, zoomer.currentSpinPosition));
                     /*  replaced with fixed rectagle
                     * if ( targetRectangle == null) {
                     if ( targetRectangle == null) {
@@ -752,7 +749,7 @@ public class MapsActivity
                     targetRectangle.setPoints(targetPoints);
                     *
                     */
-/*
+
                     readyToAnimate = true;
                     if (!idling) {
                         //Log.i("animateByTable", "now");
@@ -769,7 +766,7 @@ public class MapsActivity
                     animationHandler.post(animateByTable);
                     Log.w("animateByTable", "hmm animation got canceled");
                 }
-            });*/
+            });
         }
 
         public void run() {
@@ -967,6 +964,7 @@ public class MapsActivity
 
     protected void doIdle() {
         Log.i("Idle", "going into idle");
+        if (idling) return;
         idling = true;
         if (hotSpotActive) {
             closeTheHotSpot();
@@ -1204,12 +1202,6 @@ public class MapsActivity
             case KeyEvent.KEYCODE_4:
                 decreaseLatIncrement();
                 break;
-            case KeyEvent.KEYCODE_5:
-                increaseLonIncrement();
-                break;
-            case KeyEvent.KEYCODE_6:
-                decreaseLonIncrement();
-                break;
             default:
                 return super.onKeyUp(keyCode, event);
         }
@@ -1277,13 +1269,37 @@ public class MapsActivity
     }
 
     private void launchServerConnection() {
-        if (mWebSocketClient != null && mWebSocketClient.isOpen()) mWebSocketClient.close();
-        if (bws==null) bws = new BackgroundWebSocket();
+        if (useWebSocket)
+            launchWebSocketServerConnection();
+        else
+            launchUDPServerConnection();
+    }
+
+
+    private void launchUDPServerConnection() {
+        Log.i("launchServerConnection", "bws: " + bws);
+        if (mUDBSocketClient != null && mUDPSocketClient.isOpen()) mUDPSocketClient.close();
+        if (bws==null) bws = new BackgroundWebSocket(this);
         if (bws.getStatus()== AsyncTask.Status.RUNNING) return;
         if (bws.getStatus()== AsyncTask.Status.FINISHED) {
             BackgroundWebSocket deadBWS  =  bws;
             deadBWS.cancel(true);
-            bws = new BackgroundWebSocket();
+            bws = new BackgroundUDPSocket(this);
+        }
+        Log.i("starting UDPsocket", sensorServerAddress +":"+sensorServerPort);
+        bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
+
+    }
+
+    private void launchWebSocketServerConnection() {
+        Log.i("launchServerConnection", "bws: " + bws);
+        if (mWebSocketClient != null && mWebSocketClient.isOpen()) mWebSocketClient.close();
+        if (bws==null) bws = new BackgroundWebSocket(this);
+        if (bws.getStatus()== AsyncTask.Status.RUNNING) return;
+        if (bws.getStatus()== AsyncTask.Status.FINISHED) {
+            BackgroundWebSocket deadBWS  =  bws;
+            deadBWS.cancel(true);
+            bws = new BackgroundWebSocket(this);
         }
        Log.i("starting websocket", sensorServerAddress +":"+sensorServerPort);
        bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
@@ -1297,176 +1313,70 @@ public class MapsActivity
 
     }
 
-    private  void bwsComplain(String... message) {
-        Toast.makeText(MapsActivity.this, message[0] + ":" + message[1], Toast.LENGTH_LONG).show();
-        if (message[0].equals("Connection closed")) {
-            Log.i("websocket closed", "restarting");
-            asyncTaskHandler.postDelayed(sensorConnectionLauncher,15000);
-        }
-    }
 
-
-    class BackgroundWebSocket extends AsyncTask<String, String, String> {
-
-        boolean messageinQueue = false;
-        //inputarg can contain array of values
-        @Override
-        protected String doInBackground(String... URIString) {
-            URI uri;
-            try {
-                uri = new URI(URIString[0]);
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-                return "Invalid URI";
-            }
-            mWebSocketClient = new WebSocketClient(uri, new org.java_websocket.drafts.Draft_6455()) {
-                @Override
-                public void onOpen(ServerHandshake serverHandshake) {
-                    Log.i("Websocket", "Opened");
-                    mWebSocketClient.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
-                }
-
-                @Override
-                public void onMessage(String message) {
-
-                    bwsHandleMessage(message);
-                    publishProgress("message", message);
-
-                }
-
-                @Override
-                public void onClose(int i, String s, boolean b) {
-                    Log.i("Websocket", "Closed " + s);
-                    publishProgress("Connection closed", s);
-                    //mWebSocketClient.connect();
-                }
-
-                @Override
-                public void onError(Exception e) {
-
-                    Log.e("Websocket", "Error " + e.getMessage());
-                    publishProgress("Connection Error", e.getMessage());
-
-                }
-            };
-            mWebSocketClient.connect();
-            return null;
-        }
-
-        protected void onProgressUpdate(String... progress) {
-
-            //update the progress
-            if (progress.length >= 2) {
-                if (progress[0].equals("message")) {
-                    bwsHandleMessage(progress[1]);
-                } else {
-                    //onMessage(progress[0]);
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            bwsComplain(progress);
-                        }
-                    });
-                }
-            }
-
-        }
-
-        //this will call after finishing the doInBackground function
-        protected void onPostExecute(String result) {
-
-            // Update the ui elements
-            //show some notification
-            //showDialog("Task done " + result);
-
-        }
-
-
-        private void bwsHandleMessage(String messageString) {
-
-            if (mMap == null) return;
-            if (messageinQueue) {
-                //Log.e("websocket message handler", "tossing message "+ messageString);
-                return;
-            }
-            messageinQueue = true;
-            JSONObject message;
-            try {
-                message = new JSONObject(messageString);
-            } catch (org.json.JSONException e) {
-                Log.i("odd JSON", messageString);
-                messageinQueue = false;
-                return;
-            }
-            String messageType;
-            String gestureType;
-/*        try {
- messageType = message.getString("type");
+    public void handleMessage(JSONObject message) {
+        if (mMap == null) return;
+        String messageType;
+        String gestureType;
+        //LatLngBounds curScreen = mMap.getProjection()
+        //       .getVisibleRegion().latLngBounds;
+        boolean _hotSpotActive = hotSpotActive;
+        ImageHotspot _liveHotSpot = liveHotSpot;
+        try {
+            gestureType = message.getString("gesture");
+            //Log.i("incoming message",message.toString());
         } catch (org.json.JSONException e) {
-            e.printStackTrace();
-        }*/
-            try {
-                gestureType = message.getString("gesture");
-                //Log.i("incoming message",message.toString());
-            } catch (org.json.JSONException e) {
-                Log.i("no gesture message", message.toString());
+            Log.i("no gesture message", message.toString());
+            messageinQueue = false;
+            return;
+        }
+        if (!_hotSpotActive && (_liveHotSpot == null)) {
+            getUIObjects();
+            if (gestureType.equals("pan")) {
+                panner.setMessage(message);
+                panner.setMap(mMap);
+                panner.setLogging(logSensors || logTilt);
+                panner.setScreenBounds(currScreenWidth, currScreenHeight);
+                panner.setMapPosition(cameraPosition);
+                asyncTaskHandler.post(panner.handleJSON);
+
+                //paintTarget();
+            } else if (gestureType.equals("zoom")) {
+                zoomer.setMessage(message);
+                zoomer.setLogging(logSensors || logZoom);
+                asyncTaskHandler.post(zoomer.handleJSON);
+            } else if (gestureType.equals("switchCode")) {
+                ImageHotspot.__setMessage__(message);
+                asyncTaskHandler.post(ImageHotspot.__handleJSON__);
+            }
+
+        } else if (_hotSpotActive && (_liveHotSpot != null)) {
+            //liveHotSpot.setImageByLanguage(hotspotLanguage);
+            if (gestureType.equals("pan")) {
+                _liveHotSpot.setMessage(message);
+                _liveHotSpot.setLogging(logSensors || logTilt);
+                asyncTaskHandler.post(_liveHotSpot.handleJSON);
+            } else if (gestureType.equals("zoom")) {
+                _liveHotSpot.setMessage(message);
+                _liveHotSpot.setLogging(logSensors || logZoom);
+                asyncTaskHandler.post(_liveHotSpot.handleJSON);
+            } else if (gestureType.equals("switchCode")) {
+                _liveHotSpot.setMessage(message);
+                _liveHotSpot.setLogging(logSensors);
+                asyncTaskHandler.post(_liveHotSpot.handleJSON);
+            } else {
+                Log.e("unknown gesture message", message.toString());
+
                 messageinQueue = false;
                 return;
             }
+            // liveHotSpot.handleJSON.run();
 
-            //LatLngBounds curScreen = mMap.getProjection()
-            //       .getVisibleRegion().latLngBounds;
-            boolean _hotSpotActive = hotSpotActive;
-            ImageHotspot _liveHotSpot = liveHotSpot;
-            if (!_hotSpotActive && (_liveHotSpot == null)) {
-                getUIObjects();
-                if (gestureType.equals("pan")) {
-                    panner.setMessage(message);
-                    panner.setMap(mMap);
-                    panner.setLogging(logSensors || logTilt);
-                    panner.setScreenBounds(currScreenWidth, currScreenHeight);
-                    panner.setMapPosition(cameraPosition);
-                    asyncTaskHandler.post(panner.handleJSON);
-
-                    //paintTarget();
-                } else if (gestureType.equals("zoom")) {
-                    zoomer.setMessage(message);
-                    zoomer.setLogging(logSensors || logZoom);
-                    asyncTaskHandler.post(zoomer.handleJSON);
-                } else if (gestureType.equals("switchCode")) {
-                    ImageHotspot.__setMessage__(message);
-                    asyncTaskHandler.post(ImageHotspot.__handleJSON__);
-                }
-
-            } else if (_hotSpotActive && (_liveHotSpot != null)) {
-                //liveHotSpot.setImageByLanguage(hotspotLanguage);
-                if (gestureType.equals("pan")) {
-                    _liveHotSpot.setMessage(message);
-                    _liveHotSpot.setLogging(logSensors || logTilt);
-                    asyncTaskHandler.post(_liveHotSpot.handleJSON);
-                } else if (gestureType.equals("zoom")) {
-                    _liveHotSpot.setMessage(message);
-                    _liveHotSpot.setLogging(logSensors || logZoom);
-                    asyncTaskHandler.post(_liveHotSpot.handleJSON);
-                } else if (gestureType.equals("switchCode")) {
-                    _liveHotSpot.setMessage(message);
-                    _liveHotSpot.setLogging(logSensors);
-                    asyncTaskHandler.post(_liveHotSpot.handleJSON);
-                } else {
-                    Log.e("unknown gesture message", message.toString());
-
-                    messageinQueue = false;
-                    return;
-                }
-                // liveHotSpot.handleJSON.run();
-
-            } else {
-                Log.e("handle message", "somehow hotSpaotActive " + hotSpotActive + " and liveHotSpot " + liveHotSpot + " are inconsistent");
-            }
-            messageinQueue = false;
-
+        } else {
+            Log.e("handle message", "somehow hotSpaotActive " + hotSpotActive + " and liveHotSpot " + liveHotSpot + " are inconsistent");
         }
-    }
 
+    }
 
     @Override
     public void onCameraMove() {

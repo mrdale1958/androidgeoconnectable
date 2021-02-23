@@ -2,7 +2,7 @@ package com.botherconsulting.geoconnectable;
 
 import android.util.Log;
 
-import com.google.android.gms.maps.GoogleMap;
+import com.google.android.libraries.maps.GoogleMap;
 
 import org.json.JSONObject;
 

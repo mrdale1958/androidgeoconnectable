@@ -2,9 +2,9 @@ package com.botherconsulting.geoconnectable;
 
 import android.util.Log;
 
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.maps.GoogleMap;
+import com.google.android.libraries.maps.model.CameraPosition;
+import com.google.android.libraries.maps.model.LatLng;
 import com.google.maps.android.SphericalUtil;
 import org.json.JSONObject;
 
@@ -202,13 +202,24 @@ public class TablePanner {
 
                 percentChangeInX = TiltScaleX * rawX *zoomFudge/maxZoom;
                 deltaX = screenWidthDegrees * percentChangeInX;*/
-
+                    double tiltNoiseFloor = 0.01;
                 // TODO: scale by zoom level
                     percentChangeInY = Math.min(Math.max(TiltScaleY * rawY, -panMax), panMax);
-                    deltaY = screenHeightDegrees * percentChangeInY;
+                    if ( Math.abs(percentChangeInY) > tiltNoiseFloor ) {
+                        deltaY = screenHeightDegrees * percentChangeInY;
+                    }
+                    else {
+                        deltaY = 0.0;
+                    }
 
                     percentChangeInX = Math.min(Math.max(TiltScaleX * rawX, -panMax), panMax);
-                    deltaX = screenWidthDegrees * percentChangeInX;
+                    if ( Math.abs(percentChangeInY) > tiltNoiseFloor ) {
+                        deltaX = screenWidthDegrees * percentChangeInX;
+                    }
+                    else {
+                        deltaX = 0.0;
+                    }
+
                 }
 
                 //if (zoomLayers[currentZoom]["pannable"])

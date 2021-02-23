@@ -4,8 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
-import com.google.android.gms.maps.model.Tile;
-import com.google.android.gms.maps.model.TileProvider;
+import com.google.android.libraries.maps.model.Tile;
+import com.google.android.libraries.maps.model.TileProvider;
 
 import java.io.ByteArrayOutputStream;
 
