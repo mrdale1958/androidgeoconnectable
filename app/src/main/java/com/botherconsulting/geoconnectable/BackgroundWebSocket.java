@@ -12,14 +12,15 @@ import org.json.JSONObject;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-        public class BackgroundWebSocket extends AsyncTask<String, String, String> {
+public class BackgroundWebSocket extends AsyncTask<String, String, String> {
 
     boolean messageinQueue = false;
-    WebSocketClient mWebSocketClient;
+    static WebSocketClient mWebSocketClient;
     MapsActivity parentActivity;
 
     public BackgroundWebSocket(MapsActivity mapsActivity) {
         parentActivity = mapsActivity;
+        if (mWebSocketClient != null && mWebSocketClient.isOpen()) mWebSocketClient.close();
     }
 
     private void bwsComplain(String... message){
@@ -125,6 +126,16 @@ import java.net.URISyntaxException;
         parentActivity.handleMessage(message);
         messageinQueue = false;
 
+    }
+
+    public boolean isOpen() {
+        return (mWebSocketClient != null && mWebSocketClient.isOpen());
+    }
+
+    public void send(String message) {
+        if (mWebSocketClient != null) {
+            mWebSocketClient.send(message);
+        }
     }
 }
 

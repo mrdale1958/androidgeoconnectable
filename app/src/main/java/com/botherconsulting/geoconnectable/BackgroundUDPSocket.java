@@ -9,31 +9,51 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.UnknownHostException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BackgroundUDPSocket extends AsyncTask<String, String, String> {
 
     boolean messageinQueue = false;
-    UDPSocketClient mUDPSocketClient;
+    static UDPSocketClient mUDPSocketClient;
     MapsActivity parentActivity;
 
     public BackgroundUDPSocket(MapsActivity mapsActivity) {
+
         parentActivity = mapsActivity;
+        if (mUDPSocketClient != null && mUDPSocketClient.isOpen()) mUDPSocketClient.close();
+
     }
 
     private static class UDPSocketClient {
 
-        String uri;
+        java.net.InetAddress uri;
         org.java_websocket.drafts.Draft draft;
+        int port;
+        DatagramSocket theSocket;
 
-        public UDPSocketClient (String uri, org.java_websocket.drafts.Draft draft) {
 
+        public UDPSocketClient(String host, int port) throws UnknownHostException, SocketException {
+            this.uri = java.net.InetAddress.getByName(host);
+            this.port = port;
+            theSocket = new DatagramSocket(port, uri);
         }
-        public void onOpen(ServerHandshake serverHandshake) {
+
+        public void connect() {
+            theSocket.connect(uri, port);
+        }
+
+        public void onOpen(ServerHandshake serverHandshake) throws IOException {
             Log.i("UDPsocket", "Opened");
-            send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
+
+            this.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
         }
 
         public void onMessage(String message) {
@@ -43,40 +63,44 @@ public class BackgroundUDPSocket extends AsyncTask<String, String, String> {
 
         }
 
+        public boolean isOpen() {
+            return (theSocket != null && theSocket.isConnected());
+        }
+
+        public void send(String message) throws IOException {
+            byte buf[] = message.getBytes();
+            DatagramPacket sendPacket =
+                    new DatagramPacket(buf, buf.length, uri, port);
+            theSocket.send(sendPacket);
+        }
+
         public void onClose(int i, String s, boolean b) {
             Log.i("UDPsocket", "Closed " + s);
-            publishProgress("Connection closed", s);
             //mWebSocketClient.connect();
         }
 
         public void onError(Exception e) {
 
             Log.e("UDPsocket", "Error " + e.getMessage());
-            publishProgress("Connection Error", e.getMessage());
 
         }
 
-        public void publishProgress(String label, String message)  {
-
+        public void close() {
+            theSocket.close();
         }
+    }
 
-        public void send(String message) {
-            byte buf[] = message.getBytes();
-            DatagramPacket sendPacket =
-                    new DatagramPacket(buf, buf.length, uri, 1234);
 
-        }
-
-        public void connect() {
-
-        }
+    public void publishProgress(String label, String message) {
 
     }
-    private void busComplain(String... message){
-        Toast.makeText(parentActivity,message[0]+":"+message[1],Toast.LENGTH_LONG).show();
-        if(message[0].equals("Connection closed")){
-            Log.i("websocket closed","restarting");
-            parentActivity.asyncTaskHandler.postDelayed(parentActivity.sensorConnectionLauncher,15000);
+
+
+    private void busComplain(String... message) {
+        Toast.makeText(parentActivity, message[0] + ":" + message[1], Toast.LENGTH_LONG).show();
+        if (message[0].equals("Connection closed")) {
+            Log.i("websocket closed", "restarting");
+            parentActivity.asyncTaskHandler.postDelayed(parentActivity.sensorConnectionLauncher, 15000);
         }
     }
 
@@ -84,42 +108,50 @@ public class BackgroundUDPSocket extends AsyncTask<String, String, String> {
     @Override
     protected String doInBackground(String... URIString) {
         URI uri;
+        int port;
+        String serverID;
         try {
             uri = new URI(URIString[0]);
+            serverID = uri.getHost();
+            port = uri.getPort();
         } catch (URISyntaxException e) {
             e.printStackTrace();
             return "Invalid URI";
         }
-        mUDPSocketClient = new UDPSocketClient(uri, new org.java_websocket.drafts.Draft_6455()) {
-            @Override
-            public void onOpen(ServerHandshake serverHandshake) {
-                Log.i("Websocket", "Opened");
-                mUDPSocketClient.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
-            }
+        try {
+            mUDPSocketClient = new UDPSocketClient(serverID, port) {
+                @Override
+                public void onOpen(ServerHandshake serverHandshake) throws IOException {
+                    Log.i("UDPsocket", "Opened");
+                    mUDPSocketClient.send("Hello from " + Build.MANUFACTURER + " " + Build.MODEL);
+                }
 
-            @Override
-            public void onMessage(String message) {
+                @Override
+                public void onMessage(String message) {
 
-                busHandleMessage(message);
-                publishProgress("message", message);
+                    busHandleMessage(message);
+                    publishProgress("message", message);
 
-            }
+                }
 
-            @Override
-            public void onClose(int i, String s, boolean b) {
-                Log.i("Websocket", "Closed " + s);
-                publishProgress("Connection closed", s);
-                //mWebSocketClient.connect();
-            }
+                @Override
+                public void onClose(int i, String s, boolean b) {
+                    Log.i("UDPsocket", "Closed " + s);
+                    publishProgress("Connection closed", s);
+                    //mWebSocketClient.connect();
+                }
 
-            @Override
-            public void onError(Exception e) {
+                @Override
+                public void onError(Exception e) {
 
-                Log.e("Websocket", "Error " + e.getMessage());
-                publishProgress("Connection Error", e.getMessage());
+                    Log.e("UDPsocket", "Error " + e.getMessage());
+                    publishProgress("Connection Error", e.getMessage());
 
-            }
-        };
+                }
+            };
+        } catch (Exception e) {
+            Log.e("New UDP Socket", e.getMessage());
+        }
         mUDPSocketClient.connect();
         return null;
     }
@@ -174,6 +206,17 @@ public class BackgroundUDPSocket extends AsyncTask<String, String, String> {
     }*/
         parentActivity.handleMessage(message);
         messageinQueue = false;
+
+    }
+
+    public boolean isOpen() {
+        return (mUDPSocketClient != null && mUDPSocketClient.isOpen());
+    }
+
+    public void send(String message) throws IOException {
+        if (mUDPSocketClient != null) {
+            mUDPSocketClient.send(message);
+        }
 
     }
 }

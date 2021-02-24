@@ -120,8 +120,6 @@ public class MapsActivity
     private GoogleMap mMap;
     private boolean useHybridMap = true; // in settings
     private boolean useWebSocket = true;
-    private WebSocketClient mWebSocketClient;
-    private DatagramSocket mUDPSocket;
     private String targetColor = "#ff0000"; // in settings
     private double targetWidth = 0.1; // portion of visible map  // in settings
     private boolean targetVisible = false; // in settings
@@ -162,6 +160,7 @@ public class MapsActivity
     //String sensorServerAddress = "10.21.3.42";  // in settings
     String sensorServerPort = "5678";  // in settings
     BackgroundWebSocket bws;
+    BackgroundUDPSocket bus;
     OuterCircleTextView idleMessageTopView;
     OuterCircleTextView idleMessageBottomView;
 
@@ -1205,7 +1204,7 @@ public class MapsActivity
             default:
                 return super.onKeyUp(keyCode, event);
         }
-        signalWebSocket(hotspotLanguage);
+        signalSensorServer(hotspotLanguage);
         ImageHotspot.setLanguage(hotspotLanguage);
         return true;
     }
@@ -1278,22 +1277,20 @@ public class MapsActivity
 
     private void launchUDPServerConnection() {
         Log.i("launchServerConnection", "bws: " + bws);
-        if (mUDBSocketClient != null && mUDPSocketClient.isOpen()) mUDPSocketClient.close();
-        if (bws==null) bws = new BackgroundWebSocket(this);
+        if (bus==null) bus = new BackgroundUDPSocket(this);
         if (bws.getStatus()== AsyncTask.Status.RUNNING) return;
         if (bws.getStatus()== AsyncTask.Status.FINISHED) {
-            BackgroundWebSocket deadBWS  =  bws;
-            deadBWS.cancel(true);
-            bws = new BackgroundUDPSocket(this);
+            BackgroundUDPSocket deadBUS  =  bus;
+            deadBUS.cancel(true);
+            bus = new BackgroundUDPSocket(this);
         }
         Log.i("starting UDPsocket", sensorServerAddress +":"+sensorServerPort);
-        bws.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
+        bus.execute("ws://"+ sensorServerAddress + ":" + sensorServerPort);
 
     }
 
     private void launchWebSocketServerConnection() {
         Log.i("launchServerConnection", "bws: " + bws);
-        if (mWebSocketClient != null && mWebSocketClient.isOpen()) mWebSocketClient.close();
         if (bws==null) bws = new BackgroundWebSocket(this);
         if (bws.getStatus()== AsyncTask.Status.RUNNING) return;
         if (bws.getStatus()== AsyncTask.Status.FINISHED) {
@@ -1306,9 +1303,16 @@ public class MapsActivity
 
     }
 
-    private void signalWebSocket(ImageHotspot.Languages language) {
-        if (mWebSocketClient != null && mWebSocketClient.isOpen()){
-            mWebSocketClient.send("{language: " + language.toString().substring(0,1) +"}");
+    private void signalSensorServer(ImageHotspot.Languages language) {
+        if (bws != null && bws.isOpen()){
+            bws.send("{language: " + language.toString().substring(0,1) +"}");
+        } else if (bus != null && bus.isOpen()){
+            try {
+                bus.send("{language: " + language.toString().substring(0,1) +"}");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
 
     }
@@ -1327,7 +1331,7 @@ public class MapsActivity
             //Log.i("incoming message",message.toString());
         } catch (org.json.JSONException e) {
             Log.i("no gesture message", message.toString());
-            messageinQueue = false;
+            // messageinQueue = false;
             return;
         }
         if (!_hotSpotActive && (_liveHotSpot == null)) {
@@ -1367,7 +1371,7 @@ public class MapsActivity
             } else {
                 Log.e("unknown gesture message", message.toString());
 
-                messageinQueue = false;
+                //messageinQueue = false;
                 return;
             }
             // liveHotSpot.handleJSON.run();
